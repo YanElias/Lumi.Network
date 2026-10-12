@@ -1,0 +1,141 @@
+LUMI — DO ZERO (primeiro MVP)
+==============================
+
+O LUMI está sendo reconstruído como uma alternativa própria ao Discord, com branco e amarelo, logo.png e a ideia de unificar círculos/servidores em “Espaços”.
+
+ARQUIVOS
+--------
+index.html              Estrutura da interface
+style.css               Identidade visual responsiva
+script.js               Interface e funções do cliente
+ database/supabase.js    Conexão do frontend ao Supabase
+ database/supabase.sql   Tabelas, gatilhos e políticas RLS
+logo.png                Coloque aqui o arquivo original da logo do LUMI
+
+PRIMEIROS PASSOS
+----------------
+1. Abra seu projeto Supabase.
+2. Vá em SQL Editor, abra database/supabase.sql, cole todo o conteúdo e execute.
+3. Confira database/supabase.js: a URL e a chave publishable estão preenchidas com a configuração que já existia no projeto anterior. Se o projeto Supabase mudou, atualize os valores.
+4. Coloque o logo.png original na mesma pasta de index.html.
+5. Sirva a pasta com um servidor local (módulos JavaScript não funcionam de forma confiável abrindo o HTML como file://). Se tiver Python instalado, dentro da pasta execute:
+
+   python -m http.server 8000
+
+6. Abra http://localhost:8000 no navegador.
+7. Crie uma conta e teste criar um espaço. Cada espaço ganha automaticamente um canal #geral.
+
+O QUE JÁ TEM NESTA BASE
+-----------------------
+- Cadastro e login por e-mail/senha com Supabase Auth.
+- Perfil inicial sincronizado com auth.users.
+- Espaços (servidores e círculos unificados), com descrição e símbolo.
+- Código de convite para entrar em um espaço.
+- Canais de texto, canal #geral automático e mensagens online em tempo real.
+- Layout responsivo para desktop e celular.
+- Políticas de acesso no banco (RLS) para operações básicas.
+
+IMPORTANTE
+----------
+- O arquivo SQL precisa ser executado no Supabase para a aplicação funcionar com dados online.
+- Se a confirmação de e-mail estiver ligada no Supabase, a pessoa precisa confirmar o e-mail antes de entrar.
+- Mensagens diretas, notificações reais, uploads, permissões avançadas e chamadas de voz/vídeo ainda não estão implementados; a tela indica que mensagens privadas virão numa próxima etapa.
+- A logo original não estava presente na pasta de trabalho ao montar este pacote. O HTML já procura por logo.png e tem um fallback simples, mas coloque o arquivo original para usar a marca exata.
+- A chave publishable/anon pode ser usada no frontend; nunca coloque uma chave service_role no JavaScript do navegador.
+
+ATUALIZAÇÃO LUMI NETWORK (projeto já criado)
+--------------------------------------------
+Se você já executou o SQL antigo e criou seu primeiro Espaço, NÃO precisa apagar o banco nem executar tudo do zero.
+1. No Supabase, abra SQL Editor > New query.
+2. Abra database/upgrade-lumi-network.sql, copie o arquivo inteiro e execute.
+3. Atualize o navegador do LUMI.
+
+Esta atualização configura o gatilho de perfil automático, garante #geral nos espaços antigos, adiciona entrada por código de convite via função segura, ativa políticas para canais/mensagens de membros e adiciona gestão básica de papéis (dono, administrador e membro). Novos usuários precisam criar a conta normalmente; o perfil é criado pelo gatilho do banco.
+
+OBSERVAÇÃO: mensagens em tempo real dependem de a tabela public.messages estar na publicação supabase_realtime e de as políticas RLS permitirem acesso ao canal. A atualização tenta adicionar a tabela à publicação automaticamente.
+
+VERSÃO DESKTOP COM PYWEBVIEW
+----------------------------
+A interface agora mantém a janela e as barras no lugar; quando algum conteúdo for longo, a rolagem fica dentro do painel, não na página inteira.
+
+Para abrir em uma janela de aplicativo com pywebview no Linux:
+1. Instale o backend WebKitGTK do seu sistema, se ainda não estiver instalado.
+   Em distribuições Arch/Manjaro/BigLinux, normalmente: sudo pacman -S python python-pip python-gobject gtk3 webkit2gtk-4.1
+   (O nome do pacote WebKitGTK pode variar conforme a versão da distribuição.)
+2. Na pasta do projeto, crie um ambiente virtual e instale as dependências:
+   python -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -r requirements.txt
+3. Inicie o aplicativo:
+   python launch.py
+
+O launch.py serve os arquivos localmente e abre a interface em uma janela pywebview. O app ainda precisa de internet para conectar ao Supabase. Não coloque chaves secretas service_role no frontend.
+
+FOTOS DE PERFIL E SELOS OFICIAIS
+--------------------------------
+1. No Supabase, abra SQL Editor e execute database/profile-photos-and-badges.sql.
+2. Reinicie o LUMI, entre na conta e abra Perfil > Escolher foto. Aceita PNG, JPG, WEBP ou GIF de até 5 MB.
+3. Para configurar os selos oficiais, abra script.js e procure APP_OWNER_USER_ID e VERIFIED_USER_IDS.
+   - APP_OWNER_USER_ID: coloque entre aspas o UUID da sua conta dona do aplicativo.
+   - VERIFIED_USER_IDS: coloque os UUIDs aprovados numa lista, por exemplo ['uuid-1','uuid-2'].
+   O UUID da conta pode ser consultado em Authentication > Users no painel Supabase.
+   O selo azul ✓ significa conta verificada; o selo dourado ✦ identifica o dono do LUMI.
+   O dono recebe os dois selos. Não permita que usuários comuns editem esses valores.
+
+MENSAGENS DIRETAS E ENVIO DE ARQUIVOS
+-------------------------------------
+1. No Supabase, abra SQL Editor e execute database/direct-messages-and-files.sql.
+2. Abra Mensagens no LUMI, busque uma pessoa pelo nome de exibição ou @usuário e clique em Mensagem.
+3. As conversas e mensagens atualizam em tempo real. Use o botão + ao lado do campo de mensagem para anexar um arquivo.
+4. Arquivos de até 20 MB são guardados em um bucket privado; os links para abrir arquivos expiram depois de uma hora.
+
+Se o Supabase informar erro ao criar a publicação realtime, confira em Database > Publications se a tabela public.direct_messages está incluída em supabase_realtime. Não use bucket público para anexos de DMs.
+
+ATUALIZAÇÃO DE INTERFACE — LUMI v8
+----------------------------------
+- O campo de mensagem fica preso à parte inferior da área de conversa; apenas o histórico de mensagens rola.
+- As DMs agora usam a mesma estrutura de navegação dos Espaços: lista de conversas e busca de pessoas na barra lateral, conversa selecionada na área central.
+- Ícones Material Symbols Rounded são carregados pelo Google Fonts, então precisam de conexão com a internet para aparecer com a fonte correta.
+- Não requer SQL novo. Preserve database/supabase.js e o logo.png original ao atualizar.
+
+LUMI v9 — REDESIGN COMPLETO DA INTERFACE
+- Nova camada visual global: navegação, barra lateral, cabeçalho, página inicial, cartões, painel pessoal, formulários e modais.
+- Espaços e mensagens diretas usam a mesma linguagem visual e estrutura de chat.
+- Histórico com rolagem própria e compositor de mensagem fixado na parte inferior do painel de conversa.
+- Material Symbols Rounded na navegação, pesquisa, notificações e controles de conversa.
+- Mantém o código de integração com Supabase e não exige SQL novo.
+- Preserve seus arquivos database/supabase.js e logo.png ao atualizar.
+- As fontes Material Symbols e DM Sans/Manrope são carregadas do Google Fonts quando há internet; sem internet, o app continua utilizável com fontes de reserva.
+
+CHAMADAS DE VOZ E VÍDEO — NOVO
+------------------------------
+1. No Supabase, abra SQL Editor > New query.
+2. Abra database/calls-and-testing.sql, copie o conteúdo inteiro e execute. Esse SQL cria apenas a tabela de sinalização das chamadas; não apaga DMs nem Espaços.
+3. Entre no LUMI com sua conta, abra Mensagens e selecione uma conversa. Os botões de telefone e câmera no cabeçalho iniciam chamadas de voz e vídeo.
+4. O contato recebe uma janela de chamada e pode Atender ou Recusar. Durante a chamada, use os controles para silenciar o microfone, desligar a câmera ou encerrar.
+5. Permita o uso do microfone e da câmera quando o navegador perguntar. As chamadas usam WebRTC para o áudio/vídeo e Supabase Realtime para combinar a conexão.
+
+TESTAR COM SEU IRMÃO OU OUTRA PESSOA
+------------------------------------
+- Cada pessoa precisa de sua própria conta LUMI, com e-mail diferente. Evite compartilhar senha.
+- Para testar a conversa: os dois entram, um busca o @usuário do outro em Mensagens e começa uma DM. Depois, testem mensagens nos dois sentidos.
+- Para testar chamadas em dispositivos diferentes, publiquem a pasta do LUMI em um host estático com HTTPS (por exemplo, Netlify ou Vercel) e abram o mesmo endereço nos dois dispositivos. Configure o endereço publicado em Authentication > URL Configuration no Supabase, incluindo-o nas Redirect URLs.
+- Se ainda não quiser publicar, vocês podem testar mensagens em contas separadas no mesmo computador, usando perfis diferentes do navegador. Para chamadas, usem de preferência navegadores e dispositivos separados.
+- Não é suficiente enviar apenas a pasta para seu irmão se ele abrir o HTML por file://; os módulos JavaScript, login e chamadas precisam de um endereço web.
+- Esta é a primeira versão de chamadas: usa servidores STUN públicos, mas ainda não tem servidor TURN próprio. Algumas redes/NATs podem impedir a conexão; nesse caso a chamada pode não conectar mesmo que a sinalização do Supabase esteja funcionando.
+- Para maior privacidade, não compartilhe o link publicado publicamente sem revisar as políticas do Supabase e os recursos de moderação/denúncia antes de abrir para muita gente.
+
+
+LUMI v12 — FERRAMENTAS DE CONVERSA NOS ESPAÇOS
+----------------------------------------------
+1. No Supabase, abra SQL Editor > New query.
+2. Execute database/space-media-edit-reactions.sql. Esse arquivo adiciona colunas e políticas necessárias, cria as reações e configura o armazenamento privado de mídia. Não apaga mensagens existentes.
+3. Reinicie o LUMI. Em um canal de Espaço, use o botão de imagem para enviar uma foto ou vídeo de até 30 MB.
+4. Passe o mouse sobre uma mensagem para ver os controles: responder, reagir e, nas mensagens enviadas por você, editar ou excluir.
+5. Edição, exclusão, respostas e reações dependem de executar o SQL acima. Fotos e vídeos usam o bucket privado space-attachments e links temporários.
+6. Respostas aparecem como referência à mensagem original. Reações são salvas no banco e atualizadas em tempo real.
+
+PRÓXIMAS ETAPAS
+---------------
+- Chamadas em grupo dentro dos Espaços ainda não estão ativadas nesta versão. As chamadas privadas de voz/vídeo existentes continuam funcionando. Chamadas em Espaços precisam de sinalização e conexões WebRTC para vários participantes, além dos controles de entrada/saída da sala.
+- O envio de mídia nos Espaços aceita um arquivo por mensagem (imagem ou vídeo), com limite de 30 MB.
