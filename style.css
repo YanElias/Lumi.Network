@@ -1584,3 +1584,36 @@ img.dm-avatar,
   object-fit: cover !important;
   flex: none !important;
 }
+/* LUMI — correção definitiva dos avatares das DMs */
+img.dm-avatar.avatar-image {
+  display: block;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex: 0 0 36px !important;
+  object-fit: cover !important;
+  object-position: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Evita que o conteúdo das mensagens estique os avatares */
+.dm-message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.dm-message-body {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dm-message-text {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
