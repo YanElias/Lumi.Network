@@ -138,11 +138,11 @@ function renderSpaceNav() {
     const space = state.activeSpace;
     $('#activeSpaceNav').innerHTML = `
       <div class="active-space-title">
-        <div class="active-space-icon">${escapeHTML(space.symbol || '✳')}</div>
+        <div class="active-space-icon ${space.image_url ? 'has-space-photo' : ''}">${spacePhotoContent(space)}</div>
         <div class="active-space-name"><small>SEU ESPAÇO · COMUNIDADE</small><strong>${escapeHTML(space.name)}</strong>${space.description ? `<p>${escapeHTML(space.description)}</p>` : ''}</div>
         <button class="icon-button active-space-menu" data-action="invite" title="Opções do espaço" aria-label="Opções do espaço"><span class="material-symbols-rounded">expand_more</span></button>
       </div>
-      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button></div>
+      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button>' : ''}</div>
       <div class="channel-sidebar-title"><span>CANAIS DE TEXTO</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" title="Criar canal" aria-label="Criar canal">＋</button>' : ''}</div>
       <div class="channel-list sidebar-channel-list">${state.channels.length ? state.channels.map(c => `<button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span>#</span>${escapeHTML(c.name)}</button>`).join('') : `<div class="space-list-empty">Ainda não há canais.${['owner','admin'].includes(space.role) ? '<br><button data-action="create-channel">Criar canal</button>' : ''}</div>`}</div>
       ${['owner','admin'].includes(space.role) ? '<button class="sidebar-create-channel" data-action="create-channel">＋ Criar canal</button>' : ''}`;
@@ -151,9 +151,9 @@ function renderSpaceNav() {
   const filtered = state.spaces.filter(space => !search || space.name.toLowerCase().includes(search));
   $('#spaceList').innerHTML = filtered.length ? filtered.map(space => `
     <button class="space-entry ${state.activeSpace?.id === space.id ? 'active' : ''}" data-space-id="${space.id}" title="${escapeHTML(space.name)}">
-      <span class="space-entry-icon">${escapeHTML(space.symbol || '✳')}</span><span class="space-entry-copy"><strong>${escapeHTML(space.name)}</strong><small>${state.activeSpace?.id === space.id ? 'Espaço selecionado' : 'Abrir espaço'}</small></span>
+      <span class="space-entry-icon ${space.image_url ? 'has-space-photo' : ''}">${spacePhotoContent(space)}</span><span class="space-entry-copy"><strong>${escapeHTML(space.name)}</strong><small>${state.activeSpace?.id === space.id ? 'Espaço selecionado' : 'Abrir espaço'}</small></span>
     </button>`).join('') : `<div class="space-list-empty"><span>✳</span>${state.user ? 'Nenhum espaço encontrado.' : 'Entre para ver seus espaços.'}<br><button data-action="create-space">Criar um espaço</button></div>`;
-  $('#spaceRail').innerHTML = state.spaces.slice(0, 6).map(space => `<button class="rail-space ${state.activeSpace?.id === space.id ? 'active' : ''}" data-space-id="${space.id}" title="${escapeHTML(space.name)}">${escapeHTML(space.symbol || '✳')}</button>`).join('');
+  $('#spaceRail').innerHTML = state.spaces.slice(0, 6).map(space => `<button class="rail-space ${state.activeSpace?.id === space.id ? 'active' : ''} ${space.image_url ? 'has-space-photo' : ''}" data-space-id="${space.id}" title="${escapeHTML(space.name)}">${spacePhotoContent(space)}</button>`).join('');
   $('#spaceCount').textContent = state.spaces.length;
 }
 
@@ -166,15 +166,27 @@ function renderHome() {
     <section class="section-block discovery-block"><div class="section-title-row"><div><div class="eyebrow">PRA VOCÊ</div><h2>Ideias para se conectar</h2></div></div><div class="feature-grid"><article class="feature-card feature-yellow"><div class="feature-symbol">✳</div><div><span class="feature-tag">CRIE</span><h3>Seu espaço, suas regras.</h3><p>Junte pessoas em torno do que vocês amam.</p></div><button class="round-arrow" data-action="create-space" aria-label="Criar espaço">↗</button></article><article class="feature-card feature-white"><div class="feature-symbol symbol-chat">☷</div><div><span class="feature-tag">CONVERSE</span><h3>Uma conversa de cada vez.</h3><p>Canais organizados para as ideias fluírem.</p></div><button class="round-arrow" data-action="show-inbox" aria-label="Abrir mensagens">↗</button></article></div></section>`;
   renderSpaceNav();
 }
+function spacePhotoContent(space) {
+  const url = typeof space?.image_url === 'string'
+    ? space.image_url.trim()
+    : '';
+
+  if (url && /^https?:\/\/\S+$/i.test(url)) {
+    return `<img class="space-photo-image" src="${escapeHTML(url)}" alt="" loading="lazy">`;
+  }
+
+  return escapeHTML(space?.symbol || '✳');
+}
+
 function homeSpacesHTML() {
   if (!state.user) return `<div class="empty-card"><div class="empty-illustration">✳</div><strong>Seu próximo lugar favorito começa aqui</strong><p>Entre na sua conta para criar espaços, conhecer pessoas e conversar.</p><button class="secondary-button" data-action="auth">Entrar ou criar conta</button></div>`;
   if (!state.spaces.length) return `<div class="empty-card"><div class="empty-illustration">✳</div><strong>Seus espaços começam aqui</strong><p>Crie um espaço ou entre em um para encontrar sua galera.</p><button class="secondary-button" data-action="create-space">Criar meu primeiro espaço</button><button class="text-button" data-action="discover">Tenho um código de convite</button></div>`;
-  return state.spaces.slice(0,3).map(space => `<article class="space-card" data-open-space="${space.id}" tabindex="0" role="button"><div class="space-card-top"><span class="space-card-icon">${escapeHTML(space.symbol || '✳')}</span><span class="space-card-arrow">↗</span></div><h3>${escapeHTML(space.name)}</h3><p>${escapeHTML(space.description || 'Um espaço para compartilhar e conversar.')}</p><div class="space-card-foot"><span class="member-dots"><i></i><i></i><i></i></span><span>Comunidade LUMI</span></div></article>`).join('');
+  return state.spaces.slice(0,3).map(space => `<article class="space-card" data-open-space="${space.id}" tabindex="0" role="button"><div class="space-card-top"><span class="space-card-icon ${space.image_url ? 'has-space-photo' : ''}">${spacePhotoContent(space)}</span><span class="space-card-arrow">↗</span></div><h3>${escapeHTML(space.name)}</h3><p>${escapeHTML(space.description || 'Um espaço para compartilhar e conversar.')}</p><div class="space-card-foot"><span class="member-dots"><i></i><i></i><i></i></span><span>Comunidade LUMI</span></div></article>`).join('');
 }
 
 async function loadSpaces() {
   if (!state.user) { state.spaces = []; state.activeSpace = null; renderSpaceNav(); return; }
-  const { data, error } = await supabase.from('space_members').select('space_id, role, spaces(id,name,description,symbol,invite_code,owner_id,created_at)').eq('user_id', state.user.id).order('joined_at', { ascending: false });
+  const { data, error } = await supabase.from('space_members').select('space_id, role, spaces(id,name,description,symbol,image_url,invite_code,owner_id,created_at)').eq('user_id', state.user.id).order('joined_at', { ascending: false });
   if (error) { console.error(error); toast('Não consegui carregar seus espaços. Confira se executou o SQL do LUMI.', 'error'); return; }
   state.spaces = (data || []).map(row => ({...row.spaces, role:row.role})).filter(Boolean);
   if (state.activeSpace && !state.spaces.some(s => s.id === state.activeSpace.id)) state.activeSpace = null;
@@ -196,16 +208,127 @@ async function loadProfile() {
   updateIdentity();
 }
 
+function validateSpacePhoto(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+    toast('Use uma imagem PNG, JPG, WEBP ou GIF.', 'error');
+    return false;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    toast('A foto do espaço precisa ter no máximo 5 MB.', 'error');
+    return false;
+  }
+  return true;
+}
+
+async function uploadSpacePhotoFile(spaceId, file) {
+  const ext = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif'
+  }[file.type];
+
+  if (!ext) return {url: null, error: 'Formato não aceito.'};
+
+  const path = `${state.user.id}/${spaceId}/${crypto.randomUUID()}.${ext}`;
+  const {error: uploadError} = await supabase.storage.from('space-photos')
+    .upload(path, file, {upsert: false, contentType: file.type, cacheControl: '3600'});
+
+  if (uploadError) {
+    console.error(uploadError);
+    return {url: null, error: uploadError.message};
+  }
+
+  const {data: publicData} = supabase.storage.from('space-photos').getPublicUrl(path);
+  const imageUrl = publicData?.publicUrl;
+  if (!imageUrl) return {url: null, error: 'Não consegui obter a URL da foto.'};
+
+  const {error} = await supabase.from('spaces')
+    .update({image_url: imageUrl}).eq('id', spaceId);
+
+  if (error) {
+    console.error(error);
+    return {url: null, error: error.message};
+  }
+  return {url: imageUrl, error: null};
+}
+
 async function createSpace(event) {
-  event.preventDefault(); if (!requireAuth()) return;
-  const name = $('#spaceName').value.trim(); const description = $('#spaceDescription').value.trim(); const symbol = $('#spaceEmoji').value || '✳';
-  if (name.length < 2) { toast('O nome precisa ter pelo menos 2 caracteres.', 'error'); return; }
-  const button = $('#spaceForm button[type="submit"]'); button.disabled = true; button.textContent = 'Criando...';
-  const { data, error } = await supabase.from('spaces').insert({name, description, symbol, owner_id:state.user.id}).select().single();
-  button.disabled = false; button.innerHTML = 'Criar espaço <span>→</span>';
-  if (error) { console.error(error); toast(`Não foi possível criar o espaço: ${error.message}`, 'error'); return; }
-  closeModal('spaceModal'); $('#spaceForm').reset(); $('#spaceEmoji').value = '✳'; $$('.symbol-choice').forEach((el,i)=>el.classList.toggle('selected',i===0));
-  await loadSpaces(); state.activeSpace = data; await loadWorkspace(data.id); toast('Espaço criado! Sua comunidade já tem um canal #geral.', 'success');
+  event.preventDefault();
+  if (!requireAuth()) return;
+
+  const name = $('#spaceName').value.trim();
+  const description = $('#spaceDescription').value.trim();
+  const symbol = $('#spaceEmoji').value || '✳';
+  const photo = $('#spacePhoto')?.files?.[0] || null;
+
+  if (name.length < 2) {
+    toast('O nome precisa ter pelo menos 2 caracteres.', 'error');
+    return;
+  }
+  if (photo && !validateSpacePhoto(photo)) return;
+
+  const button = $('#spaceForm button[type="submit"]');
+  button.disabled = true;
+  button.textContent = 'Criando...';
+
+  const {data, error} = await supabase.from('spaces')
+    .insert({name, description, symbol, owner_id: state.user.id})
+    .select().single();
+
+  if (error) {
+    button.disabled = false;
+    button.innerHTML = 'Criar espaço <span>→</span>';
+    console.error(error);
+    toast(`Não foi possível criar o espaço: ${error.message}`, 'error');
+    return;
+  }
+
+  const result = photo
+    ? await uploadSpacePhotoFile(data.id, photo)
+    : {url: null, error: null};
+
+  button.disabled = false;
+  button.innerHTML = 'Criar espaço <span>→</span>';
+  closeModal('spaceModal');
+  $('#spaceForm').reset();
+  $('#spaceEmoji').value = '✳';
+  $$('.symbol-choice').forEach((el, i) => el.classList.toggle('selected', i === 0));
+
+  await loadSpaces();
+  state.activeSpace = state.spaces.find(s => s.id === data.id)
+    || {...data, image_url: result.url, role: 'owner'};
+  await loadWorkspace(data.id);
+
+  if (photo && result.error) {
+    toast(`Espaço criado, mas a foto não foi salva: ${result.error}`, 'error');
+  } else {
+    toast('Espaço criado! Sua comunidade já tem um canal #geral.', 'success');
+  }
+}
+
+async function changeSpacePhoto(file) {
+  const space = state.activeSpace;
+  if (!file || !state.user || !space) return;
+  if (space.owner_id !== state.user.id) {
+    toast('Somente o dono pode trocar a foto.', 'error');
+    return;
+  }
+  if (!validateSpacePhoto(file)) return;
+
+  const result = await uploadSpacePhotoFile(space.id, file);
+  if (!result.url) {
+    toast(`Não consegui salvar a foto: ${result.error}`, 'error');
+    return;
+  }
+
+  const local = state.spaces.find(s => s.id === space.id);
+  if (local) local.image_url = result.url;
+  state.activeSpace.image_url = result.url;
+  renderSpaceNav();
+  if (state.page === 'home') renderHome();
+  else if (state.page === 'discover') await renderDiscover();
+  toast('Foto do espaço atualizada!', 'success');
 }
 
 async function loadWorkspace(spaceId, preferredChannel = null) {
@@ -642,10 +765,10 @@ async function renderDiscover() {
   $('.main-panel').classList.remove('workspace-mode'); $('.app-shell').classList.remove('workspace-mode','inbox-mode'); $('#crumbParent').textContent='LUMI';$('#crumbCurrent').textContent='Descobrir';
   $('#pageContent').innerHTML = `<section class="page-placeholder"><div class="eyebrow">ENCONTRE SUA GALERA</div><h1>Descobrir espaços</h1><p>Conheça comunidades novas ou entre em uma usando um código de convite.</p><div class="discover-search"><input id="discoverQuery" placeholder="Buscar por nome ou assunto..." value="${escapeHTML(state.search)}"><button class="primary-button" data-action="search-spaces">Buscar</button></div><div class="discover-results" id="discoverResults"><div class="empty-card"><strong>Carregando espaços...</strong></div></div><div class="notice-box">Tem um código de convite? <button class="text-button" data-action="invite">Use seu código →</button></div></section>`;
   if (!state.user) { $('#discoverResults').innerHTML = `<div class="empty-card"><strong>Entre para descobrir espaços</strong><p>Faça login para explorar e participar de comunidades.</p><button class="primary-button" data-action="auth">Entrar</button></div>`; return; }
-  const {data,error} = await supabase.from('spaces').select('id,name,description,symbol,invite_code,owner_id').order('created_at',{ascending:false}).limit(60);
+  const {data,error} = await supabase.from('spaces').select('id,name,description,symbol,image_url,invite_code,owner_id').order('created_at',{ascending:false}).limit(60);
   if (error) { $('#discoverResults').innerHTML = `<div class="empty-card"><strong>Não foi possível carregar</strong><p>${escapeHTML(error.message)}</p></div>`; return; }
   state.discoverSpaces = data || []; const joined = new Set(state.spaces.map(s=>s.id)); const results = (data||[]).filter(s=>!joined.has(s.id) && (`${s.name} ${s.description}`.toLowerCase().includes(state.search.toLowerCase())));
-  $('#discoverResults').innerHTML = results.length ? results.map(s=>`<article class="space-card"><div class="space-card-top"><span class="space-card-icon">${escapeHTML(s.symbol||'✳')}</span><span class="space-card-arrow">↗</span></div><h3>${escapeHTML(s.name)}</h3><p>${escapeHTML(s.description||'Uma comunidade LUMI.')}</p><button class="join-space-button" data-join-code="${escapeHTML(s.invite_code)}">Entrar no espaço +</button></article>`).join('') : `<div class="empty-card"><div class="empty-illustration">✳</div><strong>${state.search?'Nenhum espaço encontrado':'Você já está por dentro!'}</strong><p>${state.search?'Tente buscar por outro nome ou assunto.':'Crie um espaço e convide sua galera com um código.'}</p><button class="secondary-button" data-action="create-space">Criar espaço</button></div>`;
+  $('#discoverResults').innerHTML = results.length ? results.map(s=>`<article class="space-card"><div class="space-card-top"><span class="space-card-icon ${s.image_url ? 'has-space-photo' : ''}">${spacePhotoContent(s)}</span><span class="space-card-arrow">↗</span></div><h3>${escapeHTML(s.name)}</h3><p>${escapeHTML(s.description||'Uma comunidade LUMI.')}</p><button class="join-space-button" data-join-code="${escapeHTML(s.invite_code)}">Entrar no espaço +</button></article>`).join('') : `<div class="empty-card"><div class="empty-illustration">✳</div><strong>${state.search?'Nenhum espaço encontrado':'Você já está por dentro!'}</strong><p>${state.search?'Tente buscar por outro nome ou assunto.':'Crie um espaço e convide sua galera com um código.'}</p><button class="secondary-button" data-action="create-space">Criar espaço</button></div>`;
 }
 
 async function joinSpaceById(id) {
@@ -1361,5 +1484,29 @@ window.addEventListener('beforeunload', () => {
   if (v?.localStream) v.localStream.getTracks().forEach(track => track.stop());
   if (v) for (const item of v.peers.values()) {
     try { item.pc.close(); } catch {}
+  }
+});
+
+// LUMI_SPACE_PHOTOS_V1
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-action="change-space-photo"]');
+  if (!button) return;
+  event.preventDefault();
+
+  if (!state.user || state.activeSpace?.owner_id !== state.user.id) {
+    toast('Somente o dono pode trocar a foto.', 'error');
+    return;
+  }
+
+  const input = document.querySelector('#spacePhotoChange');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+});
+
+document.addEventListener('change', event => {
+  if (event.target.id === 'spacePhotoChange' && event.target.files?.[0]) {
+    changeSpacePhoto(event.target.files[0]);
   }
 });
