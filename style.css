@@ -1442,43 +1442,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   line-height: 1.5;
 }
 
-/* Layout estável: logos fixas e listas roláveis */
-.rail {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.rail > .brand-mark,
-.rail > .rail-rule,
-.rail > .rail-button,
-.rail > .rail-add,
-.rail > .rail-bottom {
-  flex-shrink: 0;
-}
-
-.brand-mark {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-}
-
-.brand-mark img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.rail-spaces {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-}
-
+/* FIX: logo e cabeçalho estáveis com muitos espaços */
 .space-sidebar {
   display: flex;
   flex-direction: column;
@@ -1495,6 +1459,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .wordmark {
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
   min-width: 0;
   white-space: nowrap;
 }
@@ -1512,18 +1477,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 }
 
 .spaces-directory {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  min-width: 0;
+  flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .space-list {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-height: 0;
-  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1532,21 +1496,38 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   flex: 0 0 auto;
 }
 
-@media (max-width: 600px) {
-  .rail {
-    height: 64px;
-    min-height: 0;
-    overflow: visible;
-  }
+/* FIX: impedir que muitos espaços espremam a logo */
+.rail {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
 }
-/* LUMI — corrigir fotos de perfil estreitas */
-.avatar-image {
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100%;
-  min-height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center;
+
+.rail > .brand-mark,
+.rail > .rail-rule,
+.rail > .rail-button,
+.rail > .rail-bottom {
   flex-shrink: 0;
+}
+
+.rail-spaces {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+.brand-mark {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
