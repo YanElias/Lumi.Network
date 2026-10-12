@@ -1531,3 +1531,29 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   height: 100%;
   object-fit: contain;
 }
+/* LUMI: mantém o avatar da mensagem com tamanho fixo */
+.message-avatar {
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  min-height: 35px !important;
+  max-width: 35px !important;
+  max-height: 35px !important;
+  flex: 0 0 35px !important;
+  align-self: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* A foto preenche apenas a moldura */
+.message-avatar > img.avatar-image {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  flex: none !important;
+}
