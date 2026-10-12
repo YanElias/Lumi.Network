@@ -1441,3 +1441,57 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* FIX: logo e cabeçalho estáveis com muitos espaços */
+.space-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-top {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.wordmark img {
+  display: block;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+}
+
+.wordmark .beta {
+  flex: 0 0 auto;
+}
+
+.spaces-directory {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.space-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebar-bottom {
+  flex: 0 0 auto;
+}
