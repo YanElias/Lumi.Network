@@ -6,7 +6,7 @@ RESOLVIDO: erro das reações
 
 RESOLVIDO: ligações não estão aparecendo nos espaços
 
-as fotos de perfil não cabem nas molduras direito (pessoas com TOC vão odiar isso)
+DANE SE AS PESSOA COM TOC: as fotos de perfil não cabem nas molduras direito (pessoas com TOC vão odiar isso) XXX
 
 RESOLVIDO: Colocar foto de perfil das pessoas na chamada
 
