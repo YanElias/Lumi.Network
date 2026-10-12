@@ -1495,3 +1495,39 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 .sidebar-bottom {
   flex: 0 0 auto;
 }
+
+/* FIX: impedir que muitos espaços espremam a logo */
+.rail {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rail > .brand-mark,
+.rail > .rail-rule,
+.rail > .rail-button,
+.rail > .rail-bottom {
+  flex-shrink: 0;
+}
+
+.rail-spaces {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+.brand-mark {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
