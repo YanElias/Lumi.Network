@@ -2574,36 +2574,3 @@ img.dm-avatar.avatar-image,
     transition-duration: .01ms !important;
   }
 }
-/* LUMI — Correção dos avatares da top bar e barra lateral */
-
-.top-avatar,
-.user-avatar {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    max-width: 36px !important;
-    max-height: 36px !important;
-    flex: 0 0 36px !important;
-    aspect-ratio: 1 / 1 !important;
-    overflow: hidden !important;
-    border-radius: 50% !important;
-}
-
-.top-avatar img,
-.user-avatar img,
-.top-avatar .avatar-image,
-.user-avatar .avatar-image {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-width: 0 !important;
-    min-height: 0 !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: cover !important;
-    object-position: center !important;
-    flex: none !important;
-    aspect-ratio: 1 / 1 !important;
-    border-radius: inherit !important;
-}
