@@ -8,7 +8,7 @@ RESOLVIDO: ligações não estão aparecendo nos espaços
 
 as fotos de perfil não cabem nas molduras direito (pessoas com TOC vão odiar isso)
 
-RESOLVENDO: Colocar foto de perfil das pessoas na chamada
+RESOLVIDO: Colocar foto de perfil das pessoas na chamada
 
 adicionar fotos nos espaços pra ficar bonito
 
