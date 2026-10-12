@@ -1539,3 +1539,19 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
     overflow: visible;
   }
 }
+/* Corrige imagens estreitas nos avatares do LUMI */
+.user-avatar img.avatar-image,
+.top-avatar img.avatar-image {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center;
+  display: block;
+  flex-shrink: 0;
+}
