@@ -1557,3 +1557,30 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   object-fit: cover !important;
   flex: none !important;
 }
+
+/* LUMI — correção específica dos avatares das DMs */
+.dm-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  flex: 0 0 36px !important;
+  align-self: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dm-avatar img,
+img.dm-avatar,
+.dm-avatar > .avatar-image {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  flex: none !important;
+}
