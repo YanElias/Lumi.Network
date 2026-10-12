@@ -1555,12 +1555,3 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   display: block;
   flex-shrink: 0;
 }
-
-/* Mantém a moldura quadrada e recorta o excesso */
-.user-avatar,
-.top-avatar {
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
