@@ -23,7 +23,7 @@
 - [x] Compartilhamento de tela
 - [x] Mensagens de áudio — sugestão de Fabrício (tester)
 - [x] Notificações no navegador enquanto o LUMI está aberto
-- [ ] Poder atender chamadas fora do app
+- [x] Notificação de chamada enquanto o LUMI está aberto (atender fora do app não é necessário por enquanto)
 - [x] Toque sonoro enquanto uma chamada de saída está chamando (toque simples gerado pelo navegador)
 - [x] Música personalizada ao iniciar uma chamada (arquivo de áudio escolhido pelo usuário, salvo neste navegador)
 - [x] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
@@ -43,10 +43,10 @@
 - [x] Adicionar uma aba de configurações
 - [x] Modo claro e modo escuro
 - [x] Temas personalizados (cores de destaque)
-- [ ] Tradução completa da interface para outros idiomas (mensagens escritas pelos usuários permanecem no idioma original)
+- [ ] Revisar e completar a tradução de toda a interface para inglês e espanhol (mensagens escritas pelos usuários permanecem no idioma original)
   - [x] Seletor de idioma: português (Brasil), inglês e espanhol
   - [x] Salvar a preferência de idioma neste navegador
-  - [x] Ampliar traduções das telas, botões e avisos; revisão visual completa ainda pendente
+  - [x] Ampliar traduções das telas, botões, amizades, status de jogos e avisos; revisão visual completa ainda pendente
 - [x] Alterar senha
 - [x] Recuperar conta por e-mail e definir uma nova senha após abrir o link
 
