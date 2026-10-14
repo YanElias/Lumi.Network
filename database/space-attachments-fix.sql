@@ -11,7 +11,7 @@ using (
     select 1
     from public.channels c
     join public.space_members sm on sm.space_id = c.space_id
-    where c.id::text = (storage.foldername(name))[1]
+    where c.id::text = (storage.foldername(objects.name))[1]
       and sm.user_id = (select auth.uid())
   )
 );
