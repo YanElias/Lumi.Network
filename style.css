@@ -2154,3 +2154,95 @@ html[data-theme="dark"] .space-manage-details[open] > summary {
   .space-entry { padding-top: 5px; padding-bottom: 5px; }
   .rail { padding-top: 14px; }
 }
+
+
+/* LUMI — navegação principal compacta, com ícones e dicas acessíveis */
+@media (min-width: 651px) {
+  .app-shell { grid-template-columns: 68px 254px minmax(420px,1fr) 286px; }
+  .rail {
+    padding: 16px 0 12px;
+    gap: 8px;
+  }
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    margin-bottom: 3px;
+  }
+  .rail-rule { margin: 2px 0 5px; }
+  .rail-button {
+    width: 44px;
+    min-height: 44px;
+    height: 44px;
+    gap: 0;
+    border-radius: 13px;
+    position: relative;
+  }
+  .rail-button .icon { font-size: 23px; line-height: 1; }
+  .rail-button small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .rail-button:hover::after,
+  .rail-button:focus-visible::after {
+    content: attr(title);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--ink);
+    box-shadow: 0 5px 18px #29291f18;
+    font: 600 11px 'DM Sans',sans-serif;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .rail-bottom { gap: 8px; }
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    margin-top: 2px;
+    position: relative;
+  }
+  .user-avatar:hover::after,
+  .user-avatar:focus-visible::after {
+    content: attr(title);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--ink);
+    box-shadow: 0 5px 18px #29291f18;
+    font: 600 11px 'DM Sans',sans-serif;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  html[data-theme="dark"] .rail-button:hover::after,
+  html[data-theme="dark"] .rail-button:focus-visible::after,
+  html[data-theme="dark"] .user-avatar:hover::after,
+  html[data-theme="dark"] .user-avatar:focus-visible::after {
+    background: #22231e;
+    color: #f1f0e8;
+    border-color: #38392f;
+  }
+}
+@media (max-width: 950px) and (min-width: 651px) {
+  .app-shell { grid-template-columns: 62px 220px minmax(320px,1fr); }
+}
