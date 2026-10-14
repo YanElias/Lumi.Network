@@ -6,17 +6,13 @@ RESOLVIDO: erro das reações
 
 RESOLVIDO: ligações não estão aparecendo nos espaços
 
-DANE SE AS PESSOA COM TOC: as fotos de perfil não cabem nas molduras direito (pessoas com TOC vão odiar isso) XXX
-
 RESOLVIDO: Colocar foto de perfil das pessoas na chamada
 
-adicionar fotos nos espaços pra ficar bonito
+RESOLVIDO: adicionar fotos nos espaços pra ficar bonito
 
 RESOLVIDO: os canais não aparecem no mobile
 
 RESOLVIDO: os espaços não aparecem no mobile
-
-## :
 
 
 ## Alguns adicionados pelo yago e por mim
