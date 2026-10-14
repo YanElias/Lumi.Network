@@ -2891,3 +2891,13 @@ html[data-streamer-mode="true"] .lumi-badge { visibility: hidden !important; }
 
 .creator-badge { display:inline-grid; place-items:center; min-width:16px; height:16px; padding:0 3px; border-radius:5px; background:#ef4444; color:#fff!important; font-size:10px; font-weight:900; vertical-align:middle; }
 html[data-theme="dark"] .creator-badge { background:#f05252; color:#fff!important; }
+
+
+html[data-streamer-mode="true"] .dm-conversation-copy strong,
+html[data-streamer-mode="true"] .dm-conversation-copy small,
+html[data-streamer-mode="true"] .dm-person-result .dm-avatar,
+html[data-streamer-mode="true"] .dm-chat-head .dm-avatar {
+  filter: blur(7px);
+  user-select: none;
+}
+#lumiCallRemoteAudio { display: none; }
