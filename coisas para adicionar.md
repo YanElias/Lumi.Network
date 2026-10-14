@@ -1,54 +1,41 @@
-## resolver bugs:
+## Resolver bugs
 
-RESOLVIDO: espaços no celular
+- [x] Espaços no celular
+- [x] Erro das reações
+- [x] Ligações não aparecem nos espaços
+- [x] Foto de perfil das pessoas na chamada
+- [x] Fotos nos espaços
+- [x] Canais não aparecem no mobile
+- [x] Espaços não aparecem no mobile
 
-RESOLVIDO: erro das reações
+## Funcionalidades para adicionar
 
-RESOLVIDO: ligações não estão aparecendo nos espaços
+### Comunicação e chamadas
+- [ ] Compartilhamento de tela
+- [ ] Mensagens de áudio — sugestão de Fabrício (tester)
+- [ ] Notificações
+- [ ] Poder atender chamadas fora do app
+- [ ] Música ao iniciar uma chamada
+- [ ] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
+  - [ ] O retorno automático deve parar quando a pessoa atender ou quando o usuário cancelar as tentativas.
+  - [ ] Se o modo **Não Perturbe** estiver ativado, não fazer retorno automático nem insistir em chamadas.
 
-RESOLVIDO: Colocar foto de perfil das pessoas na chamada
+### Perfil e contatos
+- [ ] Bloquear e desbloquear pessoas
+- [ ] Adicionar BIO ao perfil
+- [ ] Adicionar status
+- [ ] Card de contato (pesquisar referências e definir o visual)
+- [ ] Mostrar qual jogo a pessoa está jogando, como o Discord Rich Presence
 
-RESOLVIDO: adicionar fotos nos espaços pra ficar bonito
+### Configurações e personalização
+- [ ] Adicionar uma aba de configurações
+- [ ] Modo claro e modo escuro
+- [ ] Temas personalizados
+- [ ] Suporte a outros idiomas
+- [ ] Alterar senha
 
-RESOLVIDO: os canais não aparecem no mobile
-
-RESOLVIDO: os espaços não aparecem no mobile
-
-
-## Alguns adicionados pelo yago e por mim
-
-Colocar Compartilhamento de tela
-
-bloquear/desbloquear pessoas
-
-colocar temas no app
-
-modo escuro/claro
-
-adicionar a aba configurações
-
-adicionar um vip (que será cobrado por R$10)
-
-adicionar linguagens
-
-adicionar selo de tester e staff
-
-mudar senha
-
-adicionar BIO
-
-fazer o lumi mostrar o que você está jogando tipo o rpc do discord
-
-adicionar status
-
-card de contato (melhor pesquisar sobre)
-
-musica pra quando ligar
-
-notificações
-
-poder atender fora do app
-
-se não responder em 5s, o app vai chamar ele até ele responder (e pode personalizar a mensagem) = add por paulo vitor
-
-mensagens de audio = por fabricio (tester)
+### Comunidade e VIP
+- [ ] Selos de Tester e Staff
+- [ ] VIP por **R$ 10,00, pago uma única vez**
+  - Sem assinatura, mensalidade ou renovação automática.
+  - A compra deve liberar o VIP permanentemente para a conta.
