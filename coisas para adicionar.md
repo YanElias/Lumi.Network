@@ -44,7 +44,7 @@
   - [x] Salvar a preferência de idioma neste navegador
   - [ ] Completar as traduções das telas, botões e avisos restantes
 - [x] Alterar senha
-- [ ] Recuperar conta
+- [x] Recuperar conta por e-mail e definir uma nova senha após abrir o link
 
 ### Comunidade e VIP
 - [x] Selos de Tester e Staff
@@ -61,3 +61,4 @@
 - A atividade do perfil é manual; detectar automaticamente jogos/apps exige integração específica.
 - Música personalizada ao iniciar chamadas ainda não está implementada; por enquanto existe um toque simples de chamada.
 - A tradução da interface começou em português (Brasil), inglês e espanhol. Mensagens escritas pelos usuários não são traduzidas, e ainda faltam algumas strings das telas e avisos.
+- A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
