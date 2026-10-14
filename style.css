@@ -1567,9 +1567,26 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
     outline-offset: 2px;
 }
 
-/* A moldura não deve deformar nem reduzir a foto */
+/* Fotos de avatar: tamanho controlado pela moldura, sem esticar a imagem */
 img.dm-avatar.avatar-image {
-    display: block;
-    padding: 0;
-    object-fit: cover;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 0 !important;
+    flex-shrink: 0;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+/* Preserva os tamanhos usados em cada área das DMs */
+.dm-conversation-entry img.dm-avatar.avatar-image { width: 35px !important; height: 35px !important; }
+.dm-chat-head img.dm-avatar.avatar-image { width: 37px !important; height: 37px !important; }
+.dm-message-item img.dm-avatar.avatar-image { width: 27px !important; height: 27px !important; }
+.dm-chat-full .dm-chat-head img.dm-avatar.avatar-image { width: 40px !important; height: 40px !important; }
+.app-shell.inbox-mode #dmMobileConversationList img.dm-avatar.avatar-image { width: 43px !important; height: 43px !important; }
+@media (max-width: 760px) {
+    .dm-conversation-entry img.dm-avatar.avatar-image { width: 28px !important; height: 28px !important; }
 }
