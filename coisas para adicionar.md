@@ -110,3 +110,13 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [ ] **Rich Presence:** detectar automaticamente os jogos abertos; o status de jogo manual continua disponível.
 - [ ] **LUMI INFINITY — R$ 10,00, pagamento único:** integrar um provedor de pagamento e validar a compra no backend antes de liberar o VIP permanentemente. Sem assinatura ou renovação automática.
 - [ ] **Chamadas fora do app:** avaliar depois notificações push de chamadas com configuração VAPID e testes em HTTPS. Por enquanto, a notificação dentro do LUMI é suficiente.
+
+
+### Configurações avançadas de canais e cargos
+- [x] Adicionar categoria aos canais e salvar junto com nome/descrição
+- [x] Adicionar controles para mover canais para cima/baixo e salvar a ordem no banco
+- [ ] Agrupar visualmente canais por categoria na barra lateral
+- [ ] Configurar permissões específicas por canal (visualizar, escrever, anexar, reagir e conectar à voz), com validação segura no banco
+- [ ] Criar cargos personalizados e permissões granulares, incluindo moderador e desenvolvedor
+- [ ] Permitir configurar modo somente leitura, limite de envio e limite de participantes em voz
+- [ ] Testar a gestão de canais em desktop, celular e tema escuro
