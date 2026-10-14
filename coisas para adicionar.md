@@ -66,5 +66,7 @@
 
 - [x] Identidade visual fixa em amarelo; cores alternativas reservadas para uma futura funcionalidade VIP
 - [x] Ação de apagar espaço exclusiva para o dono, com confirmação digitada
-- [ ] Aplicar a migração de permissões de dono no Supabase e testar exclusão real de espaço
+- [x] Política de exclusão do dono confirmada no Supabase; canais, mensagens e membros relacionados usam exclusão em cascata
+- [x] Edição do nome e da descrição do espaço exclusiva para o dono
+- [ ] Testar edição e exclusão real de espaço com uma comunidade de teste
 - [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular
