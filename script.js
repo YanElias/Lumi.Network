@@ -1313,15 +1313,15 @@ function renderSettings() {
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Configurações';
   const theme = document.documentElement.dataset.theme || 'light';
   const dnd = getDoNotDisturb();
-  $('#pageContent').innerHTML = \`
+  $('#pageContent').innerHTML = `
     <section class="page-placeholder settings-page">
       <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
       <p>Personalize sua experiência e cuide da sua conta.</p>
-      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" \${theme==='light'?'selected':''}>Claro</option><option value="dark" \${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
-      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI não deve insistir com retornos automáticos de chamadas. As próximas funções de chamada usarão esta preferência.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" \${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI não deve insistir com retornos automáticos de chamadas. As próximas funções de chamada usarão esta preferência.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
       <p class="settings-help">Tema e Não Perturbe são salvos neste navegador e ainda não sincronizam entre dispositivos.</p>
-    </section>\`;
+    </section>`;
 }
 async function changeAccountPassword(event) {
   event.preventDefault();
@@ -1338,7 +1338,7 @@ async function changeAccountPassword(event) {
   if (verified.error) { button.disabled=false; button.textContent='Atualizar senha'; toast('A senha atual está incorreta.','error'); return; }
   const changed = await supabase.auth.updateUser({password:next});
   button.disabled=false; button.textContent='Atualizar senha';
-  if (changed.error) { toast(\`Não foi possível alterar a senha: \${changed.error.message}\`,'error'); return; }
+  if (changed.error) { toast(`Não foi possível alterar a senha: ${changed.error.message}`,'error'); return; }
   $('#passwordChangeForm').reset(); toast('Senha alterada com sucesso!','success');
 }
 
