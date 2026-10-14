@@ -147,3 +147,7 @@ CONFIGURAÇÕES, BIO E PREFERÊNCIAS — NOVO
 - Tema e Não Perturbe ficam salvos no navegador atual; por enquanto não sincronizam entre dispositivos.
 - Para habilitar a BIO no banco existente, execute database/profile-settings.sql no SQL Editor do Supabase.
 - Não Perturbe é a preferência que as próximas funções de retorno automático de chamadas devem respeitar. O retorno automático de chamadas ainda não existe nesta versão.
+
+- O retorno automático tenta novamente após 5 segundos enquanto a chamada continuar sem resposta; ele para quando a chamada é atendida, encerrada ou o destinatário ativa Não Perturbe.
+- Para usar status, atividade, Não Perturbe sincronizado e bloqueios, execute database/lumi-feature-pack.sql no Supabase.
+- Os selos de Tester e Staff são controlados por listas de UUIDs no início de script.js; elas estão vazias por padrão para evitar que usuários se promovam sozinhos.
