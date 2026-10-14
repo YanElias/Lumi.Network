@@ -2021,3 +2021,7 @@ document.addEventListener('change', event => {
   }
 });
 document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
+
+
+// A tela de carregamento só fecha quando a inicialização principal termina sem erro.
+window.dispatchEvent(new Event('lumi:app-ready'));
