@@ -2748,3 +2748,30 @@ html[data-theme="dark"] .channel-entry-actions button:hover {
   .channel-entry-actions { opacity: 1; }
   .channel-entry-actions button { width: 28px; height: 32px; }
 }
+
+
+/* LUMI channel management: visible and easy to reach on desktop and mobile */
+.channel-entry-actions { opacity: 1 !important; visibility: visible !important; display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+.channel-entry-actions button { display: grid; place-items: center; width: 29px; height: 31px; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.channel-entry-actions button:hover { background: var(--yellow-pale); border-color: #eadb92; color: #806500; }
+.channel-entry-row { display: flex; align-items: center; gap: 3px; width: 100%; min-width: 0; }
+.channel-entry-row > .channel-entry { flex: 1 1 auto; min-width: 0; }
+.channel-header-actions { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.channel-header-actions .secondary-button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 11px; }
+.channel-header-actions .material-symbols-rounded { font-size: 16px; }
+.channel-delete-button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #f0d7d4; border-radius: 10px; background: #fff8f7; color: #b44e46; }
+.channel-delete-button:hover { background: #fce7e5; }
+html[data-theme="dark"] .channel-entry-actions button { color: #c2c1b5; }
+html[data-theme="dark"] .channel-entry-actions button:hover { background: var(--accent-pale, #343324); border-color: #5a5534; color: var(--accent, #f4d84b); }
+html[data-theme="dark"] .channel-delete-button { background: #352322; border-color: #63403d; color: #ffaaa2; }
+html[data-theme="dark"] .channel-delete-button:hover { background: #4a2927; }
+@media (max-width: 600px) {
+  #mobileChannelsList .channel-entry-row { width: 100%; max-width: 100%; }
+  #mobileChannelsList .channel-entry-row > .channel-entry { max-width: none; flex: 1 1 auto; }
+  #mobileChannelsList .channel-entry-actions { opacity: 1 !important; }
+  #mobileChannelsList .channel-entry-actions button { width: 30px; height: 34px; }
+  .channel-chat-head { align-items: flex-start; }
+  .chat-head-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .channel-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .channel-header-actions .secondary-button { padding: 7px 8px; }
+}
