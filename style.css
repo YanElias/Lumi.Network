@@ -1847,3 +1847,42 @@ html[data-accent="blue"] .settings-toggle input:checked + .settings-toggle-track
 .auth-forgot-password { display:block; margin:10px auto 0; padding:6px 10px; }
 .auth-forgot-password[hidden] { display:none!important; }
 #passwordRecoveryForm .form-error:empty { display:none; }
+
+/* LUMI — tipografia padrão em toda a interface; preserva a fonte dos ícones */
+html, body, body *:not(.material-symbols-rounded):not(.material-icons):not(.material-icons-round):not(.material-symbols-outlined):not(.material-symbols-sharp) {
+  font-family: 'DM Sans', sans-serif !important;
+}
+/* LUMI — cartão de contato interativo */
+.lumi-contact-details { min-width:0; overflow-wrap:anywhere; }
+.lumi-contact-copy { margin-top:9px; padding:6px 10px; border:1px solid var(--line); border-radius:9px; background:var(--accent-pale); color:var(--accent-strong); font:inherit; font-size:12px; font-weight:700; }
+.lumi-contact-copy:hover { filter:brightness(.97); }
+.lumi-contact-copy:disabled { opacity:.5; cursor:not-allowed; }
+html[data-theme="dark"] .lumi-contact-copy { background:var(--accent-soft); color:var(--ink); border-color:var(--line); }
+/* Complementos do tema escuro para cartões e controles que surgem dinamicamente */
+html[data-theme="dark"] .lumi-contact-copy,
+html[data-theme="dark"] .dm-file-card,
+html[data-theme="dark"] .channel-entry,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .discover-card,
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .profile-form,
+html[data-theme="dark"] .profile-preview-card,
+html[data-theme="dark"] .settings-page .settings-card,
+html[data-theme="dark"] .notification-item,
+html[data-theme="dark"] .search-result,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .popover,
+html[data-theme="dark"] .modal-card {
+  border-color: var(--line);
+}
+html[data-theme="dark"] .dm-file-card,
+html[data-theme="dark"] .notification-item,
+html[data-theme="dark"] .search-result,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .popover {
+  background: var(--white);
+  color: var(--ink);
+}
+html[data-theme="dark"] .dm-file-card small,
+html[data-theme="dark"] .notification-item small,
+html[data-theme="dark"] .search-result small { color: var(--muted); }
