@@ -1,4 +1,4 @@
-import { supabase } from './database/supabase.js';
+
 
 const $ = (s, root=document) => root.querySelector(s);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -36,7 +36,7 @@ function installStyles() {
     .lumi-assistant-form input,.lumi-gif-search{min-width:0;flex:1;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:11px;padding:10px;background:var(--surface,#fff);color:inherit}
     .lumi-assistant-form button,.lumi-gif-search-button{border:0;border-radius:11px;padding:0 13px;background:var(--accent,#ffd83d);color:#191919;font-weight:700;cursor:pointer}
     .lumi-gif-button{flex:0 0 auto;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:12px;background:var(--surface,#fff);color:inherit;padding:0 11px;cursor:pointer;font-weight:800}
-    .lumi-gif-panel{position:absolute;bottom:calc(100% + 10px);left:8px;width:min(340px,calc(100vw - 48px));max-height:360px;overflow:auto;padding:12px;border:1px solid var(--line,rgba(0,0,0,.15));border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);box-shadow:0 12px 35px #0003;z-index:30}
+    #dmMessageForm{position:relative}.lumi-gif-panel{position:absolute;bottom:calc(100% + 10px);left:8px;width:min(340px,calc(100vw - 48px));max-height:360px;overflow:auto;padding:12px;border:1px solid var(--line,rgba(0,0,0,.15));border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);box-shadow:0 12px 35px #0003;z-index:30}
     .lumi-gif-panel form{display:flex;gap:7px;margin:9px 0}
     .lumi-gif-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .lumi-gif-results button{padding:3px;overflow:hidden}
