@@ -2901,3 +2901,49 @@ html[data-streamer-mode="true"] .dm-chat-head .dm-avatar {
   user-select: none;
 }
 #lumiCallRemoteAudio { display: none; }
+
+
+/* LUMI — refinamento final das superfícies e estados interativos */
+:root {
+  --lumi-focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent, #ffd83d) 36%, transparent);
+}
+:where(button, a, input, textarea, select, summary):focus-visible {
+  outline: none;
+  box-shadow: var(--lumi-focus-ring);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --lumi-dark-surface: #191a1f;
+  --lumi-dark-raised: #202127;
+  --lumi-dark-input: #15161a;
+  --lumi-dark-line: rgba(255,255,255,.11);
+}
+html[data-theme="dark"] :is(.settings-card, .feature-card, .space-card, .empty-card, .tip-card, .stat-card, .dm-chat-panel, .dm-mobile-inbox, .dm-conversation-list, .dm-message-list, .dm-composer, .modal-card, .lumi-contact-card, .dm-file-card, .lumi-active-call-dock) {
+  background-color: var(--lumi-dark-surface);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(input, textarea, select, .form-input, .global-search input, .sidebar-search input) {
+  background-color: var(--lumi-dark-input);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(.secondary-button, .icon-button, .dm-attach-button, .lumi-gif-button, .dm-call-controls .icon-button) {
+  background-color: var(--lumi-dark-raised);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(.dm-message-item, .dm-message-body, .dm-message-meta, .dm-chat-head, .settings-card-content p, .settings-help, .dm-attachment-hint) {
+  color: var(--text, #e9e9ed);
+}
+html[data-theme="dark"] :is(.dm-message-text, .lumi-assistant-msg, .channel-empty-hint, .dm-empty-small) {
+  background-color: var(--lumi-dark-raised);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] .dm-message-item.mine .dm-message-text {
+  background: color-mix(in srgb, var(--accent, #ffd83d) 17%, #202127);
+}
+@media (max-width: 600px) {
+  .lumi-active-call-dock { max-width: calc(100vw - 20px); }
+  .lumi-active-call-dock .secondary-button { padding: 8px 10px; }
+}
