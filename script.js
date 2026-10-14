@@ -1184,7 +1184,7 @@ async function createCallPeer(recipientId, conversationId, mode) {
   state.callPC=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
   state.callPC.ontrack=e=>{ e.streams[0]?.getTracks().forEach(t=>{if(!state.callRemoteStream.getTracks().some(x=>x.id===t.id))state.callRemoteStream.addTrack(t);}); attachCallMedia(); };
   state.callPC.onicecandidate=e=>{ if(e.candidate && state.callPeerId && state.callConversationId) sendCallSignal(state.callPeerId,state.callConversationId,'ice',e.candidate.toJSON()).catch(err=>console.warn('ICE:',err.message)); };
-  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')stopLumiCallTone();if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
+  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')stopLumiCallTone();if(status==='failed')stopLumiCallTone();if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
   state.callLocalStream=await navigator.mediaDevices.getUserMedia({audio:true,video:mode==='video'});
   state.callLocalStream.getTracks().forEach(track=>state.callPC.addTrack(track,state.callLocalStream));
   attachCallMedia(); showCallStage();
