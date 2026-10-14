@@ -1589,6 +1589,34 @@ async function handleAuth(event) {
   if(state.authMode==='signup' && !result.data.session){errorBox.textContent='Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre no LUMI.';return;}
   state.user=result.data.user;closeModal('authModal');await onSessionChange(state.user);toast(state.authMode==='signup'?'Sua conta LUMI está pronta!':'Que bom ter você de volta!','success');
 }
+async function requestPasswordRecovery() {
+  const email = $('#authEmail').value.trim();
+  const errorBox = $('#authError');
+  const button = $('#forgotPasswordButton');
+  if (!email) { errorBox.textContent = 'Digite seu e-mail primeiro para receber o link de recuperação.'; $('#authEmail').focus(); return; }
+  if (state.authMode === 'signup') setAuthMode('signin');
+  button.disabled = true; button.textContent = 'Enviando link...'; errorBox.textContent = '';
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  button.disabled = false; button.textContent = 'Esqueci minha senha';
+  if (error) { errorBox.textContent = 'Não consegui enviar o link. Confira o e-mail e as URLs permitidas nas configurações de autenticação do Supabase.'; console.error('Falha ao solicitar recuperação de senha:', error.message); return; }
+  errorBox.textContent = 'Se esse e-mail estiver cadastrado, você receberá um link para criar uma nova senha. Confira também o spam.';
+}
+async function saveRecoveredPassword(event) {
+  event.preventDefault();
+  const password = $('#recoveryNewPassword').value;
+  const confirmation = $('#recoveryConfirmPassword').value;
+  const errorBox = $('#recoveryPasswordError');
+  const button = $('#passwordRecoveryForm button[type="submit"]');
+  errorBox.textContent = '';
+  if (password.length < 6) { errorBox.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; return; }
+  if (password !== confirmation) { errorBox.textContent = 'As senhas não correspondem.'; return; }
+  button.disabled = true; button.textContent = 'Salvando...';
+  const { error } = await supabase.auth.updateUser({ password });
+  button.disabled = false; button.innerHTML = 'Salvar nova senha <span>→</span>';
+  if (error) { errorBox.textContent = 'Não consegui alterar a senha. Solicite um novo link de recuperação e tente novamente.'; console.error('Falha ao salvar a senha recuperada:', error.message); return; }
+  $('#passwordRecoveryForm').reset(); closeModal('passwordRecoveryModal'); closeModal('authModal');
+  toast('Senha alterada! Você já pode entrar na sua conta.', 'success');
+}
 function authErrorMessage(error){const msg=error.message||'';if(msg.includes('Invalid login credentials'))return 'E-mail ou senha incorretos.';if(msg.includes('already registered'))return 'Este e-mail já tem uma conta. Tente entrar.';if(msg.includes('Password should be'))return 'A senha precisa ter pelo menos 6 caracteres.';return msg;}
 async function onSessionChange(user) {
   if (state.user?.id && state.user.id !== user?.id) { if(state.callRealtime){await supabase.removeChannel(state.callRealtime);state.callRealtime=null;} await cleanupCall(false); }
@@ -1686,6 +1714,8 @@ document.addEventListener('click', async event=>{
 });
 
 $('#authForm').addEventListener('submit',handleAuth);
+$('#forgotPasswordButton')?.addEventListener('click', requestPasswordRecovery);
+$('#passwordRecoveryForm')?.addEventListener('submit', saveRecoveredPassword);
 document.addEventListener('change',async e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
@@ -1728,7 +1758,7 @@ setDoNotDisturb(getDoNotDisturb());
 const {data:{session}}=await supabase.auth.getSession();
 await onSessionChange(session?.user || null);
 if (state.user) ensureCallSignalSubscription();
-supabase.auth.onAuthStateChange((_event,session)=>{if(session?.user?.id!==state.user?.id)queueMicrotask(()=>onSessionChange(session?.user||null));});
+supabase.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY')queueMicrotask(()=>openModal('passwordRecoveryModal'));if(session?.user?.id!==state.user?.id)queueMicrotask(()=>onSessionChange(session?.user||null));});
 if(!state.user){setAuthMode('signin');}
 
 
