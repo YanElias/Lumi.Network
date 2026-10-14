@@ -16,7 +16,7 @@ function avatar(person={}) {
     : `<span class="lumi-friend-avatar lumi-friend-avatar-fallback">${esc(name.trim().slice(0,1).toUpperCase()||'?')}</span>`;
 }
 function personRow(person, action='') {
-  return `<div class="lumi-friend-row">${avatar(person)}<span class="lumi-friend-person"><strong>${esc(person.display_name||person.username||'Pessoa LUMI')}</strong><small>@${esc(person.username||'lumi-user')}</small></span>${action}</div>`;
+  return `<div class="lumi-friend-row">${avatar(person)}<span class="lumi-friend-person"><strong>${esc(person.display_name||person.username||'Pessoa LUMI')}</strong><small>@${esc(person.username||'lumi-user')}</small>${person.activity_text?`<small class="lumi-friend-activity">🎮 ${esc(person.activity_text)}</small>`:''}</span>${action}</div>`;
 }
 function getRelationship(id) {
   return requests.find(r => (r.sender_id===id&&r.recipient_id===user?.id)||(r.sender_id===user?.id&&r.recipient_id===id));
@@ -55,7 +55,7 @@ async function searchPeople() {
   if(q.length<2){$('#lumiFriendSearchResults').innerHTML='<p class="lumi-friend-muted">Digite pelo menos 2 caracteres.</p>';return;}
   $('#lumiFriendSearchResults').innerHTML='<p class="lumi-friend-muted">Buscando pessoas…</p>';
   const clean=q.replace(/[,%()]/g,'');
-  const {data,error}=await supabase.from('profiles').select('id,username,display_name,avatar_url').neq('id',user.id).or(`username.ilike.%${clean}%,display_name.ilike.%${clean}%`).limit(12);
+  const {data,error}=await supabase.from('profiles').select('id,username,display_name,avatar_url,activity_text').neq('id',user.id).or(`username.ilike.%${clean}%,display_name.ilike.%${clean}%`).limit(12);
   if(error){$('#lumiFriendSearchResults').innerHTML='<p class="lumi-friend-muted">Não foi possível buscar pessoas.</p>';return;}
   searchResults=data||[];
   renderSearch();
