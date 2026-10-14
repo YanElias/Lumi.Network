@@ -2513,3 +2513,40 @@ html[data-theme="dark"] .app-shell .global-search kbd {
   color: #f1f0e8 !important;
   border-color: #38392f !important;
 }
+
+
+/* LUMI — seletor personalizado de tipo de canal */
+.lumi-select{position:relative;width:100%;margin:0 0 17px}
+.lumi-select-trigger{width:100%;min-height:47px;display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid #e9e7dc;border-radius:12px;background:#fdfdfa;color:var(--ink);text-align:left;transition:border-color .16s,box-shadow .16s,background .16s}
+.lumi-select-trigger:hover,.lumi-select-trigger[aria-expanded="true"]{border-color:#e2c43b;background:#fffef8}
+.lumi-select-trigger:focus-visible{outline:3px solid #ffd83d55;outline-offset:2px}
+.lumi-select-leading{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:#fff2b6;color:#8f7100;font-size:19px;font-weight:800}
+.lumi-select-leading.material-symbols-rounded{font-size:19px}
+.lumi-select-value{flex:1;font-size:12px;font-weight:700}
+.lumi-select-chevron{font-size:20px;color:#9a9889;transition:transform .16s}
+.lumi-select-trigger[aria-expanded="true"] .lumi-select-chevron{transform:rotate(180deg)}
+.lumi-select-menu{position:absolute;z-index:1200;top:calc(100% + 6px);left:0;right:0;padding:6px;border:1px solid #e9e5d5;border-radius:14px;background:#fff;box-shadow:0 16px 40px #29291f1c;animation:lumiSelectIn .14s ease}
+.lumi-select-menu[hidden]{display:none!important}
+.lumi-select-option{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);text-align:left}
+.lumi-select-option:hover,.lumi-select-option:focus-visible{outline:none;background:#fffbed;border-color:#f0e3a6}
+.lumi-select-option.selected{background:#fff8d7;border-color:#f0df8c}
+.lumi-select-option-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:9px;background:#f5f2e6;color:#77715a;font-size:18px;font-weight:800}
+.lumi-select-option[data-value="voice"] .lumi-select-option-icon{background:#e9f4ec;color:#3d8058}
+.lumi-select-option>span:nth-child(2){display:grid;gap:3px;flex:1;min-width:0}
+.lumi-select-option strong{font-size:11px;font-weight:800}
+.lumi-select-option small{font-size:10px;color:#969487}
+.lumi-select-check{font-size:18px;color:#9d7c00;opacity:0}
+.lumi-select-option.selected .lumi-select-check{opacity:1}
+.lumi-native-select{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important;pointer-events:none!important}
+@keyframes lumiSelectIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+html[data-theme="dark"] .lumi-select-trigger{background:#171812;color:#f1f0e8;border-color:#414237}
+html[data-theme="dark"] .lumi-select-trigger:hover,html[data-theme="dark"] .lumi-select-trigger[aria-expanded="true"]{background:#20211b;border-color:#8c782d}
+html[data-theme="dark"] .lumi-select-leading{background:#302d1c;color:#ffe47a}
+html[data-theme="dark"] .lumi-select-menu{background:#20211b;border-color:#414237;box-shadow:0 16px 40px #0005}
+html[data-theme="dark"] .lumi-select-option{color:#f1f0e8}
+html[data-theme="dark"] .lumi-select-option:hover,html[data-theme="dark"] .lumi-select-option:focus-visible{background:#292a23;border-color:#414237}
+html[data-theme="dark"] .lumi-select-option.selected{background:#302d1c;border-color:#62552a}
+html[data-theme="dark"] .lumi-select-option-icon{background:#292a23;color:#d7d5c8}
+html[data-theme="dark"] .lumi-select-option[data-value="voice"] .lumi-select-option-icon{background:#1d3427;color:#a5d6b4}
+html[data-theme="dark"] .lumi-select-option small{color:#b9b8aa}
+@media(prefers-reduced-motion:reduce){.lumi-select-menu{animation:none}.lumi-select-chevron{transition:none}}
