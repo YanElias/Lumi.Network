@@ -1442,7 +1442,7 @@ function dmMessagesHTML() {
     if (m.content?.startsWith('LUMI_CONTACT:')) {
       try {
         const card = JSON.parse(m.content.slice('LUMI_CONTACT:'.length));
-        contactCard = '<div class="lumi-contact-card"><div class="lumi-contact-icon">' + escapeHTML(initials(card.name || 'LUMI')) + '</div><div><strong>' + escapeHTML(card.name || 'Contato LUMI') + '</strong><small>@' + escapeHTML(card.username || 'lumi-user') + '</small>' + (card.bio ? '<p>' + escapeHTML(card.bio) + '</p>' : '') + '</div></div>';
+        contactCard = '<div class="lumi-contact-card"><div class="lumi-contact-icon">' + escapeHTML(initials(card.name || 'LUMI')) + '</div><div class="lumi-contact-details"><strong>' + escapeHTML(card.name || 'Contato LUMI') + '</strong><small>@' + escapeHTML(card.username || 'lumi-user') + '</small>' + (card.bio ? '<p>' + escapeHTML(card.bio) + '</p>' : '') + '<button type="button" class="lumi-contact-copy" data-copy-contact="' + escapeHTML(card.username || '') + '" ' + (card.username ? '' : 'disabled') + '>Copiar usuário</button></div></div>';
       } catch {}
     }
     const image = m.attachment_type?.startsWith('image/') && m.attachment_url ? '<a class="dm-image-link" href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHTML(m.attachment_url) + '" alt="' + escapeHTML(m.attachment_name || 'Imagem compartilhada') + '"></a>' : '';
@@ -1715,6 +1715,26 @@ document.addEventListener('click', async event=>{
 
 $('#authForm').addEventListener('submit',handleAuth);
 $('#forgotPasswordButton')?.addEventListener('click', requestPasswordRecovery);
+document.addEventListener('click', async event => {
+  const button = event.target.closest('[data-copy-contact]');
+  if (!button) return;
+  const username = button.dataset.copyContact;
+  if (!username) return;
+  try {
+    await navigator.clipboard.writeText('@' + username);
+    toast('Usuário copiado!', 'success');
+  } catch {
+    const field = document.createElement('textarea');
+    field.value = '@' + username;
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.append(field);
+    field.select();
+    const copied = document.execCommand('copy');
+    field.remove();
+    toast(copied ? 'Usuário copiado!' : 'Não consegui copiar o usuário.', copied ? 'success' : 'error');
+  }
+});
 $('#passwordRecoveryForm')?.addEventListener('submit', saveRecoveredPassword);
 document.addEventListener('change',async e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
