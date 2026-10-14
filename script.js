@@ -1143,7 +1143,30 @@ async function sendCallSignal(recipientId, conversationId, type, payload={}) {
     if (pushError) console.warn('Notificação push de chamada não enviada:', pushError.message);
   }
 }
-function callStatus(text) { const el=$('#dmCallStatus'); if(el) el.textContent=text; }
+function ensureCallDock() {
+  let dock = document.getElementById('lumiActiveCallDock');
+  if (dock) return dock;
+  dock = document.createElement('aside');
+  dock.id = 'lumiActiveCallDock';
+  dock.className = 'lumi-active-call-dock';
+  dock.hidden = true;
+  dock.setAttribute('aria-live', 'polite');
+  dock.innerHTML = `<span class="lumi-active-call-dot"></span><div class="lumi-active-call-copy"><strong id="lumiActiveCallTitle">Chamada em andamento</strong><small id="lumiActiveCallStatus">Conectando…</small></div><button type="button" class="secondary-button" data-call-dock-return>Voltar à chamada</button><button type="button" class="dm-hangup" data-call-control="hangup" title="Desligar" aria-label="Desligar chamada"><span class="material-symbols-rounded">call_end</span></button>`;
+  document.body.appendChild(dock);
+  return dock;
+}
+function updateCallDock() {
+  const dock = ensureCallDock();
+  dock.hidden = state.callStatus === 'idle' && !state.pendingCallOffer;
+  const title = document.getElementById('lumiActiveCallTitle');
+  const status = document.getElementById('lumiActiveCallStatus');
+  if (title) title.textContent = state.callMode === 'video' ? 'Chamada de vídeo' : 'Chamada de voz';
+  if (status) status.textContent = document.getElementById('dmCallStatus')?.textContent || (state.callStatus === 'calling' ? 'Chamando…' : 'Chamada em andamento');
+}
+function callStatus(text) {
+  const el=$('#dmCallStatus'); if(el) el.textContent=text;
+  if (document.getElementById('lumiActiveCallDock')) updateCallDock();
+}
 function ensureCallAvatarStyles() {
   if ($('#lumiCallAvatarStyles')) return;
 
@@ -1344,6 +1367,7 @@ function showCallStage() {
   renderCallParticipants();
   updateCallVideoCards();
   stage.hidden = false;
+  updateCallDock();
 }
 let dmVoiceMeter = { context: null, timer: null, local: null, remote: null };
 function monitorDMCallVoice() {
@@ -1631,8 +1655,6 @@ async function startCall(mode) {
     await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode,retryMessage:getCallRetryMessage()});
     scheduleCallRetry();
     toast(mode==='video'?'Ligação de vídeo iniciada.':'Ligação de voz iniciada.','success');
-    await navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => stream.getTracks().forEach(track => track.stop()));
 } catch(error) {
   console.error(error);
 
@@ -1660,7 +1682,10 @@ async function checkPendingIncomingCall() {
 }
 async function handleCallSignal(signal) {
   if(!signal || signal.sender_id===state.user?.id)return;
-  if(signal.signal_type==='ice' && state.pendingCallOffer?.conversation_id===signal.conversation_id && !state.callPC){state.pendingIceSignals.push(signal.payload);return;}
+  if (signal.signal_type === 'ice' && !state.callPC) {
+    if (signal.payload) state.pendingIceSignals.push({conversation_id: signal.conversation_id, sender_id: signal.sender_id, candidate: signal.payload});
+    return;
+  }
   if(signal.signal_type==='offer') {
     const blocked=await isUserBlocked(signal.sender_id);
     const {data:myPrefs}=await supabase.from('profiles').select('do_not_disturb').eq('id',state.user.id).maybeSingle();
@@ -1678,7 +1703,7 @@ async function handleCallSignal(signal) {
   if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId || !state.callPC)return;
   try {
     if(signal.signal_type==='answer' && state.callPC.signalingState==='have-local-offer') { clearTimeout(state.callRetryTimer); state.callRetryTimer=null; await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload)); await flushPendingIce(); }
-    else if(signal.signal_type==='ice' && signal.payload) { if(!state.callPC.remoteDescription){state.pendingIceSignals.push(signal.payload);}else{try{await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload));}catch(err){console.warn('Candidato ICE ignorado:',err.message);}} }
+    else if(signal.signal_type==='ice' && signal.payload) { if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId)return; if(!state.callPC.remoteDescription){state.pendingIceSignals.push(signal.payload);}else{try{await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload));}catch(err){console.warn('Candidato ICE ignorado:',err.message);}} }
     else if(signal.signal_type==='end') await cleanupCall(false);
   } catch(error) { console.error(error); callStatus('Erro ao conectar a chamada.'); }
 }
@@ -1701,9 +1726,16 @@ async function acceptIncomingCall() {
   } catch(error) { console.error(error); await cleanupCall(false); toast(`Não consegui atender: ${error.message||error}. Verifique as permissões e o SQL de chamadas.`, 'error'); }
 }
 async function flushPendingIce() {
-  if(!state.callPC?.remoteDescription || !state.pendingIceSignals.length)return;
-  const candidates=state.pendingIceSignals.splice(0);
-  for(const candidate of candidates){try{await state.callPC.addIceCandidate(new RTCIceCandidate(candidate));}catch(error){console.warn('Candidato ICE pendente ignorado:',error.message);}}
+  if (!state.callPC?.remoteDescription || !state.pendingIceSignals.length) return;
+  const pending = state.pendingIceSignals.splice(0);
+  for (const entry of pending) {
+    const candidate = entry?.candidate || entry;
+    if (entry?.conversation_id && entry.conversation_id !== state.callConversationId) continue;
+    if (entry?.sender_id && entry.sender_id !== state.callPeerId) continue;
+    if (!candidate) continue;
+    try { await state.callPC.addIceCandidate(new RTCIceCandidate(candidate)); }
+    catch (error) { console.warn('Candidato ICE pendente ignorado:', error.message); }
+  }
 }
 async function declineIncomingCall() {
   const offer=state.pendingCallOffer; const layer=$('#lumiIncomingCall'); if(layer)layer.hidden=true;
@@ -1719,6 +1751,7 @@ async function cleanupCall(notifyPeer=true) {
   state.callLocalStream?.getTracks().forEach(t=>t.stop()); state.callRemoteStream?.getTracks().forEach(t=>t.stop());
   clearInterval(dmVoiceMeter.timer); dmVoiceMeter.context?.close().catch(()=>{}); dmVoiceMeter={context:null,timer:null,local:null,remote:null};
   state.callPC=null;state.callLocalStream=null;state.callRemoteStream=null;state.callPeerId=null;state.callConversationId=null;state.callStatus='idle';state.pendingIceSignals=[];state.callMuted=false;state.callVideoEnabled=true;state.pendingCallOffer=null;
+  const dock=document.getElementById('lumiActiveCallDock');if(dock)dock.hidden=true;
   const stage=$('#dmCallStage'); if(stage)stage.hidden=true;
   const local=$('#dmLocalVideo'),remote=$('#dmRemoteVideo');if(local)local.srcObject=null;if(remote)remote.srcObject=null;
   const layer=$('#lumiIncomingCall');if(layer)layer.hidden=true;
@@ -2037,6 +2070,11 @@ document.addEventListener('click', async event=>{
 $('#authForm').addEventListener('submit',handleAuth);
 $('#forgotPasswordButton')?.addEventListener('click', requestPasswordRecovery);
 document.addEventListener('click', async event => {
+  const dockReturn = event.target.closest('[data-call-dock-return]');
+  if (dockReturn) {
+    if (state.activeConversation) { setPage('inbox'); setTimeout(() => { showCallStage(); updateCallDock(); }, 500); }
+    return;
+  }
   const button = event.target.closest('[data-copy-contact]');
   if (!button) return;
   const username = button.dataset.copyContact;
