@@ -109,7 +109,7 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 
 - [ ] **Rich Presence:** detectar automaticamente os jogos abertos; o status de jogo manual continua disponível.
 - [ ] **LUMI INFINITY — R$ 10,00, pagamento único:** integrar um provedor de pagamento e validar a compra no backend antes de liberar o VIP permanentemente. Sem assinatura ou renovação automática.
-- [ ] **Chamadas fora do app:** avaliar depois notificações push de chamadas com configuração VAPID e testes em HTTPS. Por enquanto, a notificação dentro do LUMI é suficiente.
+- [ ] **Chamadas fora do app:** a interface de atendimento por push foi adicionada; ainda é necessário configurar VAPID e testar em HTTPS com a aba fechada.
 
 
 ### Configurações avançadas de canais e cargos
