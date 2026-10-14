@@ -148,6 +148,7 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Corrigir o recebimento de candidatos ICE que chegam antes da oferta WebRTC e filtrar candidatos pela conversa/remetente
 - [x] Remover solicitação duplicada de microfone ao iniciar chamada
 - [x] Manter um mini-controle de chamada visível ao navegar para fora da DM, com botão para voltar e desligar
+- [x] Iniciar chamadas de voz/vídeo diretamente pelos resultados da busca de pessoas, sem abrir a conversa manualmente
 - [x] Adicionar ação **Atender** às notificações push de chamadas (depende de VAPID e de teste real no navegador)
 - [x] Adicionar modo streamer para desfocar visualmente nomes/selos
 - [x] Adicionar configuração local de atividade **LUMI Presence**
