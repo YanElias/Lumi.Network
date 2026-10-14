@@ -652,6 +652,33 @@ Object.assign(STRINGS.es, {
   "Algo deu errado. Tente novamente.":"Algo salió mal. Inténtalo de nuevo."
 });
 
+Object.assign(STRINGS.en, {
+  "LUMI Orbit":"LUMI Orbit","Conexão de chamadas (TURN)":"Call connection (TURN)",
+  "Algumas redes e dados móveis bloqueiam conexões diretas. Um servidor TURN válido pode ajudar. Se você não tem credenciais de um servidor TURN, deixe estes campos vazios.":"Some networks and mobile data block direct connections. A valid TURN server may help. If you don't have TURN credentials, leave these fields empty.",
+  "Endereço TURN":"TURN server address","Usuário TURN":"TURN username","Senha/credencial TURN":"TURN password/credential",
+  "Salvar configuração TURN":"Save TURN configuration","Salvo somente neste navegador. As mudanças valem para novas chamadas.":"Saved only in this browser. Changes apply to new calls.",
+  "LUMI Assist":"LUMI Assist","Ajuda rápida e sugestões de pessoas":"Quick help and people suggestions",
+  "Encontrar pessoas parecidas":"Find people with similar interests","O que você faz?":"What can you do?",
+  "Enviar um GIF":"Send a GIF","Chave de API do Tenor":"Tenor API key","Buscar GIFs…":"Search GIFs…",
+  "Conversa preparada. Abra Mensagens para continuar.":"Conversation prepared. Open Messages to continue.",
+  "GIF enviado! ✨":"GIF sent! ✨","Resposta enviada pela notificação!":"Reply sent from notification!",
+  "Conexão instável. Tentando recuperar…":"Unstable connection. Trying to recover…",
+  "Encontrando uma rota segura…":"Finding a secure route…","Resposta enviada. Estabelecendo áudio/vídeo…":"Answer sent. Establishing audio/video…"
+});
+Object.assign(STRINGS.es, {
+  "LUMI Orbit":"LUMI Orbit","Conexão de chamadas (TURN)":"Conexión de llamadas (TURN)",
+  "Algumas redes e dados móveis bloqueiam conexões diretas. Um servidor TURN válido pode ajudar. Se você não tem credenciais de um servidor TURN, deixe estes campos vazios.":"Algunas redes y datos móviles bloquean las conexiones directas. Un servidor TURN válido puede ayudar. Si no tienes credenciales TURN, deja estos campos vacíos.",
+  "Endereço TURN":"Dirección del servidor TURN","Usuário TURN":"Usuario TURN","Senha/credencial TURN":"Contraseña/credencial TURN",
+  "Salvar configuração TURN":"Guardar configuración TURN","Salvo somente neste navegador. As mudanças valem para novas chamadas.":"Se guarda solo en este navegador. Los cambios se aplican a llamadas nuevas.",
+  "LUMI Assist":"LUMI Assist","Ajuda rápida e sugestões de pessoas":"Ayuda rápida y sugerencias de personas",
+  "Encontrar pessoas parecidas":"Encontrar personas con intereses similares","O que você faz?":"¿Qué puedes hacer?",
+  "Enviar um GIF":"Enviar un GIF","Chave de API do Tenor":"Clave API de Tenor","Buscar GIFs…":"Buscar GIFs…",
+  "Conversa preparada. Abra Mensagens para continuar.":"Conversación preparada. Abre Mensajes para continuar.",
+  "GIF enviado! ✨":"¡GIF enviado! ✨","Resposta enviada pela notificação!":"¡Respuesta enviada desde la notificación!",
+  "Conexão instável. Tentando recuperar…":"Conexión inestable. Intentando recuperar…",
+  "Encontrando uma rota segura…":"Buscando una ruta segura…","Resposta enviada. Estabelecendo áudio/vídeo…":"Respuesta enviada. Estableciendo audio/vídeo…"
+});
+
 const STORAGE_KEY = "lumi-language";
 const textSources = new WeakMap();
 const attributeSources = new WeakMap();
