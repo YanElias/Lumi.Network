@@ -90,10 +90,14 @@ async function openFriendMessage(userId) {
   const id=typeof data==='string'?data:data?.conversation_id||data?.id;
   $('#lumiFriendsDialog').close();
   document.querySelector('[data-page="inbox"]')?.click();
-  if(id) window.setTimeout(()=>{
-    const entry=[...document.querySelectorAll('[data-open-dm]')].find(el=>el.dataset.openDm===id);
-    if(entry)entry.click();
-  },450);
+  if(id){
+    for(let attempt=0;attempt<12;attempt++){
+      const entry=[...document.querySelectorAll('[data-open-dm]')].find(el=>el.dataset.openDm===id);
+      if(entry){entry.click();return;}
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    showToast('A conversa foi criada. Abra-a pela lista de mensagens.');
+  }
 }
 function showToast(message) {
   const region=$('#toastRegion');
