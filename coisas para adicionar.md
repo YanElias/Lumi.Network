@@ -83,6 +83,8 @@
 
 ### Gerenciamento de canais
 - [x] Editar nome e descrição dos canais de texto e voz (donos e administradores)
+- [x] Mostrar ações de editar/excluir também no cabeçalho do canal ativo
+- [x] Exibir os controles de gerenciamento sem depender de passar o mouse e dar suporte ao dono mesmo se o papel carregado estiver inconsistente
 - [x] Excluir canais de texto e voz com confirmação, atualizar a seleção e tentar limpar anexos associados
 - [ ] Permitir reorganizar canais por arrastar e soltar
 - [ ] Confirmar visualmente as ações de editar/excluir em desktop, celular e modo escuro
