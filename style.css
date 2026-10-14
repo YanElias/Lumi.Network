@@ -1886,3 +1886,50 @@ html[data-theme="dark"] .popover {
 html[data-theme="dark"] .dm-file-card small,
 html[data-theme="dark"] .notification-item small,
 html[data-theme="dark"] .search-result small { color: var(--muted); }
+
+
+/* LUMI — identidade amarela fixa; cores alternativas reservadas para VIP futuro */
+html[data-accent="blue"], html[data-accent="green"], html[data-accent="purple"] {
+  --yellow:#ffd83d !important; --yellow-soft:#fff6c9 !important; --yellow-pale:#fffbed !important; --yellow-deep:#b28a00 !important;
+}
+html[data-accent="blue"] .brand-mark, html[data-accent="green"] .brand-mark, html[data-accent="purple"] .brand-mark,
+html[data-accent="blue"] .primary-button, html[data-accent="green"] .primary-button, html[data-accent="purple"] .primary-button {
+  background:#ffd83d !important; border-color:#f5ce29 !important; color:#3b3100 !important;
+}
+.lumi-badge.tester-badge, .lumi-badge.staff-badge { background:#fff1a8; color:#745b00; }
+html[data-theme="dark"] .lumi-badge.tester-badge, html[data-theme="dark"] .lumi-badge.staff-badge { background:#3b351e; color:#ffe47a; }
+.space-owner-delete { color:#8a6c00; border:1px solid #e5cf70; background:#fff8d8; border-radius:9px; padding:8px 10px; }
+.space-owner-delete:hover { background:#ffedab; }
+html[data-theme="dark"] .active-space-title,
+html[data-theme="dark"] .active-space-actions,
+html[data-theme="dark"] .channel-sidebar-title,
+html[data-theme="dark"] .channel-list,
+html[data-theme="dark"] .member-manager-list,
+html[data-theme="dark"] .member-manager-row,
+html[data-theme="dark"] .profile-editor,
+html[data-theme="dark"] .profile-form,
+html[data-theme="dark"] .profile-preview-card,
+html[data-theme="dark"] .search-overlay,
+html[data-theme="dark"] .search-results,
+html[data-theme="dark"] .notification-panel,
+html[data-theme="dark"] .notification-item,
+html[data-theme="dark"] .invite-code-wrap,
+html[data-theme="dark"] .mobile-spaces-panel,
+html[data-theme="dark"] .mobile-channels-panel,
+html[data-theme="dark"] .mobile-spaces-heading,
+html[data-theme="dark"] .mobile-channels-heading,
+html[data-theme="dark"] .space-reply-banner,
+html[data-theme="dark"] .dm-person-result,
+html[data-theme="dark"] .dm-conversation-item,
+html[data-theme="dark"] .voice-room-card {
+  background-color:#20211b !important; color:#f1f0e8 !important; border-color:#38392f !important;
+}
+html[data-theme="dark"] .channel-entry.active,
+html[data-theme="dark"] .dm-conversation-item.active,
+html[data-theme="dark"] .dm-person-result:hover,
+html[data-theme="dark"] .member-manager-row:hover {
+  background-color:#34321f !important; color:#ffe47a !important;
+}
+html[data-theme="dark"] .space-owner-delete { color:#ffe47a !important; border-color:#62552a !important; background:#302b1b !important; }
+html[data-theme="dark"] dialog::backdrop { background:rgba(0,0,0,.72); }
+html[data-theme="dark"] .form-error { color:#ffb4a8; }
