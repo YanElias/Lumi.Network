@@ -2550,3 +2550,136 @@ html[data-theme="dark"] .lumi-select-option-icon{background:#292a23;color:#d7d5c
 html[data-theme="dark"] .lumi-select-option[data-value="voice"] .lumi-select-option-icon{background:#1d3427;color:#a5d6b4}
 html[data-theme="dark"] .lumi-select-option small{color:#b9b8aa}
 @media(prefers-reduced-motion:reduce){.lumi-select-menu{animation:none}.lumi-select-chevron{transition:none}}
+
+
+/* LUMI — acabamento do tema escuro: superfícies aninhadas e conteúdo dinâmico */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-panel,
+html[data-theme="dark"] .right-panel,
+html[data-theme="dark"] .space-sidebar,
+html[data-theme="dark"] .rail,
+html[data-theme="dark"] dialog.modal,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .modal-card {
+  color-scheme: dark;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.welcome-row>div,.section-block,.section-title-row,
+  .feature-grid,.feature-card>div,.space-card-top,.space-card-foot,
+  .right-panel-head,.profile-summary,.right-divider,.right-widget,
+  .widget-heading,.stat-row,.tip-card,.tip-card>div,.right-footer,
+  .spaces-directory,.space-list,.space-list-empty,.active-space-nav,
+  .mobile-spaces-panel,.mobile-channels-panel,.mobile-spaces-heading,
+  .mobile-channels-heading,.mobile-spaces-list,.mobile-channels-list,
+  .breadcrumbs,.topbar-actions,.rail-bottom,.rail-spaces,
+  .settings-page,.settings-layout,.settings-main,.settings-card-content,
+  .settings-card-icon,.settings-row,.settings-section,.settings-section-header,
+  .profile-header,.profile-details,.profile-actions,.friends-toolbar,
+  .friends-list,.calls-list,.notifications-list,.inbox-header,
+  .inbox-content,.workspace-content,.workspace-header,.workspace-sidebar,
+  .channel-header,.channel-chat-head,.dm-chat-head,.dm-chat-header,
+  .dm-conversation-list,.dm-mobile-inbox,.dm-sidebar-results,
+  .message-list,.messages-list,.chat-messages,.message-row,
+  .message-bubble,.message-content,.message-actions,.message-composer,
+  .dm-composer,.dm-message-composer,.attachment-list,.attachment-preview,
+  .voice-room-card,.call-panel,.call-controls,.member-list,.member-row,
+  .search-overlay,.search-results,.search-result,.notification-item,
+  .dropdown-menu,.context-menu,.popover,.reaction-picker,.emoji-picker,
+  .space-manage-details,.active-space-actions,.space-reply-banner,
+  .space-reply-preview,.space-reaction,.channel-entry,.dm-conversation-entry,
+  .dm-person-result,.lumi-blocked-row,.lumi-blocked-empty
+) {
+  background-color: #20211b;
+  color: #f1f0e8;
+  border-color: #38392f;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row h1,.section-title-row h2,.feature-card h3,.space-card h3,
+  .profile-summary h3,.widget-heading strong,.stat-row strong,
+  .account-copy strong,.space-entry-copy strong,.settings-card h2,
+  .settings-section h2,.settings-row strong,.channel-header h1,
+  .dm-chat-head strong,.dm-chat-header strong,.message-author,
+  .notification-item strong,.search-result strong,.member-row strong
+) { color: #f6f4e9 !important; }
+html[data-theme="dark"] .app-shell :is(
+  .eyebrow,.breadcrumbs,.crumb-slash,.section-title-row .eyebrow,
+  .right-panel-head .eyebrow,.profile-summary p,.account-copy small,
+  .space-entry-copy small,.space-list-empty,.settings-card p,
+  .settings-help,.settings-description,.tip-card p,.right-footer,
+  .stat-row>span,.feature-card p,.space-card p,.space-card-foot,
+  .muted,.secondary-text,.empty-state p,.empty-card p,
+  .message-time,.message-edited,.message-meta,.channel-topic,
+  .dm-conversation-entry small,.notification-item small
+) { color: #b9b8aa !important; }
+html[data-theme="dark"] .app-shell :is(
+  .empty-card,.empty-state,.page-placeholder,.inbox-note,.notice-box,
+  .lumi-blocked-empty,.space-list-empty,.dm-empty-state,.no-results,
+  .no-messages,.empty-conversations
+) {
+  background: #1b1c16 !important;
+  border-color: #38392f !important;
+  color: #c8c6b8 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .primary-button,.welcome-actions .primary-button,.full-button
+) {
+  background: var(--accent, #ffd83d);
+  color: #29291f;
+  border-color: var(--accent, #ffd83d);
+}
+html[data-theme="dark"] .app-shell :is(
+  .secondary-button,.outline-full,.text-button,.round-arrow,
+  .symbol-choice,.modal-close,.icon-button,.rail-add,
+  .sidebar-search,.global-search,.global-search kbd
+) {
+  background-color: #20211b;
+  color: #e4e1d2;
+  border-color: #414237;
+}
+html[data-theme="dark"] .app-shell :is(input,textarea,select,.form-input,[contenteditable="true"])::placeholder {
+  color: #858578 !important;
+  opacity: 1;
+}
+html[data-theme="dark"] .app-shell :is(input[type="checkbox"],input[type="radio"]) {
+  accent-color: var(--accent, #ffd83d);
+}
+html[data-theme="dark"] .app-shell :is(.rail-space,.space-entry-icon,.space-card-icon,.avatar,.profile-avatar,.user-avatar,.top-avatar) {
+  border-color: #49432b;
+}
+html[data-theme="dark"] .app-shell :is(.feature-yellow,.feature-white,.welcome-row) {
+  background-image: none;
+}
+html[data-theme="dark"] .app-shell .feature-yellow {
+  background-color: #292719 !important;
+  border-color: #45412c !important;
+}
+html[data-theme="dark"] .app-shell .feature-white {
+  background-color: #20211b !important;
+}
+html[data-theme="dark"] .app-shell :is(.online-dot,.notification-button i) {
+  border-color: #1b1c16;
+}
+html[data-theme="dark"] .app-shell :is(.right-divider,.rail-rule,.sidebar-bottom,.space-card-foot) {
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell :is(.mobile-spaces-panel,.mobile-channels-panel) {
+  background: #1b1c16 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+  box-shadow: 0 12px 36px #0008;
+}
+html[data-theme="dark"] .app-shell :is(.mobile-spaces-panel,.mobile-channels-panel) button {
+  color: #f1f0e8;
+  border-color: #38392f;
+}
+html[data-theme="dark"] .modal::backdrop,
+html[data-theme="dark"] dialog::backdrop {
+  background: #0009;
+}
+html[data-theme="dark"] .app-shell :is(.lumi-select-menu,.lumi-select-option) {
+  color: #f1f0e8;
+}
+html[data-theme="dark"] .app-shell :is(.space-card,.feature-card,.settings-card,.tip-card,.right-widget,.empty-card) :is(img,video,canvas) {
+  background: transparent;
+}
