@@ -63,3 +63,8 @@
 - Música personalizada ao iniciar chamadas ainda não está implementada; por enquanto existe um toque simples de chamada.
 - A tradução da interface começou em português (Brasil), inglês e espanhol. Mensagens escritas pelos usuários não são traduzidas, e ainda faltam algumas strings das telas e avisos.
 - A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
+
+- [x] Identidade visual fixa em amarelo; cores alternativas reservadas para uma futura funcionalidade VIP
+- [x] Ação de apagar espaço exclusiva para o dono, com confirmação digitada
+- [ ] Aplicar a migração de permissões de dono no Supabase e testar exclusão real de espaço
+- [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular
