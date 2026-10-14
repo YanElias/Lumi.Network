@@ -61,13 +61,13 @@ grant execute on function public.start_direct_conversation(uuid) to authenticate
 
 -- Função SECURITY DEFINER para verificar bloqueios dos dois lados mesmo com RLS.
 create or replace function public.lumi_users_blocked(p_user_a uuid, p_user_b uuid)
-returns boolean language sql stable security definer set search_path = '' as $
+returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.user_blocks b
     where (b.blocker_id=p_user_a and b.blocked_id=p_user_b)
        or (b.blocker_id=p_user_b and b.blocked_id=p_user_a)
   );
-$;
+$$;
 revoke all on function public.lumi_users_blocked(uuid,uuid) from public;
 grant execute on function public.lumi_users_blocked(uuid,uuid) to authenticated;
 
