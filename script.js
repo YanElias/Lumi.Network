@@ -1417,6 +1417,7 @@ async function removeCustomCallTone() {
 function stopLumiCallTone() {
   if (lumiCallToneTimer) clearInterval(lumiCallToneTimer);
   lumiCallToneTimer = null;
+  if (customCallToneAudio) { customCallToneAudio.pause(); try { customCallToneAudio.currentTime = 0; } catch {} customCallToneAudio = null; }
   for (const oscillator of lumiCallToneOscillators) {
     try { oscillator.stop(); } catch {}
   }
@@ -1458,6 +1459,26 @@ function playLumiCallTonePulse() {
 
 function startLumiCallTone() {
   stopLumiCallTone();
+  if (customCallToneUrl) {
+    const audio = new Audio(customCallToneUrl);
+    audio.loop = true;
+    audio.volume = 0.8;
+    customCallToneAudio = audio;
+    audio.play().catch(error => {
+      console.warn('Toque personalizado bloqueado; usando o toque padrão.', error);
+      if (customCallToneAudio === audio) customCallToneAudio = null;
+      audio.pause();
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      try {
+        lumiCallToneContext = new AudioContextClass();
+        lumiCallToneContext.resume().catch(() => {});
+        playLumiCallTonePulse();
+        lumiCallToneTimer = setInterval(playLumiCallTonePulse, 1800);
+      } catch (fallbackError) { console.warn(fallbackError); }
+    });
+    return;
+  }
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
   try {
@@ -1924,6 +1945,7 @@ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLower
 // Preferências locais do LUMI: tema e Não Perturbe.
 try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); applyAccent(localStorage.getItem('lumi-accent') || 'yellow'); } catch { applyTheme('light'); applyAccent('yellow'); }
 setDoNotDisturb(getDoNotDisturb());
+loadCustomCallTone();
 
 // Reage à sessão existente e a login/logout em outras abas.
 const {data:{session}}=await supabase.auth.getSession();
@@ -1986,4 +2008,15 @@ document.addEventListener('click',event=>{
   if(event.target.closest('#dmRecordAudio')){event.preventDefault();recordDMVoice();return;}
 });
 
+document.addEventListener('click', event => {
+  if (event.target.closest('#chooseCallTone')) document.getElementById('lumiCallToneFile')?.click();
+  else if (event.target.closest('#previewCallTone')) previewCustomCallTone();
+  else if (event.target.closest('#removeCallTone')) removeCustomCallTone();
+});
+document.addEventListener('change', event => {
+  if (event.target?.id === 'lumiCallToneFile' && event.target.files?.[0]) {
+    chooseCustomCallTone(event.target.files[0]);
+    event.target.value = '';
+  }
+});
 document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
