@@ -60,12 +60,13 @@
   - Poderá cancelar se quiser colocar em outra conta ou perder a antiga conta
 
 
-### Limitações que ainda precisam de integração
-- O pagamento do LUMI INFINITY por R$ 10,00 ainda precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir. Paletas azul, verde e roxa já ficam disponíveis para contas com VIP ativo.
-- A atividade/jogo do perfil é manual e aparece na lista de amizades; detectar jogos automaticamente como Rich Presence exige integração externa.
-- Música personalizada ao iniciar chamadas já está disponível: a pessoa escolhe um arquivo de áudio salvo neste navegador.
-- A tradução da interface começou em português (Brasil), inglês e espanhol. As traduções de amizades e atividade foram ampliadas, mas ainda é necessário revisar todas as telas e avisos.
-- A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
+### Próximas tarefas para finalizar
+
+- [ ] Revisar visualmente o modo escuro em desktop e celular; o tema claro continua sendo o preferido para uso diário
+- [ ] Revisar a barra lateral em desktop e celular
+- [ ] Fazer uma revisão final das telas e avisos em inglês e espanhol
+- [ ] Confirmar o envio real do e-mail de recuperação e a URL autorizada nas configurações de autenticação do Supabase
+
 
 - [x] Identidade visual amarela para contas comuns; paletas azul, verde e roxa disponíveis para contas LUMI INFINITY
 - [x] Ação de apagar espaço exclusiva para o dono, com confirmação digitada
@@ -89,3 +90,12 @@
 - [x] Remover o botão duplicado de criar canal (os botões junto aos títulos já fazem isso)
 - [x] Compactar detalhes da barra lateral em janelas com pouca altura
 - [ ] Revisar visualmente a barra lateral em desktop e celular
+
+
+## Em breve
+
+Itens planejados para uma etapa futura, porque precisam de integração externa, configuração adicional ou decisão de produto:
+
+- [ ] **Rich Presence:** detectar automaticamente os jogos abertos; o status de jogo manual continua disponível.
+- [ ] **LUMI INFINITY — R$ 10,00, pagamento único:** integrar um provedor de pagamento e validar a compra no backend antes de liberar o VIP permanentemente. Sem assinatura ou renovação automática.
+- [ ] **Chamadas fora do app:** avaliar depois notificações push de chamadas com configuração VAPID e testes em HTTPS. Por enquanto, a notificação dentro do LUMI é suficiente.
