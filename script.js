@@ -822,11 +822,11 @@ async function sendMessage(event) {
   if(file && !/^(image\/|video\/)/.test(file.type)){toast('Nos Espaços, envie fotos ou vídeos.','error');return;}
   input.disabled = true; const send=$('#messageForm button[type="submit"]');if(send)send.disabled=true;
   let attachment_path=null;
-  if(file){const safeName=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-100)||'midia';attachment_path=`${state.activeChannel.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`;const {error:uploadError}=await supabase.storage.from('space-attachments').upload(attachment_path,file,{contentType:file.type,upsert:false});if(uploadError){toast(`Falha no envio da mídia: ${uploadError.message}. Execute o SQL da atualização.`, 'error');input.disabled=false;if(send)send.disabled=false;return;}}
+  if(file){const safeName=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-100)||'midia';attachment_path=`${state.activeChannel.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`;const {error:uploadError}=await supabase.storage.from('space-attachments').upload(attachment_path,file,{contentType:file.type,upsert:false});if(uploadError){toast(`Falha no envio da mídia: ${uploadError.message}. Confira as permissões do Supabase.`, 'error');input.disabled=false;if(send)send.disabled=false;return;}}
   const payload={channel_id:state.activeChannel.id,author_id:state.user.id,content:content||'',attachment_path,attachment_name:file?.name||null,attachment_type:file?.type||null,attachment_size:file?.size||null,reply_to:state.spaceReplyTo?.id||null};
   const {data,error} = await supabase.from('messages').insert(payload).select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').single();
   input.disabled = false;if(send)send.disabled=false;
-  if (error) { console.error(error); toast(`Não foi possível enviar: ${error.message}`, 'error'); return; }
+  if (error) { if (attachment_path) { const cleanup = await supabase.storage.from('space-attachments').remove([attachment_path]); if (cleanup.error) console.warn('Não consegui remover o anexo enviado sem mensagem:', cleanup.error); } console.error(error); toast(`Não foi possível enviar: ${error.message}`, 'error'); return; }
   if(data.attachment_path){const signed=await signSpaceMedia([data]);Object.assign(data,signed[0]);}
   if (!state.messages.some(m=>m.id===data.id)) state.messages.push(data);
   input.value = '';if(fileInput)fileInput.value='';state.spaceReplyTo=null;state.messageCount = state.messages.length;const count=$('#messageCount');if(count)count.textContent=state.messageCount;renderWorkspace();input.focus();
