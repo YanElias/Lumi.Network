@@ -1656,3 +1656,14 @@ html[data-theme="dark"] .lumi-contact-card { background:#20211b!important; color
 html[data-theme="dark"] .lumi-contact-card small, html[data-theme="dark"] .lumi-contact-card p { color:#aaa99c; }
 html[data-theme="dark"] .lumi-badge.tester-badge { background:#1e3d61; color:#b8dcff; }
 html[data-theme="dark"] .lumi-badge.staff-badge { background:#39265c; color:#decaff; }
+
+/* Cores de destaque selecionáveis */
+html[data-accent="blue"] { --yellow:#78b7ff; --yellow-soft:#dcecff; --yellow-pale:#edf5ff; --yellow-deep:#3478d4; }
+html[data-accent="green"] { --yellow:#7ed9a4; --yellow-soft:#dff8e8; --yellow-pale:#effcf3; --yellow-deep:#238653; }
+html[data-accent="purple"] { --yellow:#c5a4ff; --yellow-soft:#eee4ff; --yellow-pale:#f7f1ff; --yellow-deep:#7950c8; }
+html[data-accent="blue"] .brand-mark, html[data-accent="green"] .brand-mark, html[data-accent="purple"] .brand-mark { background:var(--yellow)!important; }
+html[data-accent="blue"] .primary-button, html[data-accent="green"] .primary-button, html[data-accent="purple"] .primary-button { background:var(--yellow)!important; border-color:var(--yellow)!important; color:#25251d!important; }
+html[data-accent="blue"] .rail-button.active, html[data-accent="green"] .rail-button.active, html[data-accent="purple"] .rail-button.active { background:var(--yellow-pale)!important; color:var(--yellow-deep)!important; }
+html[data-theme="dark"][data-accent="blue"] { --yellow-soft:#1c2f45; --yellow-pale:#1a2634; }
+html[data-theme="dark"][data-accent="green"] { --yellow-soft:#1d3928; --yellow-pale:#192b20; }
+html[data-theme="dark"][data-accent="purple"] { --yellow-soft:#302443; --yellow-pale:#251d33; }
