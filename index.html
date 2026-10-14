@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=28">
+  <link rel="stylesheet" href="style.css?v=29">
   <style>
     #lumiBootScreen{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:#fafaf7;color:#29291f;font-family:'DM Sans',sans-serif;padding:24px}
     #lumiBootScreen[hidden]{display:none!important}
@@ -146,11 +146,11 @@
   <option value="text"># Canal de texto</option>
   <option value="voice">🎧 Canal de voz</option>
 </select>
-<label class="field-label" for="channelName">Nome do canal</label><input class="form-input" id="channelName" maxlength="40" placeholder="Ex.: papo-geral" required><label class="field-label" for="channelTopic">Descrição <span class="optional">OPCIONAL</span></label><input class="form-input" id="channelTopic" maxlength="100" placeholder="Qual é o assunto deste canal?"><button class="primary-button full-button" type="submit">Criar canal <span>→</span></button></form></dialog>
+<label class="field-label" for="channelName">Nome do canal</label><input class="form-input" id="channelName" maxlength="40" placeholder="Ex.: papo-geral" required><label class="field-label" for="channelTopic">Descrição <span class="optional">OPCIONAL</span></label><input class="form-input" id="channelTopic" maxlength="100" placeholder="Qual é o assunto deste canal?"><label class="field-label" for="channelCategory">Categoria</label><input class="form-input" id="channelCategory" maxlength="40" value="Geral" placeholder="Ex.: Informações, Comunidade, Voz"><small class="settings-help">Use categorias para manter os canais organizados. A ordem pode ser alterada pelos botões ao lado de cada canal.</small><button class="primary-button full-button" type="submit">Criar canal <span>→</span></button></form></dialog>
 
   <dialog class="modal" id="inviteModal"><form id="inviteForm" class="modal-card"><button class="modal-close" type="button" data-close="inviteModal" aria-label="Fechar">×</button><div class="eyebrow">TRAGA SUA GALERA</div><h2>Convidar para o espaço</h2><p class="modal-subtitle">Compartilhe o código abaixo com quem você quer convidar.</p><div class="invite-code-wrap"><code id="inviteCode">LUMI-XXXXXX</code><button type="button" class="secondary-button" id="copyInvite">Copiar código</button></div><label class="field-label" for="joinCode">Ou entre com um código</label><input class="form-input" id="joinCode" placeholder="Cole o código de convite"><button class="primary-button full-button" type="submit">Entrar no espaço <span>→</span></button></form></dialog>
 
-  <input id="spacePhotoChange" class="visually-hidden-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Escolher foto do espaço"><script type="module" src="translations.js?v=20"></script><script type="module" src="friends.js?v=4"></script><script type="module" src="game-status.js?v=1"></script><script type="module" src="push-notifications.js?v=1"></script><script type="module" src="script.js?v=34"></script>
+  <input id="spacePhotoChange" class="visually-hidden-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" aria-label="Escolher foto do espaço"><script type="module" src="translations.js?v=20"></script><script type="module" src="friends.js?v=4"></script><script type="module" src="game-status.js?v=1"></script><script type="module" src="push-notifications.js?v=1"></script><script type="module" src="script.js?v=35"></script>
   <script>
     (() => {
       const root = document.getElementById("channelKindCustom");
