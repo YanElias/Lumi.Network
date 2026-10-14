@@ -1254,7 +1254,7 @@ function scheduleCallRetry() {
     if(!error&&preferences?.do_not_disturb){toast('Retorno automático interrompido: a pessoa ativou Não Perturbe.','success');await cleanupCall(false);return;}
     if(await isUserBlocked(targetId)){await cleanupCall(false);toast('Retorno automático interrompido porque a pessoa foi bloqueada.');return;}
     await cleanupCall(false);
-    if(state.activeConversation?.otherUser?.id===targetId)setTimeout(()=>{if(state.callStatus==='idle')startCall(mode);},250);
+    if(state.activeConversation?.otherUser?.id===targetId)state.callRetryTimer=setTimeout(()=>{state.callRetryTimer=null;if(state.callStatus==='idle')startCall(mode);},250);
   },5000);
 }
 
