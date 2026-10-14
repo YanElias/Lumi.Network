@@ -1667,17 +1667,32 @@ async function startCall(mode) {
 }
 async function checkPendingIncomingCall() {
   if (!state.user || state.callStatus !== 'idle') return;
+  const params = new URLSearchParams(window.location.search);
+  const acceptFromNotification = params.get('lumi_accept_call') === '1';
+  const notificationConversationId = params.get('conversation_id');
   const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const {data,error} = await supabase.from('call_signals').select('*')
+  let query = supabase.from('call_signals').select('*')
     .eq('recipient_id',state.user.id).eq('signal_type','offer')
     .gte('created_at',since).order('created_at',{ascending:false}).limit(5);
+  if (acceptFromNotification && notificationConversationId) query = query.eq('conversation_id', notificationConversationId);
+  const {data,error} = await query;
   if(error||!data?.length)return;
   for(const offer of data){
     const {data:ended}=await supabase.from('call_signals').select('id')
       .eq('conversation_id',offer.conversation_id).eq('signal_type','end')
       .eq('sender_id',state.user.id).eq('recipient_id',offer.sender_id)
       .gt('created_at',offer.created_at).limit(1);
-    if(!ended?.length){await handleCallSignal(offer);return;}
+    if(!ended?.length){
+      await handleCallSignal(offer);
+      if (acceptFromNotification && state.pendingCallOffer?.id === offer.id) {
+        try { await acceptIncomingCall(); }
+        catch (error) { console.warn('Não foi possível atender pela notificação:', error); }
+        params.delete('lumi_accept_call'); params.delete('conversation_id');
+        const cleanUrl = window.location.pathname + (params.size ? '?' + params.toString() : '') + window.location.hash;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+      return;
+    }
   }
 }
 async function handleCallSignal(signal) {
