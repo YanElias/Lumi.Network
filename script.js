@@ -1821,6 +1821,7 @@ async function handleCallSignal(signal) {
 
   if (signal.signal_type === 'offer') {
     if (state.handledOfferIds.has(signal.id) || state.pendingCallOffer?.id === signal.id) return;
+    if (state.pendingCallOffer && state.pendingCallOffer.conversation_id === signal.conversation_id && state.pendingCallOffer.sender_id === signal.sender_id) return;
     const blocked = await isUserBlocked(signal.sender_id);
     const { data: prefs } = await supabase.from('profiles').select('do_not_disturb').eq('id', state.user.id).maybeSingle();
     if (blocked || getDoNotDisturb() || prefs?.do_not_disturb) {
@@ -2423,6 +2424,7 @@ document.addEventListener('change', event => {
     event.target.value = '';
   }
 });
+document.addEventListener('click',event=>{if(!event.target.closest('#lumiSaveTurnConfig'))return;const urls=$('#lumiTurnUrls')?.value.trim();const username=$('#lumiTurnUsername')?.value.trim();const credential=$('#lumiTurnCredential')?.value;if(!urls&&!username&&!credential){localStorage.removeItem('lumi-turn-config');toast('Configuração TURN removida.','success');return;}if(!urls||!username||!credential||!/^turns?:/i.test(urls)){toast('Preencha endereço turn:/turns:, usuário e credencial válidos.','error');return;}try{localStorage.setItem('lumi-turn-config',JSON.stringify({urls,username,credential}));toast('Configuração TURN salva para as próximas chamadas.','success');}catch{toast('Não consegui salvar a configuração TURN.','error');}});
 document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
 
 
