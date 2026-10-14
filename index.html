@@ -58,7 +58,7 @@
         details.hidden = false;
         reload.hidden = false;
         const text = error instanceof Error ? (error.stack || error.message) : String(error || 'Erro desconhecido');
-        details.textContent = [text, source ? 'Arquivo: ' + source : '', line ? 'Linha: ' + line + (column ? ', coluna: ' + column : '') : ''].filter(Boolean).join('\\n');
+        details.textContent = [text, source ? 'Arquivo: ' + source : '', line ? 'Linha: ' + line + (column ? ', coluna: ' + column : '') : ''].filter(Boolean).join('\n');
       }
       window.addEventListener('error', event => {
         const target = event.target;
