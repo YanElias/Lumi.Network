@@ -121,3 +121,13 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [ ] Criar permissões granulares por cargo (moderação, anexos, voz, mensagens e gestão de canais)
 - [ ] Permitir configurar modo somente leitura, limite de envio e limite de participantes em voz
 - [ ] Testar a gestão de canais em desktop, celular e tema escuro
+
+
+### Perfil, INFINITY e experiência de voz
+- [x] Exibir selo LUMI INFINITY ao lado dos nomes de contas com o benefício ativado
+- [x] Adicionar campos de pronomes e cor de destaque ao perfil (UI e banco)
+- [x] Configurar cargos que podem falar em cada canal de texto e validar a regra na política RLS do banco
+- [ ] Adicionar medidor visual de voz ativa em salas e chamadas de DM e testar com duas contas/dispositivos
+- [ ] Adicionar banner de perfil e opções de privacidade para status/atividade
+- [ ] Revisar todos os componentes do tema escuro em desktop e celular
+- [ ] Agrupar canais visualmente por categoria e testar permissões em canais existentes
