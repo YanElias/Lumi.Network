@@ -1958,3 +1958,13 @@ html[data-theme="dark"] .settings-inline-actions .secondary-button:hover {
   .settings-inline-actions { align-items:stretch; }
   .settings-inline-actions button { flex:1 1 130px; }
 }
+
+
+/* LUMI — tela inicial e erros fatais de JavaScript */
+#lumiBootScreen { transition: opacity .18s ease; }
+#lumiBootScreen.lumi-boot-hiding { opacity: 0; pointer-events: none; }
+#lumiBootScreen[hidden] { display: none !important; }
+#lumiBootScreen .lumi-boot-error { border: 1px solid #f2b8b5; background: #fff7f6; color: #b42318; }
+html[data-theme="dark"] #lumiBootScreen { background: #171813; color: #f4f2e8; }
+html[data-theme="dark"] #lumiBootScreen .lumi-boot-card { background: #22231e; border-color: #3a3b32; }
+html[data-theme="dark"] #lumiBootScreen #lumiBootMessage { color: #b9b8aa !important; }
