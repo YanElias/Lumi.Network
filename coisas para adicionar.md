@@ -81,6 +81,12 @@
 - [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular (ainda há superfícies brancas; CSS atualizado, falta conferência visual)
 
 
+### Gerenciamento de canais
+- [x] Editar nome e descrição dos canais de texto e voz (donos e administradores)
+- [x] Excluir canais de texto e voz com confirmação, atualizar a seleção e tentar limpar anexos associados
+- [ ] Permitir reorganizar canais por arrastar e soltar
+- [ ] Confirmar visualmente as ações de editar/excluir em desktop, celular e modo escuro
+
 ### Melhorias de navegação
 - [x] Adicionar seletor personalizado de tipo de canal com ícones, descrições, teclado e compatibilidade com a criação de canais
 - [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
