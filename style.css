@@ -2683,3 +2683,16 @@ html[data-theme="dark"] .app-shell :is(.lumi-select-menu,.lumi-select-option) {
 html[data-theme="dark"] .app-shell :is(.space-card,.feature-card,.settings-card,.tip-card,.right-widget,.empty-card) :is(img,video,canvas) {
   background: transparent;
 }
+
+/* Acessibilidade: respeita a preferência do sistema por menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    caret-color: auto !important;
+  }
+}
