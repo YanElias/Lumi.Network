@@ -2064,3 +2064,62 @@ html[data-theme="dark"] :focus-visible {
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
 }
+
+
+/* LUMI — barra lateral de espaços mais limpa */
+.space-manage-details {
+  flex: 0 0 auto;
+  margin: 8px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-bg, #fff);
+  overflow: hidden;
+}
+.space-manage-details > summary {
+  min-height: 37px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--muted-color, #77766c);
+  font-size: 11px;
+  font-weight: 700;
+}
+.space-manage-details > summary::-webkit-details-marker { display: none; }
+.space-manage-details > summary > .material-symbols-rounded { font-size: 17px; }
+.space-manage-details > summary .manage-chevron {
+  margin-left: auto;
+  transition: transform .16s ease;
+}
+.space-manage-details[open] > summary {
+  color: var(--ink);
+  background: var(--yellow-pale);
+  border-bottom: 1px solid var(--line);
+}
+.space-manage-details[open] > summary .manage-chevron { transform: rotate(180deg); }
+.space-manage-details .active-space-actions {
+  padding: 9px;
+  margin: 0;
+  border: 0;
+}
+.space-manage-details .active-space-actions button {
+  min-height: 34px;
+}
+html[data-theme="dark"] .space-manage-details {
+  background:#20211b;
+  border-color:#38392f;
+}
+html[data-theme="dark"] .space-manage-details > summary { color:#b9b8aa; }
+html[data-theme="dark"] .space-manage-details[open] > summary {
+  color:#f1f0e8;
+  background:#302d1c;
+  border-color:#38392f;
+}
+@media (max-height:760px) and (min-width:651px) {
+  .app-shell.workspace-mode .active-space-title { padding-bottom:9px; }
+  .app-shell.workspace-mode .active-space-name p { display:none; }
+  .app-shell.workspace-mode .channel-group-heading { padding-top:9px; padding-bottom:7px; }
+  .app-shell.workspace-mode .channel-entry { padding-top:7px; padding-bottom:7px; }
+}
