@@ -37,7 +37,7 @@
 - [x] Adicionar status
 - [x] Card de contato
 - [x] Mostrar a atividade/jogo informado no perfil para amigos
-- [ ] Detectar jogos automaticamente como Rich Presence (exige integração externa)
+- [ ] Detectar jogos automaticamente como Rich Presence (exige componente local externo)
 - [x] Sistema de amizades: buscar pessoas, enviar/aceitar/recusar solicitações e remover amigos
 
 ### Configurações e personalização
@@ -151,13 +151,26 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Iniciar chamadas de voz/vídeo diretamente pelos resultados da busca de pessoas, sem abrir a conversa manualmente
 - [x] Adicionar ação **Atender** às notificações push de chamadas (depende de VAPID e de teste real no navegador)
 - [x] Adicionar modo streamer para desfocar visualmente nomes/selos
-- [x] Adicionar configuração local de atividade **LUMI Presence**
+- [x] Adicionar configuração local de atividade **LUMI Orbit**
 - [x] Preparar suporte ao selo de criador de conteúdo (IDs de criadores ainda precisam ser aprovados e adicionados)
 - [ ] Testar chamadas WebRTC com duas contas, redes diferentes, áudio/vídeo, recusa, queda e encerramento
-- [ ] Configurar servidor TURN para melhorar chamadas atrás de NATs/rede móvel e testar sua disponibilidade
+- [ ] Configurar credenciais reais de servidor TURN (suporte para credenciais configuráveis adicionado) e testar redes restritivas
 - [ ] Configurar chave pública/privada VAPID e validar atendimento por notificação com a aba fechada
-- [ ] Permitir resposta a mensagens diretamente nas notificações push
-- [ ] Implementar seletor de GIF com provedor/API e envio direto nas DMs e nos Espaços
-- [ ] Criar chatbot LUMI com recomendações de amizade baseadas em interesses informados no perfil e ações que exigem confirmação do usuário
-- [ ] Conectar o LUMI Presence a um componente local para detectar jogos/aplicativos; o status atual é manual e local ao navegador
+- [x] Adicionar ação de resposta às notificações de mensagens enquanto o LUMI está aberto (suporte depende do navegador; testar no dispositivo)
+- [ ] Testar resposta por notificação com o site em segundo plano/fechado e confirmar suporte à ação de texto no navegador
+- [x] Implementar busca e envio de GIF nas DMs via Tenor (requer chave de API configurada pelo usuário)
+- [ ] Adicionar GIFs também nos Espaços
+- [x] Adicionar LUMI Assist com ajuda rápida e recomendações de perfis baseadas em interesses/bio (regras locais, sem modelo generativo externo)
+- [ ] Criar componente local do LUMI Orbit para detectar jogos/aplicativos; o status atual ainda é manual e local ao navegador
 - [ ] Refinar paletas e revisar o tema escuro em todos os painéis e tamanhos de tela
+
+
+### Melhorias técnicas — outubro de 2026
+- [x] Evitar ofertas recebidas duplicadas com o mesmo ID e preservar candidatos ICE que chegam antes da descrição remota
+- [x] Melhorar a captura de microfone com cancelamento de eco, supressão de ruído e controle automático de ganho
+- [x] Adicionar mais servidores STUN e suporte opcional para credenciais TURN configuradas localmente
+- [x] Melhorar mensagens de estado e tratamento de erros durante a negociação WebRTC
+- [x] Adicionar LUMI Assist e sugestões locais de perfis com interesses parecidos
+- [x] Adicionar busca/envio de GIFs Tenor nas DMs, com chave API informada pelo usuário
+- [x] Adicionar suporte a resposta em notificações de mensagens (precisa teste real em navegadores compatíveis)
+- [ ] Testar chamadas com duas contas em redes diferentes; STUN sozinho não garante conexão em todas as redes
