@@ -63,7 +63,7 @@
 - [ ] Chamadas fora do app: service worker, tabela de inscrições push e Edge Function já estão preparados; falta configurar as chaves VAPID e testar em HTTPS com duas contas.
 - O pagamento VIP de R$ 10,00 precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir.
 - A atividade/jogo do perfil é manual e aparece na lista de amizades; detectar jogos automaticamente como Rich Presence exige integração externa.
-- Música personalizada ao iniciar chamadas ainda não está implementada; por enquanto existe um toque simples de chamada.
+- Música personalizada ao iniciar chamadas já está disponível: a pessoa escolhe um arquivo de áudio salvo neste navegador.
 - A tradução da interface começou em português (Brasil), inglês e espanhol. As traduções de amizades e atividade foram ampliadas, mas ainda é necessário revisar todas as telas e avisos.
 - A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
 
