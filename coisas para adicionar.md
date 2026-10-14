@@ -67,7 +67,7 @@
 - A tradução da interface começou em português (Brasil), inglês e espanhol. As traduções de amizades e atividade foram ampliadas, mas ainda é necessário revisar todas as telas e avisos.
 - A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
 
-- [x] Identidade visual fixa em amarelo; cores alternativas reservadas para uma futura funcionalidade VIP
+- [x] Identidade visual amarela para contas comuns; paletas azul, verde e roxa disponíveis para contas LUMI INFINITY
 - [x] Ação de apagar espaço exclusiva para o dono, com confirmação digitada
 - [x] Política de exclusão do dono confirmada no Supabase; canais, mensagens e membros relacionados usam exclusão em cascata
 - [x] Edição do nome e da descrição do espaço exclusiva para o dono
