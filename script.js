@@ -1104,7 +1104,7 @@ async function openConversation(id, refreshList = true) {
     <video id="dmLocalVideo" autoplay playsinline muted></video>
     <div class="dm-call-person-name" id="dmLocalName"></div>
   </div>
-</div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button" data-call-control="screen" title="Compartilhar tela"><span class="material-symbols-rounded">screen_share</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
+</div><div class="dm-call-voice-presence"><span id="dmRemoteSpeaking" class="dm-speaking-chip"><span class="material-symbols-rounded">graphic_eq</span><span data-speaking-label>Ouvindo</span></span><span id="dmLocalSpeaking" class="dm-speaking-chip"><span class="material-symbols-rounded">mic</span><span data-speaking-label>Microfone ligado</span></span></div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button" data-call-control="screen" title="Compartilhar tela"><span class="material-symbols-rounded">screen_share</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
   if (refreshList) renderConversationList();
   const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
   if (error) { console.error(error); $('#dmMessageList').innerHTML=`<div class="dm-empty-small">Não consegui carregar as mensagens: ${escapeHTML(error.message)}</div>`; return; }
@@ -1334,6 +1334,15 @@ function showCallStage() {
   updateCallVideoCards();
   stage.hidden = false;
 }
+let dmVoiceMeter = { context: null, timer: null, local: null, remote: null };
+function monitorDMCallVoice() {
+  const local=state.callLocalStream, remote=state.callRemoteStream;
+  if(!local && !remote)return;
+  if(dmVoiceMeter.local===local && dmVoiceMeter.remote===remote && dmVoiceMeter.timer)return;
+  clearInterval(dmVoiceMeter.timer); dmVoiceMeter.context?.close().catch(()=>{});
+  dmVoiceMeter={context:null,timer:null,local,remote};
+  try { const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;const ctx=dmVoiceMeter.context=new Ctx();const meters=[];for(const [key,stream] of [['local',local],['remote',remote]])if(stream?.getAudioTracks().length){const analyser=ctx.createAnalyser();analyser.fftSize=512;ctx.createMediaStreamSource(stream).connect(analyser);meters.push({key,analyser,samples:new Uint8Array(analyser.fftSize)});}dmVoiceMeter.timer=setInterval(()=>{for(const meter of meters){meter.analyser.getByteTimeDomainData(meter.samples);let sum=0;for(const n of meter.samples){const x=(n-128)/128;sum+=x*x;}const speaking=Math.sqrt(sum/meter.samples.length)>0.055;const node=document.getElementById(meter.key==='remote'?'dmRemoteSpeaking':'dmLocalSpeaking');if(node){node.classList.toggle('is-speaking',speaking);const label=node.querySelector('[data-speaking-label]');if(label)label.textContent=speaking?'Falando agora':(meter.key==='remote'?'Ouvindo':'Microfone ligado');}}},130); } catch(error){console.debug('Medidor de voz da chamada indisponível',error);}
+}
 function attachCallMedia() {
   const local = $('#dmLocalVideo');
   const remote = $('#dmRemoteVideo');
@@ -1353,6 +1362,7 @@ function attachCallMedia() {
   }
 
   updateCallVideoCards();
+  monitorDMCallVoice();
 }
 async function createCallPeer(recipientId, conversationId, mode) {
   state.callPeerId=recipientId; state.callConversationId=conversationId; state.callMode=mode; state.callSeenSignals=new Set(); state.pendingIceSignals=[];
@@ -1697,6 +1707,7 @@ async function cleanupCall(notifyPeer=true) {
   if(state.callPC){state.callPC.onicecandidate=null;state.callPC.ontrack=null;state.callPC.close();}
   state.callScreenStream?.getTracks().forEach(t=>t.stop()); state.callScreenStream=null;
   state.callLocalStream?.getTracks().forEach(t=>t.stop()); state.callRemoteStream?.getTracks().forEach(t=>t.stop());
+  clearInterval(dmVoiceMeter.timer); dmVoiceMeter.context?.close().catch(()=>{}); dmVoiceMeter={context:null,timer:null,local:null,remote:null};
   state.callPC=null;state.callLocalStream=null;state.callRemoteStream=null;state.callPeerId=null;state.callConversationId=null;state.callStatus='idle';state.pendingIceSignals=[];state.callMuted=false;state.callVideoEnabled=true;state.pendingCallOffer=null;
   const stage=$('#dmCallStage'); if(stage)stage.hidden=true;
   const local=$('#dmLocalVideo'),remote=$('#dmRemoteVideo');if(local)local.srcObject=null;if(remote)remote.srcObject=null;
