@@ -581,7 +581,7 @@ async function createGroupVoicePeer(userId, name, initiator, avatar_url = '') {
     pc,
     name: name && name !== 'Participante' ? name : '',
     avatar_url: avatar_url || '',
-    stream: new MediaStream()
+    stream: new MediaStream(), speaking: false, meterTimer: null, meterContext: null
   };
   v.peers.set(userId, item);
 
@@ -694,6 +694,7 @@ async function joinGroupVoice() {
       video: false
     });
     v.channelId = channel.id;
+    monitorLocalGroupVoice();
 
     const room = supabase.channel(`lumi-group-voice-${channel.id}`, {
       config: {
