@@ -141,3 +141,22 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Desativar a caixa de envio para cargos sem permissão de falar no canal
 
 - [x] Aplicar modo ouvinte aos cargos sem permissão de falar em salas de voz (validar com contas reais)
+
+
+## Novidades — outubro de 2026
+
+- [x] Corrigir o recebimento de candidatos ICE que chegam antes da oferta WebRTC e filtrar candidatos pela conversa/remetente
+- [x] Remover solicitação duplicada de microfone ao iniciar chamada
+- [x] Manter um mini-controle de chamada visível ao navegar para fora da DM, com botão para voltar e desligar
+- [x] Adicionar ação **Atender** às notificações push de chamadas (depende de VAPID e de teste real no navegador)
+- [x] Adicionar modo streamer para desfocar visualmente nomes/selos
+- [x] Adicionar configuração local de atividade **LUMI Presence**
+- [x] Preparar suporte ao selo de criador de conteúdo (IDs de criadores ainda precisam ser aprovados e adicionados)
+- [ ] Testar chamadas WebRTC com duas contas, redes diferentes, áudio/vídeo, recusa, queda e encerramento
+- [ ] Configurar servidor TURN para melhorar chamadas atrás de NATs/rede móvel e testar sua disponibilidade
+- [ ] Configurar chave pública/privada VAPID e validar atendimento por notificação com a aba fechada
+- [ ] Permitir resposta a mensagens diretamente nas notificações push
+- [ ] Implementar seletor de GIF com provedor/API e envio direto nas DMs e nos Espaços
+- [ ] Criar chatbot LUMI com recomendações de amizade baseadas em interesses informados no perfil e ações que exigem confirmação do usuário
+- [ ] Conectar o LUMI Presence a um componente local para detectar jogos/aplicativos; o status atual é manual e local ao navegador
+- [ ] Refinar paletas e revisar o tema escuro em todos os painéis e tamanhos de tela
