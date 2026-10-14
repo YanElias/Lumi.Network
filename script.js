@@ -1984,7 +1984,8 @@ document.addEventListener('change',async e=>{if(e.target.id==='lumiEnterToSend')
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
-$('#channelForm').addEventListener('submit',createChannel);\n$('#channelModal')?.addEventListener('close',resetChannelModal);
+$('#channelForm').addEventListener('submit',createChannel);
+$('#channelModal')?.addEventListener('close',resetChannelModal);
 $('#inviteForm').addEventListener('submit',async e=>{e.preventDefault();await joinSpaceByCode($('#joinCode').value);});
 $('#copyInvite').addEventListener('click',copyInvite);
 $('#spaceSearch').addEventListener('input',renderSpaceNav);
