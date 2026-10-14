@@ -55,11 +55,18 @@ const symbols = ['✳','🎮','🎨','☕','✦','🌙'];
 // Configure os selos oficiais aqui. Use IDs de usuários obtidos no Supabase Auth.
 const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona do LUMI
 const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de contas verificadas, aprovadas por você
+const TESTER_USER_IDS = []; // Adicione aqui UUIDs de testers autorizados
+const STAFF_USER_IDS = []; // Adicione aqui UUIDs da equipe do LUMI
 function accountBadges(userId) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
   const verified = owner || VERIFIED_USER_IDS.includes(userId);
-  return `${verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : ''}${owner ? '<span class="lumi-badge owner-badge" title="Dono do LUMI" aria-label="Dono do LUMI">✦</span>' : ''}`;
+  const tester = TESTER_USER_IDS.includes(userId);
+  const staff = owner || STAFF_USER_IDS.includes(userId);
+  return (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
+    + (owner ? '<span class="lumi-badge owner-badge" title="Dono do LUMI" aria-label="Dono do LUMI">✦</span>' : '')
+    + (tester ? '<span class="lumi-badge tester-badge" title="Tester do LUMI" aria-label="Tester do LUMI">T</span>' : '')
+    + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '');
 }
 function avatarMarkup(name, url, className='avatar') {
   return url ? `<img class="${className} avatar-image" src="${escapeHTML(url)}" alt="Foto de ${escapeHTML(name)}">` : `<span class="${className}">${escapeHTML(initials(name))}</span>`;
@@ -1414,12 +1421,14 @@ function renderSettings() {
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Configurações';
   const theme = document.documentElement.dataset.theme || 'light';
   const dnd = getDoNotDisturb();
+  const isVip = Boolean(state.profile?.vip_purchased);
   $('#pageContent').innerHTML = `
     <section class="page-placeholder settings-page">
       <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
       <p>Personalize sua experiência e cuide da sua conta.</p>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI não deve insistir com retornos automáticos de chamadas. As próximas funções de chamada usarão esta preferência.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><h2>LUMI VIP</h2><p>Pagamento único de <strong>R$ 10,00</strong>. Sem assinatura e sem renovação automática.</p><p>${isVip ? "Seu perfil já tem VIP ativado." : "O checkout ainda precisa ser conectado a um provedor de pagamento seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "VIP ativado" : "Pagamento ainda não conectado"}</button></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
       <p class="settings-help">Tema e Não Perturbe são salvos neste navegador e ainda não sincronizam entre dispositivos.</p>
     </section>`;
