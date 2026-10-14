@@ -1415,11 +1415,18 @@ function setDoNotDisturb(enabled) {
   document.documentElement.dataset.doNotDisturb = String(Boolean(enabled));
   if (state.user) supabase.from('profiles').update({do_not_disturb:Boolean(enabled)}).eq('id',state.user.id).then(({error})=>{if(error)console.warn('Não Perturbe não sincronizado:',error.message);});
 }
+function applyAccent(accent) {
+  const allowed = ['yellow','blue','green','purple'];
+  const selected = allowed.includes(accent) ? accent : 'yellow';
+  document.documentElement.dataset.accent = selected;
+  try { localStorage.setItem('lumi-accent', selected); } catch {}
+}
 function renderSettings() {
   $('.main-panel').classList.remove('workspace-mode');
   $('.app-shell').classList.remove('workspace-mode','inbox-mode','mobile-chat-open');
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Configurações';
   const theme = document.documentElement.dataset.theme || 'light';
+  const accent = document.documentElement.dataset.accent || 'yellow';
   const dnd = getDoNotDisturb();
   const isVip = Boolean(state.profile?.vip_purchased);
   $('#pageContent').innerHTML = `
@@ -1427,11 +1434,13 @@ function renderSettings() {
       <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
       <p>Personalize sua experiência e cuide da sua conta.</p>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">color_lens</div><div class="settings-card-content"><h2>Cor de destaque</h2><p>Escolha uma cor para os detalhes do LUMI.</p><label class="field-label" for="lumiAccent">Cor</label><select class="form-input" id="lumiAccent"><option value="yellow">Amarelo LUMI</option><option value="blue">Azul</option><option value="green">Verde</option><option value="purple">Roxo</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><h2>LUMI VIP</h2><p>Pagamento único de <strong>R$ 10,00</strong>. Sem assinatura e sem renovação automática.</p><p>${isVip ? "Seu perfil já tem VIP ativado." : "O checkout ainda precisa ser conectado a um provedor de pagamento seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "VIP ativado" : "Pagamento ainda não conectado"}</button></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
       <p class="settings-help">Tema e Não Perturbe são salvos neste navegador e ainda não sincronizam entre dispositivos.</p>
     </section>`;
+  const accentSelect = $('#lumiAccent'); if (accentSelect) accentSelect.value = accent;
 }
 async function changeAccountPassword(event) {
   event.preventDefault();
@@ -1628,7 +1637,7 @@ $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){state.sear
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus();}if(e.key==='Escape'){$$('.modal[open]').forEach(d=>d.close());}});
 
 // Preferências locais do LUMI: tema e Não Perturbe.
-try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); } catch { applyTheme('light'); }
+try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); applyAccent(localStorage.getItem('lumi-accent') || 'yellow'); } catch { applyTheme('light'); applyAccent('yellow'); }
 setDoNotDisturb(getDoNotDisturb());
 
 // Reage à sessão existente e a login/logout em outras abas.
@@ -1691,3 +1700,5 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-share-contact]')){event.preventDefault();shareContactCard();return;}
   if(event.target.closest('#dmRecordAudio')){event.preventDefault();recordDMVoice();return;}
 });
+
+document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
