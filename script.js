@@ -55,8 +55,8 @@ const symbols = ['✳','🎮','🎨','☕','✦','🌙'];
 // Configure os selos oficiais aqui. Use IDs de usuários obtidos no Supabase Auth.
 const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona do LUMI
 const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de contas verificadas, aprovadas por você
-const TESTER_USER_IDS = []; // Adicione aqui UUIDs de testers autorizados
-const STAFF_USER_IDS = []; // Adicione aqui UUIDs da equipe do LUMI
+const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs de testers autorizados
+const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs da equipe do LUMI
 function accountBadges(userId) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
