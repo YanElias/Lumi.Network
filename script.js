@@ -105,6 +105,7 @@ function updateIdentity() {
 }
 
 function setPage(page) {
+  if (page === 'settings' && !requireAuth()) return;
   state.page = page;
   $$('.rail-button[data-page]').forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
   const main = $('.main-panel');
@@ -116,6 +117,7 @@ function setPage(page) {
   if (page === 'discover') { renderDiscover(); return; }
   if (page === 'inbox') { renderInbox(); return; }
   if (page === 'profile') { renderProfile(); return; }
+  if (page === 'settings') { renderSettings(); return; }
   renderHome();
 }
 
@@ -1291,20 +1293,70 @@ async function sendDM(event) {
   if(error){console.error(error);toast(`Não consegui enviar: ${error.message}`,'error');return;}
   state.dmMessages.push(...await signDMFileUrls([data])); input.value='';fileInput.value='';renderDMMessages();input.focus();
 }
+
+function applyTheme(theme) {
+  const selected = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = selected;
+  document.documentElement.style.colorScheme = selected;
+  try { localStorage.setItem('lumi-theme', selected); } catch {}
+}
+function getDoNotDisturb() {
+  try { return localStorage.getItem('lumi-do-not-disturb') === 'true'; } catch { return false; }
+}
+function setDoNotDisturb(enabled) {
+  try { localStorage.setItem('lumi-do-not-disturb', String(Boolean(enabled))); } catch {}
+  document.documentElement.dataset.doNotDisturb = String(Boolean(enabled));
+}
+function renderSettings() {
+  $('.main-panel').classList.remove('workspace-mode');
+  $('.app-shell').classList.remove('workspace-mode','inbox-mode','mobile-chat-open');
+  $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Configurações';
+  const theme = document.documentElement.dataset.theme || 'light';
+  const dnd = getDoNotDisturb();
+  $('#pageContent').innerHTML = \`
+    <section class="page-placeholder settings-page">
+      <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
+      <p>Personalize sua experiência e cuide da sua conta.</p>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" \${theme==='light'?'selected':''}>Claro</option><option value="dark" \${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI não deve insistir com retornos automáticos de chamadas. As próximas funções de chamada usarão esta preferência.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" \${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
+      <p class="settings-help">Tema e Não Perturbe são salvos neste navegador e ainda não sincronizam entre dispositivos.</p>
+    </section>\`;
+}
+async function changeAccountPassword(event) {
+  event.preventDefault();
+  if (!state.user?.email) { toast('Entre na sua conta para alterar a senha.','error'); return; }
+  const current = $('#currentPassword').value;
+  const next = $('#newPassword').value;
+  const confirm = $('#confirmPassword').value;
+  if (next.length < 6) { toast('A nova senha precisa ter pelo menos 6 caracteres.','error'); return; }
+  if (next !== confirm) { toast('A confirmação da nova senha não corresponde.','error'); return; }
+  if (current === next) { toast('Escolha uma senha diferente da atual.','error'); return; }
+  const button = $('#passwordChangeForm button[type="submit"]');
+  button.disabled = true; button.textContent = 'Verificando…';
+  const verified = await supabase.auth.signInWithPassword({email:state.user.email,password:current});
+  if (verified.error) { button.disabled=false; button.textContent='Atualizar senha'; toast('A senha atual está incorreta.','error'); return; }
+  const changed = await supabase.auth.updateUser({password:next});
+  button.disabled=false; button.textContent='Atualizar senha';
+  if (changed.error) { toast(\`Não foi possível alterar a senha: \${changed.error.message}\`,'error'); return; }
+  $('#passwordChangeForm').reset(); toast('Senha alterada com sucesso!','success');
+}
+
 function renderProfile() {
   $('.main-panel').classList.remove('workspace-mode');
   $('.app-shell').classList.remove('workspace-mode','inbox-mode','mobile-chat-open');
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Perfil';
   const name=state.profile?.display_name || state.user?.email?.split('@')[0] || 'Visitante';
   const photo = state.profile?.avatar_url;
-  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
+  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
 }
 async function saveProfile(event) {
   event.preventDefault(); if (!state.user) return;
   const display_name=$('#profileDisplayName').value.trim(); if (!display_name) return;
-  const {error}=await supabase.from('profiles').update({display_name}).eq('id',state.user.id);
-  if(error){toast(`Não foi possível salvar: ${error.message}`,'error');return;}
-  state.profile.display_name=display_name; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
+  const bio=$('#profileBio')?.value.trim() || '';
+  const {error}=await supabase.from('profiles').update({display_name,bio}).eq('id',state.user.id);
+  if(error){toast(error.message.toLowerCase().includes('bio') ? 'Execute database/profile-settings.sql no SQL Editor do Supabase e tente novamente.' : `Não foi possível salvar: ${error.message}`,'error');return;}
+  state.profile.display_name=display_name; state.profile.bio=bio; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
 }
 async function uploadProfilePhoto(file) {
   if (!state.user || !file) return;
@@ -1427,6 +1479,8 @@ document.addEventListener('click', async event=>{
 });
 
 $('#authForm').addEventListener('submit',handleAuth);
+document.addEventListener('change',e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiDnd'){setDoNotDisturb(e.target.checked);toast(e.target.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');}});
+document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
 $('#channelForm').addEventListener('submit',createChannel);
@@ -1458,6 +1512,10 @@ $('#notificationsButton').addEventListener('click',()=>toast('Notificações ent
 $('#rightPanelMenu').addEventListener('click',()=>toast('Mais opções de perfil chegam em breve.'));
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){state.search=e.target.value.trim();setPage('discover');}});
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus();}if(e.key==='Escape'){$$('.modal[open]').forEach(d=>d.close());}});
+
+// Preferências locais do LUMI: tema e Não Perturbe.
+try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); } catch { applyTheme('light'); }
+setDoNotDisturb(getDoNotDisturb());
 
 // Reage à sessão existente e a login/logout em outras abas.
 const {data:{session}}=await supabase.auth.getSession();
