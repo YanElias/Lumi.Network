@@ -693,6 +693,10 @@ async function joinGroupVoice() {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: false
     });
+    const voiceRole = state.activeSpace?.role || 'member';
+    const voiceAllowed = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(voiceRole) || ['owner','admin'].includes(voiceRole);
+    v.muted = !voiceAllowed;
+    if (!voiceAllowed) v.localStream.getAudioTracks().forEach(track => track.enabled = false);
     v.channelId = channel.id;
     monitorLocalGroupVoice();
 
@@ -778,6 +782,9 @@ async function joinGroupVoice() {
 function toggleGroupVoiceMute() {
   const v = state.groupVoice;
   if (!v.localStream) return;
+  const role=state.activeSpace?.role||'member';
+  const allowed=(state.activeChannel?.speak_roles||['owner','admin','moderator','developer','member','newcomer']).includes(role)||['owner','admin'].includes(role);
+  if(v.muted&&!allowed){toast('Seu cargo está em modo ouvinte neste canal.','error');return;}
   v.muted = !v.muted;
   v.localStream.getAudioTracks().forEach(track => track.enabled = !v.muted);
   renderGroupVoiceMembers();
@@ -1027,7 +1034,8 @@ async function loadConversations() {
         id: member?.user_id || other?.id,
         display_name: other?.display_name || other?.username || 'Pessoa LUMI',
         username: other?.username || 'lumi-user',
-        avatar_url: other?.avatar_url || ''
+        avatar_url: other?.avatar_url || '',
+        vip_purchased: Boolean(other?.vip_purchased)
       }
     };
   }).filter(Boolean);
@@ -1035,7 +1043,7 @@ async function loadConversations() {
 }
 function renderConversationList() {
   const html = state.conversations.length
-    ? state.conversations.map(c => `<button class="dm-conversation-entry ${state.activeConversation?.id===c.id?'active':''}" data-open-dm="${c.id}">${avatarMarkup(c.otherUser.display_name || c.otherUser.username || '?',c.otherUser.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(c.otherUser.display_name || c.otherUser.username || 'Pessoa LUMI')}</strong><small>@${escapeHTML(c.otherUser.username || 'lumi-user')}</small></span><span class="dm-entry-arrow material-symbols-rounded">chevron_right</span></button>`).join('')
+    ? state.conversations.map(c => `<button class="dm-conversation-entry ${state.activeConversation?.id===c.id?'active':''}" data-open-dm="${c.id}">${avatarMarkup(c.otherUser.display_name || c.otherUser.username || '?',c.otherUser.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(c.otherUser.display_name || c.otherUser.username || 'Pessoa LUMI')} ${accountBadges(c.otherUser.id,c.otherUser.vip_purchased)}</strong><small>@${escapeHTML(c.otherUser.username || 'lumi-user')}</small></span><span class="dm-entry-arrow material-symbols-rounded">chevron_right</span></button>`).join('')
     : `<div class="dm-empty-small"><span>✉</span><strong>Nenhuma conversa ainda</strong><p>Busque uma pessoa para mandar a primeira mensagem.</p></div>`;
   ['#dmConversationList', '#dmMobileConversationList'].forEach(selector => {
     const host = $(selector);
