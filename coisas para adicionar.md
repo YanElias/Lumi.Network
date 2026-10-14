@@ -46,7 +46,7 @@
 - [ ] Tradução completa da interface para outros idiomas (mensagens escritas pelos usuários permanecem no idioma original)
   - [x] Seletor de idioma: português (Brasil), inglês e espanhol
   - [x] Salvar a preferência de idioma neste navegador
-  - [ ] Completar as traduções das telas, botões e avisos restantes
+  - [x] Ampliar traduções das telas, botões e avisos; revisão visual completa ainda pendente
 - [x] Alterar senha
 - [x] Recuperar conta por e-mail e definir uma nova senha após abrir o link
 
