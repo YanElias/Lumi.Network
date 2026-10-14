@@ -1,3 +1,4 @@
+import { supabase } from './database/supabase.js';
 
 
 const $ = (s, root=document) => root.querySelector(s);
