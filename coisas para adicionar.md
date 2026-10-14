@@ -46,7 +46,8 @@
 - [ ] Revisar e completar a tradução de toda a interface para inglês e espanhol (mensagens escritas pelos usuários permanecem no idioma original)
   - [x] Seletor de idioma: português (Brasil), inglês e espanhol
   - [x] Salvar a preferência de idioma neste navegador
-  - [x] Ampliar traduções das telas, botões, amizades, status de jogos e avisos; revisão visual completa ainda pendente
+  - [x] Ampliar traduções das telas, botões, amizades, status de jogos, configurações e perfil
+  - [ ] Revisão visual final de todas as telas e avisos em inglês e espanhol
 - [x] Alterar senha
 - [x] Recuperar conta por e-mail e definir uma nova senha após abrir o link
 
@@ -74,4 +75,11 @@
 - [ ] Testar edição e exclusão real de espaço com uma comunidade de teste
 - [x] Normalizar nomes de arquivos anexados (acentos e caracteres especiais) antes do envio ao Storage
 - [ ] Testar envio e visualização de fotos/vídeos com duas contas em espaços diferentes
+- [x] Refinar contraste e superfícies de componentes adicionais do modo escuro (menus, busca, notificações, anexos e controles)
 - [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular
+
+
+### Melhorias de navegação
+- [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
+- [ ] Mostrar uma dica visual do atalho `/` ao passar o mouse sobre a busca global
+- [ ] Adicionar navegação completa por teclado aos menus de mensagens, reações e notificações
