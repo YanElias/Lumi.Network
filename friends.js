@@ -83,6 +83,18 @@ async function removeFriend(id) {
   showToast('Amizade removida.');
   await loadRequests();
 }
+async function openFriendMessage(userId) {
+  if(!userId||!user)return;
+  const {data,error}=await supabase.rpc('start_direct_conversation',{p_user_id:userId});
+  if(error){showToast('Não foi possível abrir a conversa.');return;}
+  const id=typeof data==='string'?data:data?.conversation_id||data?.id;
+  $('#lumiFriendsDialog').close();
+  document.querySelector('[data-page="inbox"]')?.click();
+  if(id) window.setTimeout(()=>{
+    const entry=[...document.querySelectorAll('[data-open-dm]')].find(el=>el.dataset.openDm===id);
+    if(entry)entry.click();
+  },450);
+}
 function showToast(message) {
   const region=$('#toastRegion');
   if(region){const item=document.createElement('div');item.className='toast';item.textContent=message;region.append(item);setTimeout(()=>item.remove(),3200);}
@@ -114,7 +126,7 @@ function installUI() {
     const add=e.target.closest('[data-friend-add]');if(add){await addFriend(add.dataset.friendAdd);return;}
     const response=e.target.closest('[data-friend-respond]');if(response){await respond(response.dataset.friendRespond,response.dataset.accept==='true');return;}
     const remove=e.target.closest('[data-friend-remove]');if(remove){await removeFriend(remove.dataset.friendRemove);return;}
-    const message=e.target.closest('[data-friend-message]');if(message){dialog.close();document.querySelector('[data-page="inbox"]')?.click();setTimeout(()=>{const input=$('#dmMobilePeopleSearch')||$('#dmPeopleSearch');if(input){input.value='';input.focus();} },150);}
+    const message=e.target.closest('[data-friend-message]');if(message){await openFriendMessage(message.dataset.friendMessage);}
   });
 }
 installUI();
