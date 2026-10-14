@@ -44,7 +44,7 @@ function renderLists() {
 }
 async function loadRequests() {
   if(!user)return;
-  const {data,error}=await supabase.from('friend_requests').select('id,sender_id,recipient_id,status,created_at,sender:profiles!friend_requests_sender_id_fkey(id,username,display_name,avatar_url),recipient:profiles!friend_requests_recipient_id_fkey(id,username,display_name,avatar_url)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at',{ascending:false}).limit(200);
+  const {data,error}=await supabase.from('friend_requests').select('id,sender_id,recipient_id,status,created_at,sender:profiles!friend_requests_sender_id_fkey(id,username,display_name,avatar_url,activity_text),recipient:profiles!friend_requests_recipient_id_fkey(id,username,display_name,avatar_url,activity_text)').or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`).order('created_at',{ascending:false}).limit(200);
   if(error){console.error(error);$('#lumiFriendRequests').innerHTML='<p class="lumi-friend-muted">Não foi possível carregar amizades. Confira o SQL de amizades no Supabase.</p>';return;}
   requests=data||[];
   renderLists();
