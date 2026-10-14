@@ -151,7 +151,7 @@ function renderSpaceNav() {
         <div class="active-space-name"><small>SEU ESPAÇO · COMUNIDADE</small><strong>${escapeHTML(space.name)}</strong>${space.description ? `<p>${escapeHTML(space.description)}</p>` : ''}</div>
         <button class="icon-button active-space-menu" data-action="invite" title="Opções do espaço" aria-label="Opções do espaço"><span class="material-symbols-rounded">expand_more</span></button>
       </div>
-      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div>
+      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="edit-space"><span class="material-symbols-rounded">edit</span> Editar espaço</button><button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div>
       <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
       <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
       <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
@@ -318,6 +318,52 @@ async function createSpace(event) {
   }
 }
 
+async function editActiveSpace() {
+  const space = state.activeSpace;
+  if (!state.user || !space) return;
+  if (space.owner_id !== state.user.id) {
+    toast('Somente o dono pode editar este espaço.', 'error');
+    return;
+  }
+
+  const name = prompt('Novo nome do espaço (2 a 48 caracteres):', space.name);
+  if (name === null) return;
+  const cleanName = name.trim();
+  if (cleanName.length < 2 || cleanName.length > 48) {
+    toast('O nome deve ter entre 2 e 48 caracteres.', 'error');
+    return;
+  }
+
+  const description = prompt('Nova descrição do espaço (opcional):', space.description || '');
+  if (description === null) return;
+  const cleanDescription = description.trim();
+  if (cleanDescription.length > 500) {
+    toast('A descrição deve ter no máximo 500 caracteres.', 'error');
+    return;
+  }
+
+  const { data, error } = await supabase.from('spaces')
+    .update({ name: cleanName, description: cleanDescription })
+    .eq('id', space.id)
+    .eq('owner_id', state.user.id)
+    .select('*')
+    .single();
+
+  if (error || !data) {
+    console.error('Falha ao editar espaço:', error);
+    toast('Não consegui editar o espaço. Verifique as permissões do Supabase.', 'error');
+    return;
+  }
+
+  state.activeSpace = { ...space, ...data };
+  state.spaces = state.spaces.map(item => item.id === space.id ? { ...item, ...data } : item);
+  renderSpaceNav();
+  if (state.page === 'space') renderWorkspace();
+  else if (state.page === 'home') renderHome();
+  else if (state.page === 'discover') await renderDiscover();
+  toast('Espaço atualizado!', 'success');
+}
+
 async function deleteActiveSpace() {
   const space = state.activeSpace;
   if (!state.user || !space) return;
@@ -333,7 +379,7 @@ async function deleteActiveSpace() {
   const { error } = await supabase.from('spaces').delete().eq('id', space.id).eq('owner_id', state.user.id);
   if (error) {
     console.error('Falha ao apagar espaço:', error);
-    toast('Não consegui apagar. Confira se a migração database/owner-space-controls.sql foi aplicada no Supabase.', 'error');
+    toast('Não consegui apagar. Verifique as permissões do Supabase e tente novamente.', 'error');
     return;
   }
   state.spaces = state.spaces.filter(item => item.id !== space.id);
@@ -1735,6 +1781,7 @@ document.addEventListener('click', async event=>{
   else if(action==='show-inbox')setPage('inbox');
   else if(action==='create-channel'){if(requireAuth()&&state.activeSpace)openModal('channelModal');else if(!state.activeSpace)toast('Abra um espaço primeiro.');}
   else if(action==='invite')showInvite();
+  else if(action==='edit-space')await editActiveSpace();
   else if(action==='delete-space')await deleteActiveSpace();
   else if(action==='manage-members')await manageMembers();
   else if(action==='search-spaces'){state.search=$('#discoverQuery')?.value.trim()||'';renderDiscover();}
