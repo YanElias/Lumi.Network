@@ -17,7 +17,8 @@
 - [x] Mensagens de áudio — sugestão de Fabrício (tester)
 - [x] Notificações no navegador enquanto o LUMI está aberto
 - [ ] Poder atender chamadas fora do app
-- [ ] Música ao iniciar uma chamada
+- [x] Toque sonoro enquanto uma chamada de saída está chamando (toque simples gerado pelo navegador)
+- [ ] Música personalizada ao iniciar uma chamada
 - [x] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
   - [x] O retorno automático para quando a pessoa atende ou quando o usuário cancela as tentativas.
   - [x] Se o modo **Não Perturbe** estiver ativado, não fazer retorno automático nem insistir em chamadas.
@@ -33,7 +34,10 @@
 - [x] Adicionar uma aba de configurações
 - [x] Modo claro e modo escuro
 - [x] Temas personalizados (cores de destaque)
-- [ ] Suporte a outros idiomas
+- [ ] Tradução completa da interface para outros idiomas (mensagens escritas pelos usuários permanecem no idioma original)
+  - [x] Seletor de idioma: português (Brasil), inglês e espanhol
+  - [x] Salvar a preferência de idioma neste navegador
+  - [ ] Completar as traduções das telas, botões e avisos restantes
 - [x] Alterar senha
 
 ### Comunidade e VIP
@@ -47,4 +51,5 @@
 - Notificações de chamada só chegam enquanto o navegador/site está em execução; atender com o site fechado precisa de push, service worker e sinalização no servidor.
 - O pagamento VIP de R$ 10,00 precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir.
 - A atividade do perfil é manual; detectar automaticamente jogos/apps exige integração específica.
-- Música ao iniciar chamadas e interface totalmente traduzida para outros idiomas ainda não estão implementadas.
+- Música personalizada ao iniciar chamadas ainda não está implementada; por enquanto existe um toque simples de chamada.
+- A tradução da interface começou em português (Brasil), inglês e espanhol. Mensagens escritas pelos usuários não são traduzidas, e ainda faltam algumas strings das telas e avisos.
