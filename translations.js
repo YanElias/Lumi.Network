@@ -612,6 +612,46 @@ Object.assign(STRINGS.es, {
   "Mais opções de perfil chegam em breve.":"Próximamente habrá más opciones de perfil."
 });
 
+/* Revisão adicional: seletor de canal, chamadas e mensagens de interface. */
+Object.assign(STRINGS.en, {
+  "Tipo de canal":"Channel type","Canal de texto":"Text channel","Canal de voz":"Voice channel",
+  "Mensagens e conversas":"Messages and conversations","Converse por áudio":"Talk by voice",
+  "Novo canal":"New channel","ORGANIZE AS CONVERSAS":"ORGANIZE YOUR CONVERSATIONS",
+  "Cada canal tem um assunto e uma conversa próprios.":"Each channel has its own topic and conversation.",
+  "Nome do canal":"Channel name","Descrição":"Description","Qual é o assunto deste canal?":"What is this channel about?",
+  "Criar canal":"Create channel","Ex.: papo-geral":"e.g. general-chat","Ex.: sala-de-voz":"e.g. voice-room",
+  "Espaços são comunidades. Canais são os lugares onde as conversas acontecem.":"Spaces are communities. Channels are where conversations happen.",
+  "FEITO PARA SE ENCONTRAR":"MADE TO CONNECT","Uma dica LUMI":"A LUMI tip",
+  "PAINEL PESSOAL":"PERSONAL DASHBOARD","Seu resumo":"Your overview",
+  "Espaços":"Spaces","Canais":"Channels","Mensagens hoje":"Messages today",
+  "Tema claro":"Light theme","Tema escuro":"Dark theme","Cor de destaque":"Accent color",
+  "Aplicar":"Apply","Cancelar":"Cancel","Confirmar":"Confirm","Voltar":"Back","Fechar":"Close",
+  "Copiar":"Copy","Copiado!":"Copied!","Tentar novamente":"Try again","Carregando…":"Loading…",
+  "Nenhum resultado":"No results","Buscar":"Search","Criar":"Create","Editar":"Edit","Excluir":"Delete",
+  "Salvar alterações":"Save changes","As alterações foram salvas.":"Changes saved.",
+  "Você não tem permissão para fazer isso.":"You don't have permission to do that.",
+  "Algo deu errado. Tente novamente.":"Something went wrong. Please try again."
+});
+Object.assign(STRINGS.es, {
+  "Tipo de canal":"Tipo de canal","Canal de texto":"Canal de texto","Canal de voz":"Canal de voz",
+  "Mensagens e conversas":"Mensajes y conversaciones","Converse por áudio":"Habla por voz",
+  "Novo canal":"Nuevo canal","ORGANIZE AS CONVERSAS":"ORGANIZA LAS CONVERSACIONES",
+  "Cada canal tem um assunto e uma conversa próprios.":"Cada canal tiene su propio tema y conversación.",
+  "Nome do canal":"Nombre del canal","Descrição":"Descripción","Qual é o assunto deste canal?":"¿De qué trata este canal?",
+  "Criar canal":"Crear canal","Ex.: papo-geral":"p. ej., charla-general","Ex.: sala-de-voz":"p. ej., sala-de-voz",
+  "Espaços são comunidades. Canais são os lugares onde as conversas acontecem.":"Los espacios son comunidades. Los canales son donde ocurren las conversaciones.",
+  "FEITO PARA SE ENCONTRAR":"HECHO PARA CONECTAR","Uma dica LUMI":"Un consejo de LUMI",
+  "PAINEL PESSOAL":"PANEL PERSONAL","Seu resumo":"Tu resumen",
+  "Espaços":"Espacios","Canais":"Canales","Mensagens hoje":"Mensajes de hoy",
+  "Tema claro":"Tema claro","Tema escuro":"Tema oscuro","Cor de destaque":"Color de acento",
+  "Aplicar":"Aplicar","Cancelar":"Cancelar","Confirmar":"Confirmar","Voltar":"Volver","Fechar":"Cerrar",
+  "Copiar":"Copiar","Copiado!":"¡Copiado!","Tentar novamente":"Intentar de nuevo","Carregando…":"Cargando…",
+  "Nenhum resultado":"No hay resultados","Buscar":"Buscar","Criar":"Crear","Editar":"Editar","Excluir":"Eliminar",
+  "Salvar alterações":"Guardar cambios","As alterações foram salvas.":"Se guardaron los cambios.",
+  "Você não tem permissão para fazer isso.":"No tienes permiso para hacer eso.",
+  "Algo deu errado. Tente novamente.":"Algo salió mal. Inténtalo de nuevo."
+});
+
 const STORAGE_KEY = "lumi-language";
 const textSources = new WeakMap();
 const attributeSources = new WeakMap();
