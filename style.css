@@ -2350,3 +2350,91 @@ html[data-theme="dark"] .dm-mobile-back:hover {
   background-color:var(--accent-pale,#302d1c) !important;
   color:var(--accent,#ffe47a) !important;
 }
+
+
+/* LUMI — modo escuro de verdade: cobre superfícies restantes sem afetar imagens */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --white: #20211b;
+  --canvas: #151611;
+  --surface-bg: #20211b;
+  --ink: #f1f0e8;
+  --muted-color: #aaa99c;
+  --muted: #aaa99c;
+  --line: #38392f;
+}
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-panel,
+html[data-theme="dark"] .page-content,
+html[data-theme="dark"] .workspace-mode,
+html[data-theme="dark"] .inbox-mode,
+html[data-theme="dark"] .workspace-chat-view,
+html[data-theme="dark"] .dm-chat-full,
+html[data-theme="dark"] .page-placeholder,
+html[data-theme="dark"] .settings-view,
+html[data-theme="dark"] .settings-content,
+html[data-theme="dark"] .profile-view,
+html[data-theme="dark"] .friends-view,
+html[data-theme="dark"] .calls-view,
+html[data-theme="dark"] .notifications-view {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.section-block,.feature-card,.space-card,.empty-card,.empty-state,
+  .empty-illustration,.settings-card,.settings-section,.settings-panel,.settings-row,
+  .profile-summary,.profile-preview-card,.profile-card,.right-widget,.tip-card,
+  .inbox-note,.notice-box,.notification-panel,.notification-item,.search-overlay,
+  .search-results,.search-result,.dropdown-menu,.popover,.context-menu,.modal-card,
+  .dialog-card,.lumi-friends-dialog,.lumi-incoming-card,.call-panel,.call-controls,
+  .voice-room-card,.member-list,.member-row,.dm-chat-panel,.dm-conversation-list,
+  .dm-mobile-inbox,.dm-chat-head,.dm-chat-header,.dm-composer,.dm-message-composer,
+  .dm-file-card,.attachment-card,.chat-panel,.chat-header,.channel-header,
+  .channel-chat-head,.message-composer,.workspace-sidebar,.workspace-header,
+  .workspace-content,.workspace-chat-view,.dm-chat-full,.dm-conversation-entry,
+  .dm-person-result,.dm-sidebar-results,.active-space-name,.active-space-actions,
+  .space-manage-details,.lumi-blocked-row,.lumi-blocked-empty,.space-reply-preview,
+  .space-reply-banner,.space-reaction,.channel-entry,.sidebar-search,.global-search
+) {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  input,textarea,select,.form-input,[contenteditable="true"],
+  .sidebar-search input,.global-search input
+) {
+  background-color: #171812 !important;
+  color: #f1f0e8 !important;
+  border-color: #414237 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row p,.feature-card p,.space-card p,.settings-help,.settings-description,
+  .profile-bio-preview,.notification-item small,.dm-file-card small,
+  .muted,.secondary-text,.empty-state p
+) { color: #b9b8aa !important; }
+html[data-theme="dark"] .app-shell :is(
+  button:not(.primary-button):not(.brand-mark):not(.rail-space):not(.avatar):not(.user-avatar):not(.top-avatar)
+) {
+  border-color: #414237;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.feature-card,.space-card,.empty-card,.settings-card,.settings-section,
+  .profile-summary,.profile-preview-card,.right-widget,.tip-card,.inbox-note,.notice-box
+) {
+  box-shadow: none;
+}
+html[data-theme="dark"] [style*="background: white"],
+html[data-theme="dark"] [style*="background:white"],
+html[data-theme="dark"] [style*="background-color: white"],
+html[data-theme="dark"] [style*="background-color:white"],
+html[data-theme="dark"] [style*="background: #fff"],
+html[data-theme="dark"] [style*="background:#fff"],
+html[data-theme="dark"] [style*="background-color: #fff"],
+html[data-theme="dark"] [style*="background-color:#fff"],
+html[data-theme="dark"] [style*="background: rgb(255"],
+html[data-theme="dark"] [style*="background-color: rgb(255"] {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
