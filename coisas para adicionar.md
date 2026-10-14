@@ -35,7 +35,7 @@
 - [x] Adicionar BIO ao perfil
 - [x] Adicionar status
 - [x] Card de contato
-- [ ] Mostrar qual jogo a pessoa está jogando, como o Discord Rich Presence
+- [x] Mostrar a atividade/jogo informado no perfil para amigos\n- [ ] Detectar jogos automaticamente como Rich Presence (exige integração externa)
 - [ ] Adicionar Amizade
 
 ### Configurações e personalização
