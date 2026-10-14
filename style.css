@@ -1841,3 +1841,9 @@ img.dm-avatar.avatar-image { display:block; width:36px!important; height:36px!im
 html[data-theme="dark"] .lumi-call-custom-message { background:var(--accent-soft); color:var(--ink); border-color:var(--line); }
 html[data-accent="blue"] .channel-entry.active, html[data-accent="green"] .channel-entry.active, html[data-accent="purple"] .channel-entry.active { background:var(--accent-pale); color:var(--accent-strong); }
 html[data-accent="blue"] .settings-toggle input:checked + .settings-toggle-track, html[data-accent="green"] .settings-toggle input:checked + .settings-toggle-track, html[data-accent="purple"] .settings-toggle input:checked + .settings-toggle-track { background:var(--accent)!important; }
+
+
+/* LUMI — recuperação de conta */
+.auth-forgot-password { display:block; margin:10px auto 0; padding:6px 10px; }
+.auth-forgot-password[hidden] { display:none!important; }
+#passwordRecoveryForm .form-error:empty { display:none; }
