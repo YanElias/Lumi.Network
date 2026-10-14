@@ -940,7 +940,7 @@ async function openConversation(id, refreshList = true) {
   state.dmRealtime = supabase.channel(`lumi-dm-${id}`).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:`conversation_id=eq.${id}`},async payload=>{
     if (state.dmMessages.some(m=>m.id===payload.new.id)) return;
     const {data:msg} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('id',payload.new.id).maybeSingle();
-    if (msg && state.activeConversation?.id===id) { state.dmMessages.push(...await signDMFileUrls([msg])); renderDMMessages(); }
+    if (msg && state.activeConversation?.id===id) { state.dmMessages.push(...await signDMFileUrls([msg])); renderDMMessages(); if(msg.sender_id!==state.user?.id&&document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification(msg.profiles?.display_name||'Nova mensagem no LUMI',{body:msg.content||'Enviou um arquivo'});n.onclick=()=>window.focus();}catch{}} }
   }).subscribe();
 }
 // Chamadas WebRTC (voz/vídeo) com sinalização pelo Supabase.
@@ -1315,6 +1315,7 @@ function showIncomingCall(name,mode) {
   let layer=$('#lumiIncomingCall'); if(!layer){layer=document.createElement('div');layer.id='lumiIncomingCall';layer.className='lumi-incoming-call';document.body.append(layer);}
   layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p><div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
   layer.hidden=false;
+  if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification('Chamada recebida no LUMI',{body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.'});n.onclick=()=>window.focus();}catch{}}
 }
 async function acceptIncomingCall() {
   const offer=state.pendingCallOffer; if(!offer)return;
