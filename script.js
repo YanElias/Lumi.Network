@@ -1714,10 +1714,12 @@ function renderSettings() {
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">music_note</div><div class="settings-card-content"><h2>Toque de chamada</h2><p>Escolha um áudio para tocar enquanto você liga. O arquivo fica salvo neste navegador.</p><input id="lumiCallToneFile" type="file" accept="audio/*" hidden><div class="settings-inline-actions"><button class="secondary-button" id="chooseCallTone" type="button">Escolher áudio</button><button class="secondary-button" id="previewCallTone" type="button">Ouvir toque</button><button class="text-button" id="removeCallTone" type="button">Usar toque padrão</button></div><small class="settings-help" id="callToneStatus">Toque padrão do LUMI</small></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">chat</div><div class="settings-card-content"><h2>Mensagem nas chamadas</h2><p>Escreva uma mensagem curta que aparecerá para a pessoa quando você ligar. Ela será reutilizada nas tentativas automáticas.</p><label class="field-label" for="lumiCallRetryMessage">Mensagem (opcional)</label><input class="form-input" id="lumiCallRetryMessage" maxlength="160" value="${escapeHTML(retryMessage)}" placeholder="Ex.: Opa, me atende quando puder!"><small class="settings-help">Até 160 caracteres. Salva neste navegador.</small></div></section>
       <section class="settings-card lumi-infinity-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><div class="lumi-infinity-eyebrow">EDIÇÃO ESPECIAL</div><h2>LUMI INFINITY</h2><p>Um pagamento único de <strong>R$ 10,00</strong>. Sem assinatura, mensalidade ou renovação automática.</p><ul class="lumi-infinity-perks"><li><span class="material-symbols-rounded">palette</span><span><strong>Paletas exclusivas</strong><small>Azul, verde e roxo para personalizar sua experiência.</small></span></li><li><span class="material-symbols-rounded">auto_awesome</span><span><strong>Mais identidade</strong><small>Novos detalhes de personalização planejados para o INFINITY.</small></span></li></ul><p>${isVip ? "Seu perfil já tem LUMI INFINITY ativado." : "A compra ainda não está disponível: estamos preparando um checkout seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "INFINITY ativado" : "Compra em breve"}</button></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">person_off</div><div class="settings-card-content"><h2>Pessoas bloqueadas</h2><p>Veja quem você bloqueou e desbloqueie alguém quando quiser voltar a conversar.</p><div id="lumiBlockedUsers" class="lumi-blocked-users"><p class="settings-help">Carregando lista…</p></div></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
       <p class="settings-help">Tema e cor de destaque ficam neste navegador. O Não Perturbe é sincronizado com sua conta quando você está conectado.</p>
     </section>`;
   const accentSelect = $('#lumiAccent'); if (accentSelect) accentSelect.value = accent;
+  loadBlockedUsers();
 }
 async function changeAccountPassword(event) {
   event.preventDefault();
@@ -2044,6 +2046,62 @@ document.addEventListener('change', event => {
   }
 });
 document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
+
+
+async function loadBlockedUsers() {
+  const host = $('#lumiBlockedUsers');
+  if (!host) return;
+  if (!state.user) {
+    host.innerHTML = '<p class="settings-help">Entre na sua conta para gerenciar pessoas bloqueadas.</p>';
+    return;
+  }
+  host.innerHTML = '<p class="settings-help">Carregando lista…</p>';
+  const { data: blocks, error } = await supabase
+    .from('user_blocks')
+    .select('blocked_id')
+    .eq('blocker_id', state.user.id);
+  if (error) {
+    host.innerHTML = '<p class="settings-help">Não foi possível carregar a lista. Confira se o SQL de bloqueios do LUMI foi executado no Supabase.</p>';
+    console.warn('Lista de bloqueios:', error.message);
+    return;
+  }
+  const ids = [...new Set((blocks || []).map(row => row.blocked_id).filter(Boolean))];
+  if (!ids.length) {
+    host.innerHTML = '<div class="lumi-blocked-empty"><span class="material-symbols-rounded">check_circle</span><span><strong>Ninguém bloqueado</strong><small>Sua lista está vazia.</small></span></div>';
+    return;
+  }
+  const { data: people, error: peopleError } = await supabase
+    .from('profiles')
+    .select('id,display_name,username,avatar_url')
+    .in('id', ids);
+  if (peopleError) {
+    host.innerHTML = '<p class="settings-help">Os bloqueios foram encontrados, mas não consegui carregar os perfis.</p>';
+    return;
+  }
+  const byId = new Map((people || []).map(person => [person.id, person]));
+  host.innerHTML = ids.map(id => {
+    const person = byId.get(id) || {};
+    const name = person.display_name || person.username || 'Pessoa do LUMI';
+    const avatar = person.avatar_url
+      ? '<img src="' + escapeHTML(person.avatar_url) + '" alt="" class="lumi-blocked-avatar">'
+      : '<span class="lumi-blocked-avatar lumi-blocked-avatar-fallback">' + escapeHTML(initials(name)) + '</span>';
+    return '<div class="lumi-blocked-row">' + avatar
+      + '<span class="lumi-blocked-person"><strong>' + escapeHTML(name) + '</strong>'
+      + (person.username ? '<small>@' + escapeHTML(person.username) + '</small>' : '')
+      + '</span><button type="button" class="secondary-button" data-unblock-user="' + escapeHTML(id) + '">Desbloquear</button></div>';
+  }).join('');
+}
+
+document.addEventListener('click', async event => {
+  const button = event.target.closest('[data-unblock-user]');
+  if (!button) return;
+  const userId = button.dataset.unblockUser;
+  if (!userId || button.disabled) return;
+  button.disabled = true;
+  button.textContent = 'Desbloqueando…';
+  await toggleBlockUser(userId);
+  await loadBlockedUsers();
+});
 
 
 // A tela de carregamento só fecha quando a inicialização principal termina sem erro.
