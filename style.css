@@ -2266,3 +2266,87 @@ html[data-theme="dark"] .space-manage-details[open] > summary {
 html[data-theme="dark"] .lumi-blocked-row{background:#20211b;border-color:#38392f}
 html[data-theme="dark"] .lumi-blocked-avatar-fallback{background:#302d1c;color:#ffe47a}
 @media(max-width:560px){.lumi-blocked-row{flex-wrap:wrap}.lumi-blocked-person{min-width:calc(100% - 58px)}.lumi-blocked-row button{margin-left:48px}}
+
+
+/* LUMI — acabamento do modo escuro: superfícies fixas que ainda ficavam brancas */
+html[data-theme="dark"] .workspace-chat-view,
+html[data-theme="dark"] .dm-chat-full,
+html[data-theme="dark"] .app-shell.inbox-mode .space-sidebar,
+html[data-theme="dark"] .app-shell.inbox-mode #dmMobileInbox,
+html[data-theme="dark"] .dm-chat-full .dm-composer,
+html[data-theme="dark"] .dm-chat-full .dm-chat-head,
+html[data-theme="dark"] .workspace-chat-view .channel-chat-head,
+html[data-theme="dark"] .workspace-chat-view .message-composer,
+html[data-theme="dark"] .dm-chat-full .dm-attachment-hint,
+html[data-theme="dark"] .dm-sidebar-results .dm-person-result,
+html[data-theme="dark"] .active-space-name,
+html[data-theme="dark"] .active-space-actions button,
+html[data-theme="dark"] .sidebar-create-channel,
+html[data-theme="dark"] .dm-start-button,
+html[data-theme="dark"] .dm-conversation-entry,
+html[data-theme="dark"] .dm-mobile-back {
+  background-color:#20211b !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .workspace-chat-view .message-composer textarea,
+html[data-theme="dark"] .dm-chat-full .dm-composer textarea,
+html[data-theme="dark"] .dm-chat-full .dm-composer input,
+html[data-theme="dark"] .dm-chat-full .dm-composer [contenteditable="true"] {
+  background-color:#171812 !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:#414237 !important;
+}
+html[data-theme="dark"] .space-message-actions button,
+html[data-theme="dark"] .dm-chat-full .dm-call-actions .dm-call-button,
+html[data-theme="dark"] .dm-call-controls .icon-button,
+html[data-theme="dark"] .dm-attach-button,
+html[data-theme="dark"] .dm-start-button {
+  background-color:#292a23 !important;
+  color:#e6e4d8 !important;
+  border-color:#414237 !important;
+}
+html[data-theme="dark"] .space-message-actions button:hover,
+html[data-theme="dark"] .dm-chat-full .dm-call-actions .dm-call-button:hover,
+html[data-theme="dark"] .dm-call-controls .icon-button:hover,
+html[data-theme="dark"] .dm-attach-button:hover {
+  background-color:var(--accent-pale,#302d1c) !important;
+  color:var(--accent,#ffe47a) !important;
+}
+html[data-theme="dark"] .space-reply-preview,
+html[data-theme="dark"] .space-reply-banner,
+html[data-theme="dark"] .space-reaction,
+html[data-theme="dark"] .active-space-actions,
+html[data-theme="dark"] .channel-entry,
+html[data-theme="dark"] .dm-conversation-entry.active {
+  background-color:#292a23 !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .lumi-incoming-card,
+html[data-theme="dark"] .lumi-friends-dialog,
+html[data-theme="dark"] .lumi-blocked-row,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .context-menu,
+html[data-theme="dark"] .notification-panel,
+html[data-theme="dark"] .reaction-picker,
+html[data-theme="dark"] .emoji-picker,
+html[data-theme="dark"] .search-results,
+html[data-theme="dark"] [role="menu"],
+html[data-theme="dark"] [role="dialog"] {
+  background-color:#20211b !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .lumi-incoming-card p,
+html[data-theme="dark"] .lumi-incoming-card small,
+html[data-theme="dark"] .lumi-friends-dialog p,
+html[data-theme="dark"] .lumi-blocked-row small {
+  color:var(--muted,#aaa99c) !important;
+}
+html[data-theme="dark"] .sidebar-create-channel:hover,
+html[data-theme="dark"] .active-space-actions button:hover,
+html[data-theme="dark"] .dm-mobile-back:hover {
+  background-color:var(--accent-pale,#302d1c) !important;
+  color:var(--accent,#ffe47a) !important;
+}
