@@ -2887,3 +2887,7 @@ html[data-streamer-mode="true"] .lumi-badge { visibility: hidden !important; }
   .lumi-active-call-dock .secondary-button { font-size: 11px; padding: 8px; }
   .lumi-active-call-copy strong { font-size: 12px; }
 }
+
+
+.creator-badge { display:inline-grid; place-items:center; min-width:16px; height:16px; padding:0 3px; border-radius:5px; background:#ef4444; color:#fff!important; font-size:10px; font-weight:900; vertical-align:middle; }
+html[data-theme="dark"] .creator-badge { background:#f05252; color:#fff!important; }
