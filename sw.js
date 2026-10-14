@@ -12,6 +12,11 @@ self.addEventListener('notificationclick',event=>{
     targetUrl.searchParams.set('lumi_accept_call','1');
     targetUrl.searchParams.set('conversation_id',event.notification.data.conversation_id);
   }
+  if(event.action==='reply' && event.notification.data?.conversation_id){
+    const reply = String(event.reply || '').trim().slice(0,4000);
+    targetUrl.searchParams.set('conversation_id',event.notification.data.conversation_id);
+    if(reply) targetUrl.searchParams.set('lumi_reply',reply);
+  }
   const target=targetUrl.href;
   event.waitUntil((async()=>{
     const clientsList=await self.clients.matchAll({type:'window',includeUncontrolled:true});
