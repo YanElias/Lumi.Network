@@ -861,8 +861,14 @@ async function deleteChannel(id) {
   const kindLabel = channel.kind === 'voice' ? 'canal de voz' : 'canal de texto';
   if (!confirm(`Excluir o ${kindLabel} “${channel.name}”? As mensagens e os arquivos associados podem ser removidos e esta ação não pode ser desfeita.`)) return;
   const previousChannelId = state.activeChannel?.id;
+  const {data: attachments} = await supabase.from('messages').select('attachment_path').eq('channel_id', channel.id).not('attachment_path', 'is', null);
   const {error} = await supabase.from('channels').delete().eq('id', channel.id).eq('space_id', state.activeSpace.id);
   if (error) { console.error(error); toast(`Não foi possível excluir o canal: ${error.message}`, 'error'); return; }
+  const paths = (attachments || []).map(item => item.attachment_path).filter(Boolean);
+  if (paths.length) {
+    const {error: storageError} = await supabase.storage.from('space-attachments').remove(paths);
+    if (storageError) console.warn('LUMI: não foi possível limpar todos os anexos do canal excluído.', storageError);
+  }
   const nextChannel = state.channels.find(item => item.id !== channel.id);
   if (state.groupVoice?.channelId === channel.id) await leaveGroupVoice();
   await loadWorkspace(state.activeSpace.id, previousChannelId === channel.id ? nextChannel?.id || null : previousChannelId);
