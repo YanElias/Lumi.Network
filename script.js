@@ -1881,6 +1881,8 @@ function renderSettings() {
       <p class="settings-help">Tema e cor de destaque ficam neste navegador. O Não Perturbe é sincronizado com sua conta quando você está conectado.</p>
     </section>`;
   const accentSelect = $('#lumiAccent'); if (accentSelect) accentSelect.value = accent;
+  const streamerToggle = $('#lumiStreamerMode'); if (streamerToggle) streamerToggle.checked = localStorage.getItem('lumi-streamer-mode') === 'true';
+  const presenceSelect = $('#lumiPresenceStatus'); if (presenceSelect) presenceSelect.value = localStorage.getItem('lumi-presence-status') || 'online';
   loadBlockedUsers();
 }
 async function changeAccountPassword(event) {
