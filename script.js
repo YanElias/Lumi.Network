@@ -1338,6 +1338,81 @@ function scheduleCallRetry() {
 let lumiCallToneContext = null;
 let lumiCallToneTimer = null;
 let lumiCallToneOscillators = [];
+let customCallToneUrl = null;
+let customCallToneAudio = null;
+let customCallTonePreview = null;
+
+function lumiToneDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('lumi-local-preferences', 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains('media')) request.result.createObjectStore('media');
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function loadCustomCallTone() {
+  try {
+    const db = await lumiToneDB();
+    const blob = await new Promise((resolve, reject) => {
+      const request = db.transaction('media').objectStore('media').get('outgoing-call-tone');
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    setCustomCallTone(blob);
+  } catch (error) { console.warn('Não foi possível carregar o toque personalizado.', error); }
+}
+function setCustomCallTone(blob) {
+  if (customCallToneUrl) URL.revokeObjectURL(customCallToneUrl);
+  customCallToneUrl = blob ? URL.createObjectURL(blob) : null;
+  const status = document.getElementById('callToneStatus');
+  if (status) status.textContent = blob ? 'Toque personalizado salvo neste navegador.' : 'Toque padrão do LUMI';
+}
+async function chooseCustomCallTone(file) {
+  if (!file) return;
+  if (!file.type.startsWith('audio/')) { toast('Escolha um arquivo de áudio.', 'error'); return; }
+  if (file.size > 8 * 1024 * 1024) { toast('O áudio precisa ter no máximo 8 MB.', 'error'); return; }
+  try {
+    const db = await lumiToneDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('media', 'readwrite');
+      tx.objectStore('media').put(file, 'outgoing-call-tone');
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+    setCustomCallTone(file);
+    toast('Toque de chamada salvo!', 'success');
+  } catch (error) { console.error(error); toast('Não consegui salvar o áudio neste navegador.', 'error'); }
+}
+function previewCustomCallTone() {
+  if (!customCallToneUrl) { toast('Escolha um áudio primeiro.', 'error'); return; }
+  if (customCallTonePreview) { customCallTonePreview.pause(); customCallTonePreview = null; }
+  const audio = new Audio(customCallToneUrl);
+  audio.volume = 0.85;
+  customCallTonePreview = audio;
+  audio.onended = () => { if (customCallTonePreview === audio) customCallTonePreview = null; };
+  audio.play().catch(() => toast('Não consegui reproduzir esse áudio. Tente outro formato.', 'error'));
+}
+async function removeCustomCallTone() {
+  try {
+    const db = await lumiToneDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('media', 'readwrite');
+      tx.objectStore('media').delete('outgoing-call-tone');
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+    if (customCallToneAudio) customCallToneAudio.pause();
+    if (customCallTonePreview) customCallTonePreview.pause();
+    customCallToneAudio = customCallTonePreview = null;
+    setCustomCallTone(null);
+    toast('Toque padrão restaurado.', 'success');
+  } catch (error) { console.error(error); toast('Não consegui remover o toque personalizado.', 'error'); }
+}
 
 function stopLumiCallTone() {
   if (lumiCallToneTimer) clearInterval(lumiCallToneTimer);
