@@ -2947,3 +2947,6 @@ html[data-theme="dark"] .dm-message-item.mine .dm-message-text {
   .lumi-active-call-dock { max-width: calc(100vw - 20px); }
   .lumi-active-call-dock .secondary-button { padding: 8px 10px; }
 }
+
+/* LUMI: agrupamento visual de canais por categoria */
+.channel-category-group{min-width:0}.channel-category-heading{padding:12px 10px 5px;color:var(--muted,#89897e);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.channel-category-group:first-child .channel-category-heading{padding-top:5px}.channel-category-group+.channel-category-group{margin-top:3px}.channel-category-group .channel-entry-row{margin-top:1px}
