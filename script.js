@@ -57,13 +57,15 @@ const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona 
 const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de contas verificadas, aprovadas por você
 const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs de testers autorizados
 const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs da equipe do LUMI
-function accountBadges(userId) {
+function accountBadges(userId, isInfinity = false) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
+  const infinity = owner || Boolean(isInfinity) || (userId === state.user?.id && Boolean(state.profile?.vip_purchased));
   const verified = owner || VERIFIED_USER_IDS.includes(userId);
   const tester = TESTER_USER_IDS.includes(userId);
   const staff = owner || STAFF_USER_IDS.includes(userId);
-  return (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
+  return (infinity ? '<span class="lumi-badge infinity-badge" title="LUMI INFINITY" aria-label="LUMI INFINITY">∞</span>' : '')
+    + (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
     + (owner ? '<span class="lumi-badge owner-badge" title="Dono do LUMI" aria-label="Dono do LUMI">✦</span>' : '')
     + (tester ? '<span class="lumi-badge tester-badge" title="Tester do LUMI" aria-label="Tester do LUMI">T</span>' : '')
     + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '');
@@ -104,9 +106,9 @@ function updateIdentity() {
     if (photo) { el.innerHTML = `<img class="avatar-image" src="${escapeHTML(photo)}" alt="Foto de perfil">`; }
     else el.textContent = initials(name);
   });
-  $('#accountName').innerHTML = `${escapeHTML(name)} ${accountBadges(state.user?.id)}`;
+  $('#accountName').innerHTML = `${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}`;
   $('#accountStatus').textContent = state.user ? `@${state.profile?.username || 'lumi-user'}` : 'Entre para continuar';
-  $('#profileName').innerHTML = `${state.user ? escapeHTML(name) : 'Boas-vindas!'} ${accountBadges(state.user?.id)}`;
+  $('#profileName').innerHTML = `${state.user ? escapeHTML(name) : 'Boas-vindas!'} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}`;
   $('#profileHandle').textContent = state.user ? `@${state.profile?.username || 'lumi-user'}` : 'Entre para personalizar seu perfil';
   $('#accountButton').title = state.user ? 'Abrir opções da conta' : 'Entrar ou criar conta';
 }
@@ -438,7 +440,7 @@ async function loadWorkspace(spaceId, preferredChannel = null) {
 
 async function loadMessages() {
   if (!state.activeChannel) { state.messages = []; renderWorkspace(); return; }
-  const {data,error} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').eq('channel_id',state.activeChannel.id).order('created_at',{ascending:true}).limit(100);
+  const {data,error} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').eq('channel_id',state.activeChannel.id).order('created_at',{ascending:true}).limit(100);
   if (error) { console.error(error); toast('Não consegui carregar as mensagens deste canal.', 'error'); state.messages = []; }
   else state.messages = await signSpaceMedia(data || []);
   if(state.messages.length){const {data:rx}=await supabase.from('message_reactions').select('message_id,user_id,emoji').in('message_id',state.messages.map(m=>m.id));state.spaceReactions=rx||[];}else state.spaceReactions=[];
@@ -452,7 +454,7 @@ function subscribeMessages() {
   state.realtime = supabase.channel(`lumi-channel-${state.activeChannel.id}`)
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:`channel_id=eq.${state.activeChannel.id}`},async payload=>{
       if (payload.eventType === 'DELETE') { state.messages = state.messages.filter(m=>m.id!==payload.old.id); renderMessages(); return; }
-      const {data} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').eq('id',payload.new.id).maybeSingle();
+      const {data} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').eq('id',payload.new.id).maybeSingle();
       if (data) { const signed=(data.attachment_path?await signSpaceMedia([data]):[data])[0]; const i=state.messages.findIndex(m=>m.id===signed.id); if(i>=0) state.messages[i]=signed; else state.messages.push(signed); state.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)); state.messageCount = state.messages.length; const count=$('#messageCount'); if(count)count.textContent=state.messageCount; if (state.page === 'space') renderMessages(); }
     }).on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async payload=>{const ids=state.messages.map(m=>m.id);if(!ids.length)return;const {data}=await supabase.from('message_reactions').select('message_id,user_id,emoji').in('message_id',ids);state.spaceReactions=data||[];if(state.page==='space')renderMessages();}).subscribe();
 }
@@ -813,7 +815,7 @@ function messagesHTML() {
     const isVideo=message.attachment_type?.startsWith('video/');
     const media=fileUrl?(isImage?`<a class="space-media-link" href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(fileUrl)}" loading="lazy" alt="${escapeHTML(message.attachment_name||'Foto compartilhada')}"></a>`:isVideo?`<video class="space-video" controls preload="metadata" src="${escapeHTML(fileUrl)}"></video>`:`<a href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(message.attachment_name||'Abrir arquivo')}</a>`):message.attachment_path?`<div class="space-media-unavailable"><span class="material-symbols-rounded">attach_file</span><span><strong>${escapeHTML(message.attachment_name||'Mídia anexada')}</strong><small>Não foi possível carregar a mídia. Atualize o canal para tentar novamente.</small></span></div>`:'';
     const reply=message.reply_to?state.messages.find(m=>m.id===message.reply_to):null; const reactions=state.spaceReactions.filter(r=>r.message_id===message.id); const reactionHTML=reactions.length?`<div class="space-reactions">${[...new Set(reactions.map(r=>r.emoji))].map(emoji=>`<button type="button" data-space-react="${message.id}" data-emoji="${escapeHTML(emoji)}" class="space-reaction">${escapeHTML(emoji)} <small>${reactions.filter(r=>r.emoji===emoji).length}</small></button>`).join('')}</div>`:'';
-    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?`<div class="message-text">${escapeHTML(message.content)}</div>`:''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
+    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id,message.profiles?.vip_purchased)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?`<div class="message-text">${escapeHTML(message.content)}</div>`:''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
   }).join('');
 }
 async function signSpaceMedia(messages) {
@@ -826,6 +828,9 @@ async function refreshSpaceMedia(){state.messages=await signSpaceMedia(state.mes
 function renderMessages() { const list = $('#chatMessageList'); if (!list) return; const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 120; list.innerHTML = messagesHTML(); if (nearBottom || state.messages.length <= 1) list.scrollTop = list.scrollHeight; }
 async function sendMessage(event) {
   event.preventDefault(); if (!requireAuth() || !state.activeChannel) return;
+  const role = state.activeSpace?.role || 'member';
+  const allowedRoles = state.activeChannel?.speak_roles || ['owner','admin','moderator','developer','member','newcomer'];
+  if (!allowedRoles.includes(role) && !['owner','admin'].includes(role)) { toast('Seu cargo pode ler este canal, mas não pode enviar mensagens.', 'error'); return; }
   const input = $('#messageInput'); const fileInput=$('#spaceFileInput'); const file=fileInput?.files?.[0]||null; const content = input.value.trim(); if (!content&&!file) return;
   if(file && file.size>30*1024*1024){toast('Cada arquivo deve ter no máximo 30 MB.','error');return;}
   if(file && !/^(image\/|video\/)/.test(file.type)){toast('Nos Espaços, envie fotos ou vídeos.','error');return;}
@@ -833,7 +838,7 @@ async function sendMessage(event) {
   let attachment_path=null;
   if(file){const safeName=(file.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9._-]/g,'_').replace(/_+/g,'_').slice(-100)||'midia');attachment_path=`${state.activeChannel.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`;const {error:uploadError}=await supabase.storage.from('space-attachments').upload(attachment_path,file,{contentType:file.type,upsert:false});if(uploadError){toast(`Falha no envio da mídia: ${uploadError.message}. Confira as permissões do Supabase.`, 'error');input.disabled=false;if(send)send.disabled=false;return;}}
   const payload={channel_id:state.activeChannel.id,author_id:state.user.id,content:content||'',attachment_path,attachment_name:file?.name||null,attachment_type:file?.type||null,attachment_size:file?.size||null,reply_to:state.spaceReplyTo?.id||null};
-  const {data,error} = await supabase.from('messages').insert(payload).select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').single();
+  const {data,error} = await supabase.from('messages').insert(payload).select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').single();
   input.disabled = false;if(send)send.disabled=false;
   if (error) { if (attachment_path) { const cleanup = await supabase.storage.from('space-attachments').remove([attachment_path]); if (cleanup.error) console.warn('Não consegui remover o anexo enviado sem mensagem:', cleanup.error); } console.error(error); toast(`Não foi possível enviar: ${error.message}`, 'error'); return; }
   if(data.attachment_path){const signed=await signSpaceMedia([data]);Object.assign(data,signed[0]);}
@@ -873,6 +878,7 @@ function openEditChannel(id) {
   $('#channelName').value = channel.name || '';
   $('#channelTopic').value = channel.topic || '';
   if ($('#channelCategory')) $('#channelCategory').value = channel.category || 'Geral';
+  if ($('#channelSpeakRoles')) [...$('#channelSpeakRoles').options].forEach(option => option.selected = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(option.value));
   const kindSelect = $('#channelKind');
   if (kindSelect) { kindSelect.value = channel.kind === 'voice' ? 'voice' : 'text'; kindSelect.disabled = true; window.lumiSyncChannelSelect?.(kindSelect.value); }
   const title = $('#channelModal h2'); if (title) title.textContent = 'Editar canal';
@@ -904,14 +910,15 @@ async function createChannel(event) {
   const name = $('#channelName').value.trim().toLowerCase().replace(/\s+/g,'-');
   const topic = $('#channelTopic').value.trim();
   const category = ($('#channelCategory')?.value || 'Geral').trim().slice(0,40) || 'Geral';
+  const speak_roles = [...($('#channelSpeakRoles')?.selectedOptions || [])].map(option => option.value);
   const kind = $('#channelKind')?.value === 'voice' ? 'voice' : 'text';
   if (!name) return;
   let data, error;
   if (state.editingChannelId) {
-    const result = await supabase.from('channels').update({name,topic,category}).eq('id',state.editingChannelId).eq('space_id',state.activeSpace.id).select().single();
+    const result = await supabase.from('channels').update({name,topic,category,speak_roles}).eq('id',state.editingChannelId).eq('space_id',state.activeSpace.id).select().single();
     data = result.data; error = result.error;
   } else {
-    const result = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,category,kind,created_by:state.user.id,position:state.channels.length}).select().single();
+    const result = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,category,speak_roles,kind,created_by:state.user.id,position:state.channels.length}).select().single();
     data = result.data; error = result.error;
   }
   if (error) { console.error(error); toast(error.code === '42501' ? 'Somente administradores podem gerenciar canais neste espaço.' : `Não foi possível salvar o canal: ${error.message}`, 'error'); return; }
@@ -993,7 +1000,7 @@ async function renderInbox() {
 
 async function loadConversations() {
   if (!state.user) return;
-  const { data, error } = await supabase.from('conversation_members').select('conversation_id, conversations(id,created_at,conversation_members(user_id,profiles(id,username,display_name,avatar_url)))').eq('user_id', state.user.id).order('joined_at', {ascending:false});
+  const { data, error } = await supabase.from('conversation_members').select('conversation_id, conversations(id,created_at,conversation_members(user_id,profiles(id,username,display_name,avatar_url,vip_purchased)))').eq('user_id', state.user.id).order('joined_at', {ascending:false});
   if (error) { console.error(error); $('#dmConversationList').innerHTML = `<div class="dm-empty-small">Não consegui carregar. Execute o SQL de DMs.</div>`; return; }
   state.conversations = (data || []).map(row => {
     const c = row.conversations; if (!c) return null;
@@ -1049,7 +1056,7 @@ async function searchDMPeople() {
   }
   state.dmSearchResults = data || [];
   const html = state.dmSearchResults.length
-    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button></div>`).join('')
+    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id,u.vip_purchased)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button></div>`).join('')
     : `<div class="dm-empty-small">Não encontrei ninguém com esse nome.</div>`;
   ['#dmSearchResults', '#dmMobileSearchResults'].forEach(s => {
     const host = $(s);
@@ -1072,7 +1079,7 @@ async function openConversation(id, refreshList = true) {
   $('.app-shell')?.classList.add('mobile-chat-open');
   if (state.dmRealtime) { await supabase.removeChannel(state.dmRealtime); state.dmRealtime = null; }
   const panel = $('#dmChatPanel'); if (!panel) return;
-  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button" type="button" data-share-contact title="Compartilhar cartão de contato" aria-label="Compartilhar cartão de contato"><span class="material-symbols-rounded">contact_page</span></button><button class="icon-button" type="button" data-block-user="${conversation.otherUser.id}" title="Bloquear ou desbloquear pessoa" aria-label="Bloquear ou desbloquear pessoa"><span class="material-symbols-rounded">block</span></button><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
+  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id,conversation.otherUser.vip_purchased)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button" type="button" data-share-contact title="Compartilhar cartão de contato" aria-label="Compartilhar cartão de contato"><span class="material-symbols-rounded">contact_page</span></button><button class="icon-button" type="button" data-block-user="${conversation.otherUser.id}" title="Bloquear ou desbloquear pessoa" aria-label="Bloquear ou desbloquear pessoa"><span class="material-symbols-rounded">block</span></button><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
   <div class="dm-call-person-card" id="dmRemotePerson">
     <div class="dm-call-person-avatar" id="dmRemoteAvatar"></div>
     <video id="dmRemoteVideo" autoplay playsinline></video>
@@ -1085,12 +1092,12 @@ async function openConversation(id, refreshList = true) {
   </div>
 </div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button" data-call-control="screen" title="Compartilhar tela"><span class="material-symbols-rounded">screen_share</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
   if (refreshList) renderConversationList();
-  const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
+  const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
   if (error) { console.error(error); $('#dmMessageList').innerHTML=`<div class="dm-empty-small">Não consegui carregar as mensagens: ${escapeHTML(error.message)}</div>`; return; }
   state.dmMessages = await signDMFileUrls(data||[]); renderDMMessages();
   state.dmRealtime = supabase.channel(`lumi-dm-${id}`).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:`conversation_id=eq.${id}`},async payload=>{
     if (state.dmMessages.some(m=>m.id===payload.new.id)) return;
-    const {data:msg} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('id',payload.new.id).maybeSingle();
+    const {data:msg} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').eq('id',payload.new.id).maybeSingle();
     if (msg && state.activeConversation?.id===id) { state.dmMessages.push(...await signDMFileUrls([msg])); renderDMMessages(); if(msg.sender_id!==state.user?.id&&document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification(msg.profiles?.display_name||'Nova mensagem no LUMI',{body:msg.content||'Enviou um arquivo'});n.onclick=()=>window.focus();}catch{}} }
   }).subscribe();
 }
@@ -1714,7 +1721,7 @@ function dmMessagesHTML() {
     const image = m.attachment_type?.startsWith('image/') && m.attachment_url ? '<a class="dm-image-link" href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHTML(m.attachment_url) + '" alt="' + escapeHTML(m.attachment_name || 'Imagem compartilhada') + '"></a>' : '';
     const audio = m.attachment_type?.startsWith('audio/') && m.attachment_url ? '<audio class="dm-audio-player" controls preload="metadata" src="' + escapeHTML(m.attachment_url) + '"></audio>' : '';
     const attachment = m.attachment_name ? '<div class="dm-file-card"><span class="dm-file-icon">' + (m.attachment_type?.startsWith('image/') ? '▧' : m.attachment_type?.startsWith('audio/') ? 'mic' : '↧') + '</span><div><strong>' + escapeHTML(m.attachment_name) + '</strong><small>' + formatFileSize(m.attachment_size) + '</small></div>' + (m.attachment_url ? '<a href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer" download="' + escapeHTML(m.attachment_name) + '">Abrir</a>' : '<span class="dm-file-unavailable">Indisponível</span>') + '</div>' : '';
-    return '<article class="dm-message-item ' + (m.sender_id === state.user.id ? 'mine' : '') + '">' + avatarMarkup(name, m.profiles?.avatar_url, 'dm-avatar') + '<div class="dm-message-body"><div class="dm-message-meta"><strong>' + escapeHTML(name) + '</strong>' + accountBadges(m.sender_id) + '<time>' + shortDate(m.created_at) + '</time></div>' + (m.content && !contactCard ? '<div class="dm-message-text">' + escapeHTML(m.content) + '</div>' : '') + contactCard + image + audio + attachment + '</div></article>';
+    return '<article class="dm-message-item ' + (m.sender_id === state.user.id ? 'mine' : '') + '">' + avatarMarkup(name, m.profiles?.avatar_url, 'dm-avatar') + '<div class="dm-message-body"><div class="dm-message-meta"><strong>' + escapeHTML(name) + '</strong>' + accountBadges(m.sender_id,m.profiles?.vip_purchased) + '<time>' + shortDate(m.created_at) + '</time></div>' + (m.content && !contactCard ? '<div class="dm-message-text">' + escapeHTML(m.content) + '</div>' : '') + contactCard + image + audio + attachment + '</div></article>';
   }).join('');
 }
 function renderDMMessages() { const list=$('#dmMessageList'); if(!list)return; const nearBottom=list.scrollHeight-list.scrollTop-list.clientHeight<120; list.innerHTML=dmMessagesHTML(); if(nearBottom)list.scrollTop=list.scrollHeight; }
@@ -1727,7 +1734,7 @@ async function sendDM(event) {
   let attachment_path=null;
   if(file){ const safeName=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-120)||'arquivo'; attachment_path=`${state.activeConversation.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`; const {error:uploadError}=await supabase.storage.from('dm-attachments').upload(attachment_path,file,{contentType:file.type||'application/octet-stream',upsert:false}); if(uploadError){if(submit)submit.disabled=false;toast(`Não consegui enviar o arquivo: ${uploadError.message}. Confira o SQL de anexos.`, 'error');return;} }
   const payload={conversation_id:state.activeConversation.id,sender_id:state.user.id,content,attachment_path,attachment_name:file?.name||null,attachment_type:file?.type||null,attachment_size:file?.size||null};
-  const {data,error}=await supabase.from('direct_messages').insert(payload).select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').single();
+  const {data,error}=await supabase.from('direct_messages').insert(payload).select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').single();
   if(submit)submit.disabled=false;
   if(error){console.error(error);toast(`Não consegui enviar: ${error.message}`,'error');return;}
   state.dmMessages.push(...await signDMFileUrls([data])); input.value='';fileInput.value='';renderDMMessages();input.focus();
@@ -1821,17 +1828,19 @@ function renderProfile() {
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Perfil';
   const name=state.profile?.display_name || state.user?.email?.split('@')[0] || 'Visitante';
   const photo = state.profile?.avatar_url;
-  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview">${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
+  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview">${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
 }
 async function saveProfile(event) {
   event.preventDefault(); if (!state.user) return;
   const display_name=$('#profileDisplayName').value.trim(); if (!display_name) return;
   const bio=$('#profileBio')?.value.trim() || '';
+  const pronouns=$('#profilePronouns')?.value.trim().slice(0,32) || '';
+  const profile_color=$('#profileColor')?.value || '#ffd83d';
   const status_text=$('#profileStatus')?.value.trim() || '';
   const activity_text=$('#profileActivity')?.value.trim() || '';
-  const {error}=await supabase.from('profiles').update({display_name,bio,status_text,activity_text}).eq('id',state.user.id);
+  const {error}=await supabase.from('profiles').update({display_name,bio,pronouns,profile_color,status_text,activity_text}).eq('id',state.user.id);
   if(error){toast(error.message.toLowerCase().includes('bio') ? 'Execute database/profile-settings.sql no SQL Editor do Supabase e tente novamente.' : `Não foi possível salvar: ${error.message}`,'error');return;}
-  state.profile.display_name=display_name; state.profile.bio=bio; state.profile.status_text=status_text; state.profile.activity_text=activity_text; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
+  state.profile.display_name=display_name; state.profile.bio=bio; state.profile.pronouns=pronouns; state.profile.profile_color=profile_color; state.profile.status_text=status_text; state.profile.activity_text=activity_text; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
 }
 async function uploadProfilePhoto(file) {
   if (!state.user || !file) return;
