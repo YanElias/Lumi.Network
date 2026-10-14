@@ -1933,3 +1933,28 @@ html[data-theme="dark"] .member-manager-row:hover {
 html[data-theme="dark"] .space-owner-delete { color:#ffe47a !important; border-color:#62552a !important; background:#302b1b !important; }
 html[data-theme="dark"] dialog::backdrop { background:rgba(0,0,0,.72); }
 html[data-theme="dark"] .form-error { color:#ffb4a8; }
+
+
+/* LUMI — controles do toque personalizado */
+.settings-inline-actions {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin:12px 0 8px;
+}
+.settings-inline-actions button { min-height:36px; }
+.settings-inline-actions .text-button { padding:8px 10px; }
+html[data-theme="dark"] .settings-inline-actions .secondary-button {
+  background:#292d25;
+  color:var(--ink);
+  border-color:var(--line);
+}
+html[data-theme="dark"] .settings-inline-actions .secondary-button:hover {
+  background:var(--accent-pale);
+  color:var(--accent-strong);
+}
+@media (max-width:650px) {
+  .settings-inline-actions { align-items:stretch; }
+  .settings-inline-actions button { flex:1 1 130px; }
+}
