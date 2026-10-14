@@ -151,3 +151,6 @@ CONFIGURAÇÕES, BIO E PREFERÊNCIAS — NOVO
 - O retorno automático tenta novamente após 5 segundos enquanto a chamada continuar sem resposta; ele para quando a chamada é atendida, encerrada ou o destinatário ativa Não Perturbe.
 - Para usar status, atividade, Não Perturbe sincronizado e bloqueios, execute database/lumi-feature-pack.sql no Supabase.
 - Os selos de Tester e Staff são controlados por listas de UUIDs no início de script.js; elas estão vazias por padrão para evitar que usuários se promovam sozinhos.
+
+- Notificações do navegador agora podem alertar sobre novas mensagens e chamadas recebidas quando a aba do LUMI está em segundo plano, desde que a permissão tenha sido concedida. Push com o site fechado ainda exige service worker/servidor de push.
+- A tela de Configurações oferece cores de destaque adicionais; elas são preferências locais.
