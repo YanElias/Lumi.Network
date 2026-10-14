@@ -137,3 +137,5 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Incluir estado de medição de voz local/remota na sala de voz
 
 - [x] Adicionar indicador visual de voz ativa na chamada de DM; falta teste real com duas contas/dispositivos
+
+- [x] Desativar a caixa de envio para cargos sem permissão de falar no canal
