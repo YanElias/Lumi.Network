@@ -162,9 +162,9 @@ function renderSpaceNav() {
       </div>
       <details class="space-manage-details"><summary><span class="material-symbols-rounded">tune</span> Gerenciar espaço <span class="material-symbols-rounded manage-chevron">expand_more</span></summary><div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="edit-space"><span class="material-symbols-rounded">edit</span> Editar espaço</button><button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div></details>
       <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
-      <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
+      <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="move-channel-up" data-move-channel="${c.id}" title="Mover canal para cima" aria-label="Mover canal para cima"><span class="material-symbols-rounded">keyboard_arrow_up</span></button><button type="button" data-action="move-channel-down" data-move-channel="${c.id}" title="Mover canal para baixo" aria-label="Mover canal para baixo"><span class="material-symbols-rounded">keyboard_arrow_down</span></button><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
       <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
-      <div class="channel-list sidebar-channel-list voice-channel-list">${state.channels.filter(c => c.kind === 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">volume_up</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de voz</div>'}</div>
+      <div class="channel-list sidebar-channel-list voice-channel-list">${state.channels.filter(c => c.kind === 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">volume_up</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="move-channel-up" data-move-channel="${c.id}" title="Mover canal para cima" aria-label="Mover canal para cima"><span class="material-symbols-rounded">keyboard_arrow_up</span></button><button type="button" data-action="move-channel-down" data-move-channel="${c.id}" title="Mover canal para baixo" aria-label="Mover canal para baixo"><span class="material-symbols-rounded">keyboard_arrow_down</span></button><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de voz</div>'}</div>
 `;
   }
   const search = $('#spaceSearch').value.trim().toLowerCase();
@@ -845,6 +845,20 @@ async function deleteSpaceMessage(id){const msg=state.messages.find(m=>m.id===id
 function replyToSpaceMessage(id){const msg=state.messages.find(m=>m.id===id);if(!msg)return;state.spaceReplyTo=msg;renderWorkspace();$('#messageInput')?.focus();}
 async function reactToSpaceMessage(id,chosen=null){const msg=state.messages.find(m=>m.id===id);if(!msg)return;const reaction=chosen||prompt('Digite uma reação (por exemplo: 💛 🎉 😂 👍):','💛');if(!reaction)return;const existing=state.spaceReactions.find(r=>r.message_id===id&&r.user_id===state.user.id&&r.emoji===reaction);if(existing){const {error}=await supabase.from('message_reactions').delete().eq('message_id',id).eq('user_id',state.user.id).eq('emoji',reaction);if(error){toast(`Não foi possível remover reação: ${error.message}`,'error');return;}state.spaceReactions=state.spaceReactions.filter(r=>r!==existing);}else{const {data,error}=await supabase.from('message_reactions').insert({message_id:id,user_id:state.user.id,emoji:reaction}).select().single();if(error){toast(`Não foi possível reagir: ${error.message}`,'error');return;}state.spaceReactions.push(data);}renderMessages();}
 
+async function moveChannel(id, direction) {
+  if (!canManageChannels()) { toast('Somente o dono ou um administrador pode reorganizar canais.', 'error'); return; }
+  const ordered = [...state.channels].sort((a,b)=>(a.position||0)-(b.position||0));
+  const index = ordered.findIndex(channel => channel.id === id), targetIndex = index + direction;
+  if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
+  const [item] = ordered.splice(index, 1); ordered.splice(targetIndex, 0, item);
+  for (let i=0; i<ordered.length; i++) {
+    const {error} = await supabase.from('channels').update({position:i}).eq('id', ordered[i].id).eq('space_id', state.activeSpace.id);
+    if (error) { toast('Não consegui reorganizar os canais. Confira as permissões do Supabase.', 'error'); await loadWorkspace(state.activeSpace.id, state.activeChannel?.id); return; }
+  }
+  state.channels = ordered.map((channel, position)=>({...channel, position}));
+  renderWorkspace(); toast('Ordem dos canais atualizada!', 'success');
+}
+
 function resetChannelModal() {
   state.editingChannelId = null;
   $('#channelForm')?.reset();
@@ -858,6 +872,7 @@ function openEditChannel(id) {
   state.editingChannelId = channel.id;
   $('#channelName').value = channel.name || '';
   $('#channelTopic').value = channel.topic || '';
+  if ($('#channelCategory')) $('#channelCategory').value = channel.category || 'Geral';
   const kindSelect = $('#channelKind');
   if (kindSelect) { kindSelect.value = channel.kind === 'voice' ? 'voice' : 'text'; kindSelect.disabled = true; window.lumiSyncChannelSelect?.(kindSelect.value); }
   const title = $('#channelModal h2'); if (title) title.textContent = 'Editar canal';
@@ -888,14 +903,15 @@ async function createChannel(event) {
   if (!canManageChannels()) { toast('Somente o dono ou um administrador pode gerenciar canais.', 'error'); return; }
   const name = $('#channelName').value.trim().toLowerCase().replace(/\s+/g,'-');
   const topic = $('#channelTopic').value.trim();
+  const category = ($('#channelCategory')?.value || 'Geral').trim().slice(0,40) || 'Geral';
   const kind = $('#channelKind')?.value === 'voice' ? 'voice' : 'text';
   if (!name) return;
   let data, error;
   if (state.editingChannelId) {
-    const result = await supabase.from('channels').update({name,topic}).eq('id',state.editingChannelId).eq('space_id',state.activeSpace.id).select().single();
+    const result = await supabase.from('channels').update({name,topic,category}).eq('id',state.editingChannelId).eq('space_id',state.activeSpace.id).select().single();
     data = result.data; error = result.error;
   } else {
-    const result = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,kind,created_by:state.user.id,position:state.channels.length}).select().single();
+    const result = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,category,kind,created_by:state.user.id,position:state.channels.length}).select().single();
     data = result.data; error = result.error;
   }
   if (error) { console.error(error); toast(error.code === '42501' ? 'Somente administradores podem gerenciar canais neste espaço.' : `Não foi possível salvar o canal: ${error.message}`, 'error'); return; }
@@ -1963,6 +1979,8 @@ document.addEventListener('click', async event=>{
   else if(action==='show-inbox')setPage('inbox');
   else if(action==='create-channel'){if(requireAuth()&&state.activeSpace){resetChannelModal();openModal('channelModal');}else if(!state.activeSpace)toast('Abra um espaço primeiro.');}
   else if(action==='edit-channel')openEditChannel(event.target.closest('[data-channel-edit]')?.dataset.channelEdit);
+  else if(action==='move-channel-up')await moveChannel(event.target.closest('[data-move-channel]')?.dataset.moveChannel,-1);
+  else if(action==='move-channel-down')await moveChannel(event.target.closest('[data-move-channel]')?.dataset.moveChannel,1);
   else if(action==='delete-channel')await deleteChannel(event.target.closest('[data-channel-delete]')?.dataset.channelDelete);
   else if(action==='invite')showInvite();
   else if(action==='edit-space')await editActiveSpace();
