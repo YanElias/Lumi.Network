@@ -117,6 +117,7 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Adicionar controles para mover canais para cima/baixo e salvar a ordem no banco
 - [ ] Agrupar visualmente canais por categoria na barra lateral
 - [ ] Configurar permissões específicas por canal (visualizar, escrever, anexar, reagir e conectar à voz), com validação segura no banco
-- [ ] Criar cargos personalizados e permissões granulares, incluindo moderador e desenvolvedor
+- [x] Adicionar cargos de Fundador, Administrador, Moderador, Desenvolvedor, Membro e Novato, com alteração segura de cargo pelo fundador
+- [ ] Criar permissões granulares por cargo (moderação, anexos, voz, mensagens e gestão de canais)
 - [ ] Permitir configurar modo somente leitura, limite de envio e limite de participantes em voz
 - [ ] Testar a gestão de canais em desktop, celular e tema escuro
