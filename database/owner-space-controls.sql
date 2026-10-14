@@ -1,14 +1,13 @@
--- LUMI: controles de dono para exclusão de espaços
--- Execute no SQL Editor do Supabase. Esta política permite que o dono autenticado exclua o próprio espaço.
-alter table public.spaces enable row level security;
+-- LUMI: permissão de exclusão de espaços pelo próprio dono.
+-- O RLS de public.spaces já está habilitado no projeto.
+-- As relações space_members e channels usam ON DELETE CASCADE; messages
+-- são removidas em cascata quando os canais do espaço são removidos.
 
 drop policy if exists "Owners can delete their own spaces" on public.spaces;
-create policy "Owners can delete their own spaces"
+drop policy if exists "Owners can delete spaces" on public.spaces;
+
+create policy "Owners can delete spaces"
 on public.spaces
 for delete
 to authenticated
-using (owner_id = (select auth.uid()));
-
--- A exclusão depende de as relações filhas (canais, mensagens e membros)
--- usarem ON DELETE CASCADE. Se o Supabase informar violação de chave estrangeira,
--- revise essas chaves antes de alterar; não apague dados manualmente sem backup.
+using ((select auth.uid()) = owner_id);
