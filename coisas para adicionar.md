@@ -14,6 +14,7 @@
 - [ ] Modo escuro completo + colorações
   - [x] Padronizar superfícies de cartões, resultados e controles dinâmicos no tema escuro
   - [x] Usar DM Sans como fonte padrão em toda a interface, preservando a fonte dos ícones
+  - [x] Ampliar a cobertura CSS de cartões aninhados, diálogos, campos e painéis dinâmicos no tema escuro
 - [x] Modo escuro completo no mobile
 - [x] Cartão de contato funcional com botão para copiar o nome de usuário
 
@@ -80,6 +81,7 @@
 
 
 ### Melhorias de navegação
+- [x] Adicionar seletor personalizado de tipo de canal com ícones, descrições, teclado e compatibilidade com a criação de canais
 - [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
 - [x] Mostrar uma dica ao passar o mouse sobre a busca global explicando o atalho `/`
 - [x] Adicionar navegação por teclado (setas, Home/End e Escape) aos menus de mensagens, reações e notificações
