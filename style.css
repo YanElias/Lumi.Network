@@ -1641,3 +1641,18 @@ html[data-theme="dark"] .profile-photo-preview, html[data-theme="dark"] .avatar,
 html[data-theme="dark"] .beta, html[data-theme="dark"] .feature-tag { background:#3b351e; color:#ffe47a; }
 html[data-theme="dark"] .feature-yellow, html[data-theme="dark"] .welcome-row .hero-art { background-color:#2c291a; }
 html[data-theme="dark"] .dm-call-stage, html[data-theme="dark"] .dm-call-status, html[data-theme="dark"] .dm-call-person-card { background-color:#1b1c17; color:#f1f0e8; border-color:#38392f; }
+
+/* Novos recursos de mensagens e selos */
+.dm-audio-player { display:block; width:min(360px,100%); height:42px; margin:8px 0; }
+.dm-attach-button.recording { color:#d94747!important; animation:lumi-record-pulse 1s ease-in-out infinite alternate; }
+@keyframes lumi-record-pulse { to { opacity:.55; transform:scale(.96); } }
+.lumi-contact-card { display:flex; align-items:center; gap:12px; max-width:360px; padding:14px; margin:8px 0; border:1px solid var(--line); border-radius:16px; background:var(--white); }
+.lumi-contact-icon { width:44px; height:44px; display:grid; place-items:center; flex:0 0 44px; border-radius:14px; background:var(--yellow-soft); color:#8a6c00; font-weight:800; }
+.lumi-contact-card small { display:block; margin-top:3px; color:var(--muted); }
+.lumi-contact-card p { margin:6px 0 0; color:var(--muted); font-size:12px; }
+.lumi-badge.tester-badge { background:#d9eaff; color:#1854a5; }
+.lumi-badge.staff-badge { background:#e4d9ff; color:#5b2ca3; }
+html[data-theme="dark"] .lumi-contact-card { background:#20211b!important; color:#f1f0e8!important; border-color:#38392f!important; }
+html[data-theme="dark"] .lumi-contact-card small, html[data-theme="dark"] .lumi-contact-card p { color:#aaa99c; }
+html[data-theme="dark"] .lumi-badge.tester-badge { background:#1e3d61; color:#b8dcff; }
+html[data-theme="dark"] .lumi-badge.staff-badge { background:#39265c; color:#decaff; }
