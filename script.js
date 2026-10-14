@@ -1184,7 +1184,7 @@ async function createCallPeer(recipientId, conversationId, mode) {
   state.callPC=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
   state.callPC.ontrack=e=>{ e.streams[0]?.getTracks().forEach(t=>{if(!state.callRemoteStream.getTracks().some(x=>x.id===t.id))state.callRemoteStream.addTrack(t);}); attachCallMedia(); };
   state.callPC.onicecandidate=e=>{ if(e.candidate && state.callPeerId && state.callConversationId) sendCallSignal(state.callPeerId,state.callConversationId,'ice',e.candidate.toJSON()).catch(err=>console.warn('ICE:',err.message)); };
-  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
+  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')stopLumiCallTone();if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
   state.callLocalStream=await navigator.mediaDevices.getUserMedia({audio:true,video:mode==='video'});
   state.callLocalStream.getTracks().forEach(track=>state.callPC.addTrack(track,state.callLocalStream));
   attachCallMedia(); showCallStage();
@@ -1261,6 +1261,67 @@ function scheduleCallRetry() {
   },5000);
 }
 
+let lumiCallToneContext = null;
+let lumiCallToneTimer = null;
+let lumiCallToneOscillators = [];
+
+function stopLumiCallTone() {
+  if (lumiCallToneTimer) clearInterval(lumiCallToneTimer);
+  lumiCallToneTimer = null;
+  for (const oscillator of lumiCallToneOscillators) {
+    try { oscillator.stop(); } catch {}
+  }
+  lumiCallToneOscillators = [];
+  if (lumiCallToneContext) {
+    const context = lumiCallToneContext;
+    lumiCallToneContext = null;
+    context.close().catch(() => {});
+  }
+}
+
+function playLumiCallTonePulse() {
+  const context = lumiCallToneContext;
+  if (!context || context.state === "closed") return;
+  try {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(440, context.currentTime);
+    oscillator.frequency.setValueAtTime(480, context.currentTime + 0.18);
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.055, context.currentTime + 0.04);
+    gain.gain.setValueAtTime(0.055, context.currentTime + 0.36);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.44);
+    lumiCallToneOscillators.push(oscillator);
+    oscillator.onended = () => {
+      lumiCallToneOscillators = lumiCallToneOscillators.filter(item => item !== oscillator);
+      try { oscillator.disconnect(); gain.disconnect(); } catch {}
+    };
+  } catch (error) {
+    console.warn("Não foi possível reproduzir o toque da chamada:", error);
+    stopLumiCallTone();
+  }
+}
+
+function startLumiCallTone() {
+  stopLumiCallTone();
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    lumiCallToneContext = new AudioContextClass();
+    lumiCallToneContext.resume().catch(() => {});
+    playLumiCallTonePulse();
+    lumiCallToneTimer = setInterval(playLumiCallTonePulse, 1800);
+  } catch (error) {
+    console.warn("Não foi possível iniciar o toque da chamada:", error);
+    stopLumiCallTone();
+  }
+}
+
 async function startCall(mode) {
   if(!requireAuth())return;
   const conversation=state.activeConversation;
@@ -1272,7 +1333,7 @@ async function startCall(mode) {
   if(state.callStatus!=='idle'){toast('Já existe uma chamada ativa.');return;}
   ensureCallSignalSubscription();
   try {
-    state.callStatus='calling'; await createCallPeer(conversation.otherUser.id,conversation.id,mode);
+    state.callStatus='calling'; startLumiCallTone(); await createCallPeer(conversation.otherUser.id,conversation.id,mode);
     callStatus(`Chamando ${conversation.otherUser.display_name||conversation.otherUser.username||'seu contato'}…`);
     const offer=await state.callPC.createOffer(); await state.callPC.setLocalDescription(offer);
     await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode,retryMessage:getCallRetryMessage()});
@@ -1343,6 +1404,7 @@ async function declineIncomingCall() {
   state.pendingCallOffer=null;
 }
 async function cleanupCall(notifyPeer=true) {
+  stopLumiCallTone();
   clearTimeout(state.callRetryTimer);state.callRetryTimer=null;
   if(notifyPeer && state.callPeerId && state.callConversationId)try{await sendCallSignal(state.callPeerId,state.callConversationId,'end',{});}catch{}
   if(state.callPC){state.callPC.onicecandidate=null;state.callPC.ontrack=null;state.callPC.close();}
