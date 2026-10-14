@@ -71,5 +71,6 @@
 - [x] Política de exclusão do dono confirmada no Supabase; canais, mensagens e membros relacionados usam exclusão em cascata
 - [x] Edição do nome e da descrição do espaço exclusiva para o dono
 - [ ] Testar edição e exclusão real de espaço com uma comunidade de teste
+- [x] Normalizar nomes de arquivos anexados (acentos e caracteres especiais) antes do envio ao Storage
 - [ ] Testar envio e visualização de fotos/vídeos com duas contas em espaços diferentes
 - [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular
