@@ -1690,3 +1690,142 @@ html[data-theme="dark"] .lumi-contact-icon { background:var(--accent-soft)!impor
 html[data-theme="dark"] .settings-toggle-track { background:#48493f; }
 html[data-theme="dark"] .settings-toggle input:checked + .settings-toggle-track { background:var(--accent)!important; }
 html[data-theme="dark"] .settings-card, html[data-theme="dark"] .settings-card p, html[data-theme="dark"] .settings-card h2 { color:var(--ink); }
+
+
+/* LUMI — tema consistente em todas as superfícies */
+html[data-theme="dark"] {
+  --ink:#f1f2ed;
+  --muted:#b0b4a8;
+  --line:#383d35;
+  --canvas:#151813;
+  --white:#20241e;
+  --yellow-soft:#39351f;
+  --yellow-pale:#2c2b20;
+  --yellow-deep:#e7c84d;
+  --shadow:0 12px 36px rgba(0,0,0,.28);
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-panel,
+html[data-theme="dark"] #pageContent,
+html[data-theme="dark"] .page-placeholder,
+html[data-theme="dark"] .workspace-chat-view,
+html[data-theme="dark"] .workspace-content,
+html[data-theme="dark"] .dm-layout,
+html[data-theme="dark"] .inbox-layout { background:var(--canvas)!important; color:var(--ink)!important; }
+html[data-theme="dark"] .rail,
+html[data-theme="dark"] .space-sidebar,
+html[data-theme="dark"] .right-panel,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .sidebar-bottom,
+html[data-theme="dark"] .active-space-nav,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .profile-form,
+html[data-theme="dark"] .profile-preview-card,
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .discover-card,
+html[data-theme="dark"] .inbox-note,
+html[data-theme="dark"] .empty-card,
+html[data-theme="dark"] .notice-box,
+html[data-theme="dark"] .modal-card,
+html[data-theme="dark"] dialog,
+html[data-theme="dark"] .right-widget,
+html[data-theme="dark"] .tip-card,
+html[data-theme="dark"] .channel-chat-head,
+html[data-theme="dark"] .chat-header,
+html[data-theme="dark"] .channel-header,
+html[data-theme="dark"] .workspace-header,
+html[data-theme="dark"] .workspace-sidebar,
+html[data-theme="dark"] .dm-chat-panel,
+html[data-theme="dark"] .dm-conversation-list,
+html[data-theme="dark"] .dm-mobile-inbox,
+html[data-theme="dark"] .dm-chat-head,
+html[data-theme="dark"] .dm-message-composer,
+html[data-theme="dark"] .dm-composer,
+html[data-theme="dark"] .chat-panel,
+html[data-theme="dark"] .dm-call-stage,
+html[data-theme="dark"] .dm-call-status,
+html[data-theme="dark"] .dm-call-person-card,
+html[data-theme="dark"] .voice-room-view,
+html[data-theme="dark"] .voice-room-card,
+html[data-theme="dark"] .call-participant-card {
+  background-color:var(--white)!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+html[data-theme="dark"] .channel-list,
+html[data-theme="dark"] .dm-message-list,
+html[data-theme="dark"] .chat-message-list,
+html[data-theme="dark"] .message-list,
+html[data-theme="dark"] .space-list,
+html[data-theme="dark"] .spaces-directory { background:transparent!important; }
+html[data-theme="dark"] .channel-entry,
+html[data-theme="dark"] .space-entry,
+html[data-theme="dark"] .rail-button,
+html[data-theme="dark"] .secondary-button,
+html[data-theme="dark"] .icon-button,
+html[data-theme="dark"] .text-button,
+html[data-theme="dark"] .dm-attach-button,
+html[data-theme="dark"] .dm-call-button,
+html[data-theme="dark"] .active-space-actions button {
+  color:var(--ink);
+  border-color:var(--line);
+}
+html[data-theme="dark"] .channel-entry:hover,
+html[data-theme="dark"] .channel-entry.active,
+html[data-theme="dark"] .space-entry:hover,
+html[data-theme="dark"] .space-entry.active {
+  background:var(--accent-pale)!important;
+  color:var(--accent-strong)!important;
+}
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+html[data-theme="dark"] .sidebar-search,
+html[data-theme="dark"] .global-search {
+  background:#171b16!important;
+  color:var(--ink)!important;
+  border-color:var(--line)!important;
+}
+html[data-theme="dark"] .form-input option,
+html[data-theme="dark"] select option { background:#171b16; color:var(--ink); }
+html[data-theme="dark"] p,
+html[data-theme="dark"] small,
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .settings-help,
+html[data-theme="dark"] .channel-topic,
+html[data-theme="dark"] .channel-empty-hint { color:var(--muted); }
+html[data-theme="dark"] .dm-message-bubble,
+html[data-theme="dark"] .message-bubble,
+html[data-theme="dark"] .dm-message-item:not(.mine) .dm-message-text { background:#2a2f28!important; color:var(--ink)!important; }
+html[data-theme="dark"] .dm-message-item.mine .dm-message-text { background:var(--accent-soft)!important; color:var(--ink)!important; }
+html[data-theme="dark"] .welcome-row .hero-art,
+html[data-theme="dark"] .feature-yellow,
+html[data-theme="dark"] .profile-photo-preview,
+html[data-theme="dark"] .lumi-contact-icon { background:var(--accent-pale)!important; color:var(--accent-strong)!important; }
+html[data-theme="dark"] .settings-card h2,
+html[data-theme="dark"] .settings-card strong,
+html[data-theme="dark"] .settings-page h1,
+html[data-theme="dark"] .profile-page h1 { color:var(--ink)!important; }
+html[data-theme="dark"] .settings-toggle-track { background:#454b41; }
+html[data-theme="dark"] .settings-toggle input:checked + .settings-toggle-track { background:var(--accent)!important; }
+
+/* Agrupamento de canais de texto e de voz */
+.channel-group-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:18px; }
+.channel-group-heading > span { display:flex; align-items:center; gap:7px; }
+.channel-group-heading .material-symbols-rounded { font-size:16px; }
+.channel-group-heading button { width:25px; height:25px; border:0; border-radius:7px; background:transparent; color:var(--muted); font-size:18px; line-height:1; }
+.channel-group-heading button:hover { background:var(--accent-pale); color:var(--accent-strong); }
+.voice-channel-heading { margin-top:22px; }
+.channel-empty-hint { padding:5px 10px 8px 29px; color:var(--muted); font-size:11px; opacity:.9; }
+.channel-entry { display:flex; align-items:center; gap:8px; }
+.channel-entry .channel-type-icon { flex:0 0 17px; font-size:17px; opacity:.7; }
+.channel-entry-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+html[data-theme="dark"] .channel-group-heading { color:#c9cec2; }
+html[data-theme="dark"] .channel-empty-hint { color:var(--muted); }
+@media (max-width:650px) {
+  .channel-group-heading { margin-top:15px; }
+  .voice-channel-heading { margin-top:18px; }
+}
