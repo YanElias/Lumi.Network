@@ -1029,6 +1029,12 @@ function ensureCallSignalSubscription() {
 async function sendCallSignal(recipientId, conversationId, type, payload={}) {
   const {error} = await supabase.from('call_signals').insert({conversation_id:conversationId, sender_id:state.user.id, recipient_id:recipientId, signal_type:type, payload});
   if (error) throw error;
+  if (type === 'offer') {
+    const {error: pushError} = await supabase.functions.invoke('send-call-push', {
+      body: { recipient_id: recipientId, conversation_id: conversationId, mode: payload.mode || 'audio' }
+    });
+    if (pushError) console.warn('Notificação push de chamada não enviada:', pushError.message);
+  }
 }
 function callStatus(text) { const el=$('#dmCallStatus'); if(el) el.textContent=text; }
 function ensureCallAvatarStyles() {
@@ -1521,6 +1527,21 @@ async function startCall(mode) {
 
   await cleanupCall(false); toast(`Não consegui iniciar a chamada: ${error.message||error}. Confira a permissão do microfone/câmera e execute o SQL de chamadas.`, 'error'); }
 }
+async function checkPendingIncomingCall() {
+  if (!state.user || state.callStatus !== 'idle') return;
+  const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const {data,error} = await supabase.from('call_signals').select('*')
+    .eq('recipient_id',state.user.id).eq('signal_type','offer')
+    .gte('created_at',since).order('created_at',{ascending:false}).limit(5);
+  if(error||!data?.length)return;
+  for(const offer of data){
+    const {data:ended}=await supabase.from('call_signals').select('id')
+      .eq('conversation_id',offer.conversation_id).eq('signal_type','end')
+      .eq('sender_id',state.user.id).eq('recipient_id',offer.sender_id)
+      .gt('created_at',offer.created_at).limit(1);
+    if(!ended?.length){await handleCallSignal(offer);return;}
+  }
+}
 async function handleCallSignal(signal) {
   if(!signal || signal.sender_id===state.user?.id)return;
   if(signal.signal_type==='ice' && state.pendingCallOffer?.conversation_id===signal.conversation_id && !state.callPC){state.pendingIceSignals.push(signal.payload);return;}
@@ -1797,7 +1818,7 @@ async function onSessionChange(user) {
   ensureCallSignalSubscription();
   await loadProfile();
   if(typeof state.profile?.do_not_disturb==='boolean'){try{localStorage.setItem('lumi-do-not-disturb',String(state.profile.do_not_disturb));}catch{}document.documentElement.dataset.doNotDisturb=String(state.profile.do_not_disturb);}
-  await loadSpaces();updateIdentity();if(state.page==='home')renderHome();
+  await loadSpaces();updateIdentity();if(state.page==='home')renderHome();checkPendingIncomingCall();
 }
 async function signOut(){await supabase.auth.signOut();state.activeSpace=null;state.activeChannel=null;toast('Você saiu da sua conta.');}
 
