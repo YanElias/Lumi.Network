@@ -2801,3 +2801,89 @@ html[data-theme="dark"] .voice-room-card{background:radial-gradient(ellipse at 5
 
 /* Voice activity indicators in direct calls */
 .dm-call-voice-presence{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:9px 12px}.dm-speaking-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:99px;background:var(--white);color:var(--muted);font-size:10px}.dm-speaking-chip .material-symbols-rounded{font-size:15px}.dm-speaking-chip.is-speaking{background:#e7f8ec;border-color:#53c981;color:#167b43;box-shadow:0 0 0 3px #46bd7120}html[data-theme="dark"] .dm-speaking-chip{background:#282922;border-color:#414237;color:#c0c0b4}html[data-theme="dark"] .dm-speaking-chip.is-speaking{background:#1d3928;border-color:#4bd181;color:#91f0b3}
+
+
+/* LUMI refresh: call dock, streamer privacy and improved dark surfaces */
+.lumi-active-call-dock {
+  position: fixed;
+  z-index: 10050;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(560px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--line, rgba(120,120,120,.25));
+  border-radius: 18px;
+  background: var(--white, #fff);
+  color: var(--ink, #29291f);
+  box-shadow: 0 18px 60px rgba(0,0,0,.25);
+  backdrop-filter: blur(18px);
+}
+.lumi-active-call-dock[hidden] { display: none !important; }
+.lumi-active-call-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: #36c98f; box-shadow: 0 0 0 5px rgba(54,201,143,.14); }
+.lumi-active-call-copy { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.lumi-active-call-copy strong { font-size: 13px; }
+.lumi-active-call-copy small { color: var(--muted, #89897e); font-size: 12px; }
+.lumi-active-call-dock .secondary-button { white-space: nowrap; padding: 9px 12px; }
+.lumi-active-call-dock .dm-hangup { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 0; background: #ef4444; color: #fff; }
+html[data-theme="dark"] .lumi-active-call-dock {
+  --white: #191b20;
+  --ink: #f3f4f6;
+  --line: #343740;
+  --muted: #a1a5b0;
+  background: rgba(25,27,32,.94);
+  border-color: #343740;
+  color: #f3f4f6;
+  box-shadow: 0 20px 70px rgba(0,0,0,.48);
+}
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .inbox-note,
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .dm-chat-panel {
+  border-color: #343740;
+}
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .inbox-note,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .dm-chat-panel {
+  background: #191b20;
+  color: #eef0f4;
+}
+html[data-theme="dark"] .settings-card p,
+html[data-theme="dark"] .settings-help,
+html[data-theme="dark"] .settings-card small {
+  color: #a5a9b4;
+}
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .settings-page select,
+html[data-theme="dark"] .settings-page input:not([type="checkbox"]):not([type="file"]) {
+  background: #111318;
+  border-color: #3a3d46;
+  color: #f3f4f6;
+}
+html[data-theme="dark"] .lumi-active-call-dock .secondary-button {
+  background: #292c34;
+  border-color: #3a3d46;
+  color: #f3f4f6;
+}
+html[data-streamer-mode="true"] .dm-head-identity,
+html[data-streamer-mode="true"] .dm-conversation-name,
+html[data-streamer-mode="true"] .dm-message-author,
+html[data-streamer-mode="true"] .message-author,
+html[data-streamer-mode="true"] .space-message-author,
+html[data-streamer-mode="true"] #accountName,
+html[data-streamer-mode="true"] #profileName,
+html[data-streamer-mode="true"] .dm-call-person-name,
+html[data-streamer-mode="true"] .lumi-incoming-card h3 {
+  filter: blur(7px);
+  user-select: none;
+}
+html[data-streamer-mode="true"] .lumi-badge { visibility: hidden !important; }
+@media (max-width: 520px) {
+  .lumi-active-call-dock { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: calc(100vw - 20px); gap: 8px; padding: 10px; }
+  .lumi-active-call-dock .secondary-button { font-size: 11px; padding: 8px; }
+  .lumi-active-call-copy strong { font-size: 12px; }
+}
