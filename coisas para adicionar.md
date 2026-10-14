@@ -9,6 +9,9 @@
 - [x] Avatares nas mensagens diretas não esticam com o tamanho da mensagem
 - [x] Canais não aparecem no mobile
 - [x] Espaços não aparecem no mobile
+- [ ] Modo escuro completo + colorações
+- [x] Modo escuro completo no mobile
+- [ ] Card de contato funcionais
 
 ## Funcionalidades para adicionar
 
@@ -29,6 +32,8 @@
 - [x] Adicionar status
 - [x] Card de contato
 - [ ] Mostrar qual jogo a pessoa está jogando, como o Discord Rich Presence
+- [ ] Adicionar Amizade
+- [ ] 
 
 ### Configurações e personalização
 - [x] Adicionar uma aba de configurações
@@ -39,12 +44,15 @@
   - [x] Salvar a preferência de idioma neste navegador
   - [ ] Completar as traduções das telas, botões e avisos restantes
 - [x] Alterar senha
+- [ ] Recuperar conta
 
 ### Comunidade e VIP
 - [x] Selos de Tester e Staff
-- [ ] VIP por **R$ 10,00, pago uma única vez**
+- [ ] VIP por **R$ 10,00, pago uma única vez** 
+  - O vip será chamado de "LUMI (Eu não sei eu to falando sério, troca isso por algo INSANO que consiga agradar as pessoas)"
   - Sem assinatura, mensalidade ou renovação automática.
   - A compra deve liberar o VIP permanentemente para a conta.
+  - Poderá cancelar se quiser colocar em outra conta ou perder a antiga conta
 
 
 ### Limitações que ainda precisam de integração
