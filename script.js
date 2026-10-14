@@ -797,6 +797,7 @@ function renderWorkspace() {
   const space = state.activeSpace; const channel = state.activeChannel;
   if (channel?.kind === 'voice') {
     const joined = state.groupVoice?.channelId === channel.id && !!state.groupVoice?.channel;
+    const voiceCanSpeak = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role);
     $('#crumbParent').textContent = space.name;
     $('#crumbCurrent').textContent = `Voz · ${channel.name}`;
     $('#pageContent').innerHTML = `<section class="workspace-chat-view voice-room-view">
@@ -807,12 +808,12 @@ function renderWorkspace() {
       <div class="voice-room-card">
         <div class="voice-room-symbol"><span class="material-symbols-rounded">graphic_eq</span></div>
         <h3>${joined ? 'Você está na sala' : 'Sala de voz'}</h3>
-        <p>${joined ? 'Seu microfone está conectado à sala.' : 'Entre na sala para conversar em tempo real.'}</p>
+        <p>${joined ? (voiceCanSpeak ? 'Seu microfone está conectado à sala.' : 'Seu cargo está em modo ouvinte nesta sala.') : 'Entre na sala para conversar em tempo real.'}</p>
         <div class="voice-presence-header"><span class="material-symbols-rounded">graphic_eq</span><div><strong>Quem está falando</strong><small>O indicador acende quando detecta voz no microfone.</small></div><span class="voice-live-pill"><i></i> AO VIVO</span></div>
         <div id="voiceMemberList" class="voice-member-list"></div>
         <div id="voiceAudios" hidden></div>
         <div class="voice-room-controls">
-          ${joined ? `<button class="secondary-button" id="toggleGroupVoiceMute"><span class="material-symbols-rounded">${state.groupVoice.muted ? 'mic_off' : 'mic'}</span> ${state.groupVoice.muted ? 'Ativar microfone' : 'Silenciar'}</button><button class="primary-button" id="leaveGroupVoice"><span class="material-symbols-rounded">call_end</span> Sair da sala</button>` : `<button class="primary-button" id="joinGroupVoice" ${state.groupVoice?.joining ? 'disabled' : ''}><span class="material-symbols-rounded">headphones</span> ${state.groupVoice?.joining ? 'Conectando…' : 'Entrar na sala'}</button>`}
+          ${joined ? `<button class="secondary-button" id="toggleGroupVoiceMute" ${voiceCanSpeak ? '' : 'disabled'}><span class="material-symbols-rounded">${state.groupVoice.muted ? 'mic_off' : 'mic'}</span> ${voiceCanSpeak ? (state.groupVoice.muted ? 'Ativar microfone' : 'Silenciar') : 'Modo ouvinte'}</button><button class="primary-button" id="leaveGroupVoice"><span class="material-symbols-rounded">call_end</span> Sair da sala</button>` : `<button class="primary-button" id="joinGroupVoice" ${state.groupVoice?.joining ? 'disabled' : ''}><span class="material-symbols-rounded">headphones</span> ${state.groupVoice?.joining ? 'Conectando…' : 'Entrar na sala'}</button>`}
         </div>
       </div>
     </section>`;
