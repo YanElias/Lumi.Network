@@ -2696,3 +2696,55 @@ html[data-theme="dark"] .app-shell :is(.space-card,.feature-card,.settings-card,
     caret-color: auto !important;
   }
 }
+
+/* Ações de gerenciamento de canais: texto e voz. */
+.channel-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+}
+.channel-entry-row > .channel-entry {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.channel-entry-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  opacity: .72;
+}
+.channel-entry-actions button {
+  width: 27px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #969487;
+  padding: 0;
+}
+.channel-entry-actions button .material-symbols-rounded { font-size: 16px; }
+.channel-entry-actions button:hover {
+  color: #8c6b00;
+  border-color: #e9d98d;
+  background: #fff7d5;
+}
+.channel-entry-row:hover .channel-entry-actions,
+.channel-entry-row:focus-within .channel-entry-actions { opacity: 1; }
+html[data-theme="dark"] .channel-entry-actions button { color: #b8b7a9; }
+html[data-theme="dark"] .channel-entry-actions button:hover {
+  color: #ffe27a;
+  border-color: #5b512d;
+  background: #302b19;
+}
+@media (max-width: 600px) {
+  .channel-entry-row { width: max-content; max-width: 100%; flex: 0 0 auto; }
+  .channel-entry-row > .channel-entry { width: auto; max-width: 190px; flex: 0 1 auto; }
+  .channel-entry-actions { opacity: 1; }
+  .channel-entry-actions button { width: 28px; height: 32px; }
+}
