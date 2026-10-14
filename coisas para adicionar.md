@@ -10,8 +10,10 @@
 - [x] Canais não aparecem no mobile
 - [x] Espaços não aparecem no mobile
 - [ ] Modo escuro completo + colorações
+  - [x] Padronizar superfícies de cartões, resultados e controles dinâmicos no tema escuro
+  - [x] Usar DM Sans como fonte padrão em toda a interface, preservando a fonte dos ícones
 - [x] Modo escuro completo no mobile
-- [ ] Card de contato funcionais
+- [x] Cartão de contato funcional com botão para copiar o nome de usuário
 
 ## Funcionalidades para adicionar
 
@@ -33,7 +35,6 @@
 - [x] Card de contato
 - [ ] Mostrar qual jogo a pessoa está jogando, como o Discord Rich Presence
 - [ ] Adicionar Amizade
-- [ ] 
 
 ### Configurações e personalização
 - [x] Adicionar uma aba de configurações
