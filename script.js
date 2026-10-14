@@ -128,7 +128,7 @@ function setPage(page) {
   if (page === 'home') { renderHome(); return; }
   if (page === 'space' && state.activeSpace) { renderWorkspace(); return; }
   if (page === 'discover') { renderDiscover(); return; }
-  if (page === 'inbox') { renderInbox(); return; }
+  if (page === 'inbox') { return renderInbox(); }
   if (page === 'profile') { renderProfile(); return; }
   if (page === 'settings') { renderSettings(); return; }
   renderHome();
