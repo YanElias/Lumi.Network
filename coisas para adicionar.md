@@ -133,3 +133,5 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [ ] Agrupar canais visualmente por categoria e testar permissões em canais existentes
 
 - [x] Adicionar medidor visual de voz ativa nas salas de voz em grupo (precisa de teste real com duas contas/dispositivos)
+
+- [x] Incluir estado de medição de voz local/remota na sala de voz
