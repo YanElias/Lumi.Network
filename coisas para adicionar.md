@@ -35,7 +35,8 @@
 - [x] Adicionar BIO ao perfil
 - [x] Adicionar status
 - [x] Card de contato
-- [x] Mostrar a atividade/jogo informado no perfil para amigos\n- [ ] Detectar jogos automaticamente como Rich Presence (exige integração externa)
+- [x] Mostrar a atividade/jogo informado no perfil para amigos
+- [ ] Detectar jogos automaticamente como Rich Presence (exige integração externa)
 - [x] Sistema de amizades: buscar pessoas, enviar/aceitar/recusar solicitações e remover amigos
 
 ### Configurações e personalização
