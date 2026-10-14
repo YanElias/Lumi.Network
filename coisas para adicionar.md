@@ -36,7 +36,7 @@
 - [x] Adicionar status
 - [x] Card de contato
 - [x] Mostrar a atividade/jogo informado no perfil para amigos\n- [ ] Detectar jogos automaticamente como Rich Presence (exige integração externa)
-- [ ] Adicionar Amizade
+- [x] Sistema de amizades: buscar pessoas, enviar/aceitar/recusar solicitações e remover amigos
 
 ### Configurações e personalização
 - [x] Adicionar uma aba de configurações
@@ -59,11 +59,11 @@
 
 
 ### Limitações que ainda precisam de integração
-- Notificações de chamada só chegam enquanto o navegador/site está em execução; atender com o site fechado precisa de push, service worker e sinalização no servidor.
+- [ ] Chamadas fora do app: service worker, tabela de inscrições push e Edge Function já estão preparados; falta configurar as chaves VAPID e testar em HTTPS com duas contas.
 - O pagamento VIP de R$ 10,00 precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir.
-- A atividade do perfil é manual; detectar automaticamente jogos/apps exige integração específica.
+- A atividade/jogo do perfil é manual e aparece na lista de amizades; detectar jogos automaticamente como Rich Presence exige integração externa.
 - Música personalizada ao iniciar chamadas ainda não está implementada; por enquanto existe um toque simples de chamada.
-- A tradução da interface começou em português (Brasil), inglês e espanhol. Mensagens escritas pelos usuários não são traduzidas, e ainda faltam algumas strings das telas e avisos.
+- A tradução da interface começou em português (Brasil), inglês e espanhol. As traduções de amizades e atividade foram ampliadas, mas ainda é necessário revisar todas as telas e avisos.
 - A recuperação de senha depende do envio de e-mail e da URL do site permitida nas configurações de autenticação do Supabase.
 
 - [x] Identidade visual fixa em amarelo; cores alternativas reservadas para uma futura funcionalidade VIP
