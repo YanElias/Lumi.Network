@@ -694,7 +694,7 @@ async function joinGroupVoice() {
       video: false
     });
     const voiceRole = state.activeSpace?.role || 'member';
-    const voiceAllowed = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(voiceRole) || ['owner','admin'].includes(voiceRole);
+    const voiceAllowed = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(voiceRole) || ['owner','admin'].includes(voiceRole) || state.activeSpace?.owner_id === state.user?.id;
     v.muted = !voiceAllowed;
     if (!voiceAllowed) v.localStream.getAudioTracks().forEach(track => track.enabled = false);
     v.channelId = channel.id;
@@ -783,7 +783,7 @@ function toggleGroupVoiceMute() {
   const v = state.groupVoice;
   if (!v.localStream) return;
   const role=state.activeSpace?.role||'member';
-  const allowed=(state.activeChannel?.speak_roles||['owner','admin','moderator','developer','member','newcomer']).includes(role)||['owner','admin'].includes(role);
+  const allowed=(state.activeChannel?.speak_roles||['owner','admin','moderator','developer','member','newcomer']).includes(role)||['owner','admin'].includes(role)||state.activeSpace?.owner_id===state.user?.id;
   if(v.muted&&!allowed){toast('Seu cargo está em modo ouvinte neste canal.','error');return;}
   v.muted = !v.muted;
   v.localStream.getAudioTracks().forEach(track => track.enabled = !v.muted);
@@ -797,7 +797,7 @@ function renderWorkspace() {
   const space = state.activeSpace; const channel = state.activeChannel;
   if (channel?.kind === 'voice') {
     const joined = state.groupVoice?.channelId === channel.id && !!state.groupVoice?.channel;
-    const voiceCanSpeak = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role);
+    const voiceCanSpeak = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role) || space.owner_id === state.user?.id;
     $('#crumbParent').textContent = space.name;
     $('#crumbCurrent').textContent = `Voz · ${channel.name}`;
     $('#pageContent').innerHTML = `<section class="workspace-chat-view voice-room-view">
@@ -822,7 +822,7 @@ function renderWorkspace() {
     return;
   }
   if (state.groupVoice?.channel && state.groupVoice.channelId !== channel?.id) leaveGroupVoice();
-  const canSpeak = !channel || (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role);
+  const canSpeak = !channel || (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role) || space.owner_id === state.user?.id;
   $('#crumbParent').textContent = space.name; $('#crumbCurrent').textContent = channel ? `# ${channel.name}` : 'Espaço';
   $('#pageContent').innerHTML = `<section class="workspace-chat-view"><header class="channel-chat-head"><div><h2>${channel ? `<span class="chat-hash material-symbols-rounded">tag</span> ${escapeHTML(channel.name)}` : 'Nenhum canal ainda'}</h2><p>${escapeHTML(channel?.topic || (channel ? 'Esse é o começo de uma boa conversa.' : 'Crie um canal para começar a conversar.'))}</p></div><div class="chat-head-actions">${channelManageActionsHTML(channel)}<button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button><button class="icon-button" data-action="invite" title="Convidar pessoas" aria-label="Convidar pessoas"><span class="material-symbols-rounded">person_add</span></button></div></header><div class="chat-message-list" id="chatMessageList">${messagesHTML()}</div>${channel ? `<form class="message-composer" id="messageForm"><input id="spaceFileInput" type="file" accept="image/*,video/*" hidden><button class="dm-attach-button" type="button" id="spaceAttachButton" title="Enviar foto ou vídeo"><span class="material-symbols-rounded">add_photo_alternate</span></button><textarea id="messageInput" maxlength="4000" rows="1" ${canSpeak ? '' : 'disabled'} placeholder="${canSpeak ? `Mensagem em #${escapeHTML(channel.name)}` : 'Seu cargo não pode falar neste canal'}" aria-label="Escreva uma mensagem"></textarea><button class="send-button" type="submit" title="Enviar mensagem" ${canSpeak ? '' : 'disabled'}><span class="material-symbols-rounded">send</span></button></form>${state.spaceReplyTo?`<div class="space-reply-banner">Respondendo a uma mensagem <button type="button" data-space-reply-cancel aria-label="Cancelar resposta">×</button></div>`:''}` : ''}</section>`;
   renderSpaceNav();
@@ -853,7 +853,7 @@ async function sendMessage(event) {
   event.preventDefault(); if (!requireAuth() || !state.activeChannel) return;
   const role = state.activeSpace?.role || 'member';
   const allowedRoles = state.activeChannel?.speak_roles || ['owner','admin','moderator','developer','member','newcomer'];
-  if (!allowedRoles.includes(role) && !['owner','admin'].includes(role)) { toast('Seu cargo pode ler este canal, mas não pode enviar mensagens.', 'error'); return; }
+  if (!allowedRoles.includes(role) && !['owner','admin'].includes(role) && state.activeSpace?.owner_id !== state.user?.id) { toast('Seu cargo pode ler este canal, mas não pode enviar mensagens.', 'error'); return; }
   const input = $('#messageInput'); const fileInput=$('#spaceFileInput'); const file=fileInput?.files?.[0]||null; const content = input.value.trim(); if (!content&&!file) return;
   if(file && file.size>30*1024*1024){toast('Cada arquivo deve ter no máximo 30 MB.','error');return;}
   if(file && !/^(image\/|video\/)/.test(file.type)){toast('Nos Espaços, envie fotos ou vídeos.','error');return;}
