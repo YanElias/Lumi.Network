@@ -1084,12 +1084,25 @@ async function searchDMPeople() {
   }
   state.dmSearchResults = data || [];
   const html = state.dmSearchResults.length
-    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id,u.vip_purchased)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button></div>`).join('')
+    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id,u.vip_purchased)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button><button class="dm-start-button" data-call-user="${u.id}" data-call-mode="audio" title="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="dm-start-button" data-call-user="${u.id}" data-call-mode="video" title="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div>`).join('')
     : `<div class="dm-empty-small">Não encontrei ninguém com esse nome.</div>`;
   ['#dmSearchResults', '#dmMobileSearchResults'].forEach(s => {
     const host = $(s);
     if (host) host.innerHTML = html;
   });
+}
+async function startCallToUser(userId, mode='audio') {
+  if (!requireAuth() || !userId || userId === state.user.id) return;
+  if (state.callStatus !== 'idle') { toast('Você já está em uma chamada.', 'error'); return; }
+  const { data, error } = await supabase.rpc('start_direct_conversation', { p_user_id: userId });
+  if (error) { toast('Não consegui preparar a chamada: ' + error.message, 'error'); return; }
+  await loadConversations();
+  const id = typeof data === 'string' ? data : data?.conversation_id || data?.id;
+  const conversation = state.conversations.find(item => item.id === id)
+    || state.conversations.find(item => item.otherUser?.id === userId);
+  if (!conversation) { toast('Não consegui encontrar a conversa dessa pessoa.', 'error'); return; }
+  state.activeConversation = conversation;
+  await startCall(mode);
 }
 async function startDirectMessage(userId) {
   if (!requireAuth() || userId===state.user.id) return;
@@ -1154,7 +1167,7 @@ function ensureCallDock() {
   dock.className = 'lumi-active-call-dock';
   dock.hidden = true;
   dock.setAttribute('aria-live', 'polite');
-  dock.innerHTML = `<span class="lumi-active-call-dot"></span><div class="lumi-active-call-copy"><strong id="lumiActiveCallTitle">Chamada em andamento</strong><small id="lumiActiveCallStatus">Conectando…</small></div><button type="button" class="secondary-button" data-call-dock-return>Voltar à chamada</button><button type="button" class="dm-hangup" data-call-control="hangup" title="Desligar" aria-label="Desligar chamada"><span class="material-symbols-rounded">call_end</span></button>`;
+  dock.innerHTML = `<audio id="lumiCallRemoteAudio" autoplay playsinline></audio><span class="lumi-active-call-dot"></span><div class="lumi-active-call-copy"><strong id="lumiActiveCallTitle">Chamada em andamento</strong><small id="lumiActiveCallStatus">Conectando…</small></div><button type="button" class="secondary-button" data-call-dock-return>Voltar à chamada</button><button type="button" class="dm-hangup" data-call-control="hangup" title="Desligar" aria-label="Desligar chamada"><span class="material-symbols-rounded">call_end</span></button>`;
   document.body.appendChild(dock);
   return dock;
 }
@@ -1168,7 +1181,7 @@ function updateCallDock() {
 }
 function callStatus(text) {
   const el=$('#dmCallStatus'); if(el) el.textContent=text;
-  if (document.getElementById('lumiActiveCallDock')) updateCallDock();
+  if (state.callStatus !== 'idle') updateCallDock();
 }
 function ensureCallAvatarStyles() {
   if ($('#lumiCallAvatarStyles')) return;
@@ -1398,6 +1411,11 @@ function attachCallMedia() {
     remote.onplaying = updateCallVideoCards;
   }
 
+  const remoteAudio = document.getElementById('lumiCallRemoteAudio');
+  if (remoteAudio && state.callRemoteStream) {
+    if (remoteAudio.srcObject !== state.callRemoteStream) remoteAudio.srcObject = state.callRemoteStream;
+    remoteAudio.play().catch(() => {});
+  }
   updateCallVideoCards();
   monitorDMCallVoice();
 }
@@ -1772,6 +1790,7 @@ async function cleanupCall(notifyPeer=true) {
   const dock=document.getElementById('lumiActiveCallDock');if(dock)dock.hidden=true;
   const stage=$('#dmCallStage'); if(stage)stage.hidden=true;
   const local=$('#dmLocalVideo'),remote=$('#dmRemoteVideo');if(local)local.srcObject=null;if(remote)remote.srcObject=null;
+  const remoteAudio=document.getElementById('lumiCallRemoteAudio');if(remoteAudio){remoteAudio.pause();remoteAudio.srcObject=null;}
   const layer=$('#lumiIncomingCall');if(layer)layer.hidden=true;
 }
 async function toggleCallControl(control) {
@@ -2102,6 +2121,8 @@ document.addEventListener('click', async event=>{
 $('#authForm').addEventListener('submit',handleAuth);
 $('#forgotPasswordButton')?.addEventListener('click', requestPasswordRecovery);
 document.addEventListener('click', async event => {
+  const callUser = event.target.closest('[data-call-user]');
+  if (callUser) { await startCallToUser(callUser.dataset.callUser, callUser.dataset.callMode || 'audio'); return; }
   const dockReturn = event.target.closest('[data-call-dock-return]');
   if (dockReturn) {
     if (state.activeConversation) { setPage('inbox'); setTimeout(() => { showCallStage(); updateCallDock(); }, 500); }
