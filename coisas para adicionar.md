@@ -41,6 +41,7 @@
 - [x] Sistema de amizades: buscar pessoas, enviar/aceitar/recusar solicitações e remover amigos
 
 ### Configurações e personalização
+- [x] Acessibilidade: respeitar a preferência do sistema por reduzir animações e transições
 - [x] Adicionar uma aba de configurações
 - [x] Modo claro e modo escuro
 - [x] Temas personalizados (cores de destaque)
