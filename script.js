@@ -1275,7 +1275,7 @@ async function startCall(mode) {
     state.callStatus='calling'; await createCallPeer(conversation.otherUser.id,conversation.id,mode);
     callStatus(`Chamando ${conversation.otherUser.display_name||conversation.otherUser.username||'seu contato'}…`);
     const offer=await state.callPC.createOffer(); await state.callPC.setLocalDescription(offer);
-    await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode});
+    await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode,retryMessage:getCallRetryMessage()});
     scheduleCallRetry();
     toast(mode==='video'?'Ligação de vídeo iniciada.':'Ligação de voz iniciada.','success');
     await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -1303,7 +1303,7 @@ async function handleCallSignal(signal) {
     if(!conversation || conversation.otherUser.id!==signal.sender_id) return;
     state.pendingCallOffer=signal;
     const caller=conversation.otherUser.display_name||conversation.otherUser.username||'Seu contato';
-    showIncomingCall(caller,signal.payload?.mode==='video'?'video':'audio');
+    showIncomingCall(caller,signal.payload?.mode==='video'?'video':'audio',signal.payload?.retryMessage||'');
     return;
   }
   if(signal.signal_type==='busy' && state.callPeerId===signal.sender_id){callStatus('A pessoa já está em outra chamada.');setTimeout(()=>cleanupCall(false),1800);return;}
@@ -1314,9 +1314,9 @@ async function handleCallSignal(signal) {
     else if(signal.signal_type==='end') await cleanupCall(false);
   } catch(error) { console.error(error); callStatus('Erro ao conectar a chamada.'); }
 }
-function showIncomingCall(name,mode) {
+function showIncomingCall(name,mode,message='') {
   let layer=$('#lumiIncomingCall'); if(!layer){layer=document.createElement('div');layer.id='lumiIncomingCall';layer.className='lumi-incoming-call';document.body.append(layer);}
-  layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p><div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
+  layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p>${message ? `<div class="lumi-call-custom-message">${escapeHTML(message)}</div>` : ''}<div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
   layer.hidden=false;
   if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification('Chamada recebida no LUMI',{body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.'});n.onclick=()=>window.focus();}catch{}}
 }
@@ -1414,6 +1414,9 @@ function applyTheme(theme) {
 function getDoNotDisturb() {
   try { return localStorage.getItem('lumi-do-not-disturb') === 'true'; } catch { return false; }
 }
+function getCallRetryMessage() {
+  try { return (localStorage.getItem('lumi-call-retry-message') || '').trim().slice(0,160); } catch { return ''; }
+}
 async function setDoNotDisturb(enabled) {
   const next = Boolean(enabled);
   const previous = getDoNotDisturb();
@@ -1445,6 +1448,7 @@ function renderSettings() {
   const theme = document.documentElement.dataset.theme || 'light';
   const accent = document.documentElement.dataset.accent || 'yellow';
   const dnd = getDoNotDisturb();
+  const retryMessage = getCallRetryMessage();
   const isVip = Boolean(state.profile?.vip_purchased);
   $('#pageContent').innerHTML = `
     <section class="page-placeholder settings-page">
@@ -1453,6 +1457,7 @@ function renderSettings() {
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">color_lens</div><div class="settings-card-content"><h2>Cor de destaque</h2><p>Escolha uma cor para os detalhes do LUMI.</p><label class="field-label" for="lumiAccent">Cor</label><select class="form-input" id="lumiAccent"><option value="yellow">Amarelo LUMI</option><option value="blue">Azul</option><option value="green">Verde</option><option value="purple">Roxo</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">chat</div><div class="settings-card-content"><h2>Mensagem nas chamadas</h2><p>Escreva uma mensagem curta que aparecerá para a pessoa quando você ligar. Ela será reutilizada nas tentativas automáticas.</p><label class="field-label" for="lumiCallRetryMessage">Mensagem (opcional)</label><input class="form-input" id="lumiCallRetryMessage" maxlength="160" value="${escapeHTML(retryMessage)}" placeholder="Ex.: Opa, me atende quando puder!"><small class="settings-help">Até 160 caracteres. Salva neste navegador.</small></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><h2>LUMI VIP</h2><p>Pagamento único de <strong>R$ 10,00</strong>. Sem assinatura e sem renovação automática.</p><p>${isVip ? "Seu perfil já tem VIP ativado." : "O checkout ainda precisa ser conectado a um provedor de pagamento seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "VIP ativado" : "Pagamento ainda não conectado"}</button></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
       <p class="settings-help">Tema e Não Perturbe são salvos neste navegador e ainda não sincronizam entre dispositivos.</p>
@@ -1619,7 +1624,7 @@ document.addEventListener('click', async event=>{
 });
 
 $('#authForm').addEventListener('submit',handleAuth);
-document.addEventListener('change',async e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
+document.addEventListener('change',async e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
