@@ -5,6 +5,8 @@
 - [x] Ligações não aparecem nos espaços
 - [x] Foto de perfil das pessoas na chamada
 - [x] Fotos nos espaços
+- [x] Corrigida a leitura dos anexos privados nos Espaços: apenas membros podem abrir arquivos do canal
+- [x] Remoção do anexo quando o envio da mensagem falha, evitando arquivos órfãos
 - [x] Fotos de perfil respeitam o tamanho dos quadros
 - [x] Avatares nas mensagens diretas não esticam com o tamanho da mensagem
 - [x] Canais não aparecem no mobile
@@ -23,7 +25,7 @@
 - [x] Notificações no navegador enquanto o LUMI está aberto
 - [ ] Poder atender chamadas fora do app
 - [x] Toque sonoro enquanto uma chamada de saída está chamando (toque simples gerado pelo navegador)
-- [ ] Música personalizada ao iniciar uma chamada
+- [x] Música personalizada ao iniciar uma chamada (arquivo de áudio escolhido pelo usuário, salvo neste navegador)
 - [x] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
   - [x] O retorno automático para quando a pessoa atende ou quando o usuário cancela as tentativas.
   - [x] Se o modo **Não Perturbe** estiver ativado, não fazer retorno automático nem insistir em chamadas.
@@ -69,4 +71,5 @@
 - [x] Política de exclusão do dono confirmada no Supabase; canais, mensagens e membros relacionados usam exclusão em cascata
 - [x] Edição do nome e da descrição do espaço exclusiva para o dono
 - [ ] Testar edição e exclusão real de espaço com uma comunidade de teste
+- [ ] Testar envio e visualização de fotos/vídeos com duas contas em espaços diferentes
 - [ ] Revisar visualmente todos os componentes do modo escuro em desktop e celular
