@@ -52,8 +52,8 @@
 
 ### Comunidade e VIP
 - [x] Selos de Tester e Staff
-- [ ] VIP por **R$ 10,00, pago uma única vez** 
-  - O vip será chamado de "LUMI (Eu não sei eu to falando sério, troca isso por algo INSANO que consiga agradar as pessoas)"
+- [ ] LUMI INFINITY por **R$ 10,00, pago uma única vez** 
+  - [x] Nome escolhido: **LUMI INFINITY**
   - Sem assinatura, mensalidade ou renovação automática.
   - A compra deve liberar o VIP permanentemente para a conta.
   - Poderá cancelar se quiser colocar em outra conta ou perder a antiga conta
@@ -61,7 +61,7 @@
 
 ### Limitações que ainda precisam de integração
 - [ ] Chamadas fora do app: service worker, tabela de inscrições push e Edge Function já estão preparados; falta configurar as chaves VAPID e testar em HTTPS com duas contas.
-- O pagamento VIP de R$ 10,00 precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir.
+- O pagamento do LUMI INFINITY por R$ 10,00 ainda precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir. Paletas azul, verde e roxa já ficam disponíveis para contas com VIP ativo.
 - A atividade/jogo do perfil é manual e aparece na lista de amizades; detectar jogos automaticamente como Rich Presence exige integração externa.
 - Música personalizada ao iniciar chamadas já está disponível: a pessoa escolhe um arquivo de áudio salvo neste navegador.
 - A tradução da interface começou em português (Brasil), inglês e espanhol. As traduções de amizades e atividade foram ampliadas, mas ainda é necessário revisar todas as telas e avisos.
