@@ -83,3 +83,10 @@
 - [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
 - [x] Mostrar uma dica ao passar o mouse sobre a busca global explicando o atalho `/`
 - [ ] Adicionar navegação completa por teclado aos menus de mensagens, reações e notificações
+
+
+### Organização da barra lateral
+- [x] Agrupar ações do espaço em um painel recolhível para liberar espaço para os canais
+- [x] Remover o botão duplicado de criar canal (os botões junto aos títulos já fazem isso)
+- [x] Compactar detalhes da barra lateral em janelas com pouca altura
+- [ ] Revisar visualmente a barra lateral em desktop e celular
