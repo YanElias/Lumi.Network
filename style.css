@@ -1667,3 +1667,26 @@ html[data-accent="blue"] .rail-button.active, html[data-accent="green"] .rail-bu
 html[data-theme="dark"][data-accent="blue"] { --yellow-soft:#1c2f45; --yellow-pale:#1a2634; }
 html[data-theme="dark"][data-accent="green"] { --yellow-soft:#1d3928; --yellow-pale:#192b20; }
 html[data-theme="dark"][data-accent="purple"] { --yellow-soft:#302443; --yellow-pale:#251d33; }
+
+
+/* LUMI: correções de consistência para tema e cor de destaque */
+html { --accent:var(--yellow); --accent-soft:var(--yellow-soft); --accent-pale:var(--yellow-pale); --accent-strong:var(--yellow-deep); }
+html[data-theme="dark"] { --accent-soft:var(--yellow-soft); --accent-pale:var(--yellow-pale); }
+.rail-button.active, .rail-button:hover { color:var(--accent-strong); }
+.rail-button.active { background:var(--accent-pale); }
+.rail-button.active .icon { color:var(--accent-strong); }
+.brand-mark { background:var(--accent)!important; }
+.primary-button, .settings-toggle input:checked + .settings-toggle-track { background:var(--accent)!important; border-color:var(--accent)!important; }
+.primary-button { color:#25251d!important; }
+.rail-space.active { background:var(--accent)!important; border-color:var(--accent)!important; }
+.rail-space.active:before { background:var(--accent-strong); }
+.settings-toggle input:focus-visible + .settings-toggle-track { outline-color:color-mix(in srgb,var(--accent) 60%,transparent); }
+html[data-accent="blue"] .rail-button.active, html[data-accent="green"] .rail-button.active, html[data-accent="purple"] .rail-button.active { background:var(--accent-pale)!important; color:var(--accent-strong)!important; }
+html[data-theme="dark"] .rail-button:hover, html[data-theme="dark"] .rail-button.active, html[data-theme="dark"] .space-entry:hover, html[data-theme="dark"] .space-entry.active, html[data-theme="dark"] .icon-button:hover, html[data-theme="dark"] .secondary-button:hover { background:var(--accent-pale)!important; color:var(--accent)!important; }
+html[data-theme="dark"] .dm-message-item.mine .dm-message-text { background:var(--accent-soft)!important; color:var(--ink)!important; }
+html[data-theme="dark"] .feature-yellow, html[data-theme="dark"] .welcome-row .hero-art { background-color:var(--accent-pale)!important; }
+html[data-theme="dark"] .beta, html[data-theme="dark"] .feature-tag { background:var(--accent-soft)!important; color:var(--accent)!important; }
+html[data-theme="dark"] .lumi-contact-icon { background:var(--accent-soft)!important; color:var(--accent)!important; }
+html[data-theme="dark"] .settings-toggle-track { background:#48493f; }
+html[data-theme="dark"] .settings-toggle input:checked + .settings-toggle-track { background:var(--accent)!important; }
+html[data-theme="dark"] .settings-card, html[data-theme="dark"] .settings-card p, html[data-theme="dark"] .settings-card h2 { color:var(--ink); }
