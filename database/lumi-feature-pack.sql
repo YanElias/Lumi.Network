@@ -59,6 +59,18 @@ $$;
 revoke all on function public.start_direct_conversation(uuid) from public;
 grant execute on function public.start_direct_conversation(uuid) to authenticated;
 
+-- Função SECURITY DEFINER para verificar bloqueios dos dois lados mesmo com RLS.
+create or replace function public.lumi_users_blocked(p_user_a uuid, p_user_b uuid)
+returns boolean language sql stable security definer set search_path = '' as $
+  select exists (
+    select 1 from public.user_blocks b
+    where (b.blocker_id=p_user_a and b.blocked_id=p_user_b)
+       or (b.blocker_id=p_user_b and b.blocked_id=p_user_a)
+  );
+$;
+revoke all on function public.lumi_users_blocked(uuid,uuid) from public;
+grant execute on function public.lumi_users_blocked(uuid,uuid) to authenticated;
+
 -- Usuários bloqueados não podem enviar mensagens na conversa existente.
 drop policy if exists "Participants can send their own direct messages" on public.direct_messages;
 create policy "Participants can send their own direct messages" on public.direct_messages
@@ -68,8 +80,8 @@ for insert to authenticated with check (
   and not exists (
     select 1 from public.conversation_members mine
     join public.conversation_members theirs on theirs.conversation_id=mine.conversation_id and theirs.user_id<>mine.user_id
-    join public.user_blocks b on (b.blocker_id=mine.user_id and b.blocked_id=theirs.user_id) or (b.blocker_id=theirs.user_id and b.blocked_id=mine.user_id)
     where mine.conversation_id=direct_messages.conversation_id and mine.user_id=auth.uid()
+      and public.lumi_users_blocked(mine.user_id,theirs.user_id)
   )
 );
 
