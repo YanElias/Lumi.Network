@@ -2104,5 +2104,63 @@ document.addEventListener('click', async event => {
 });
 
 
+// LUMI — navegação por teclado em menus de mensagens, reações e notificações
+(() => {
+  const menuSelector = [
+    '[role="menu"]',
+    '.space-message-actions',
+    '.message-actions',
+    '.reaction-picker',
+    '.emoji-picker',
+    '.notification-panel',
+    '.dropdown-menu',
+    '.context-menu',
+    '.search-results'
+  ].join(',');
+
+  const itemSelector = 'button:not([disabled]), [role="menuitem"]:not([aria-disabled="true"]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  document.addEventListener('keydown', event => {
+    const target = event.target;
+    const menu = target?.closest?.(menuSelector);
+    if (!menu || menu.hidden || menu.getAttribute('aria-hidden') === 'true') return;
+
+    // Não intercepta as setas enquanto a pessoa está digitando ou escolhendo texto.
+    if (target.matches?.('input, textarea, select, [contenteditable="true"]')) {
+      if (event.key !== 'Escape') return;
+    }
+
+    const items = [...menu.querySelectorAll(itemSelector)].filter(item =>
+      !item.hidden && item.getAttribute('aria-hidden') !== 'true' &&
+      item.getClientRects().length > 0
+    );
+    if (!items.length) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const current = items.indexOf(document.activeElement);
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      const next = current < 0
+        ? (step > 0 ? 0 : items.length - 1)
+        : (current + step + items.length) % items.length;
+      items[next].focus();
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      items[event.key === 'Home' ? 0 : items.length - 1].focus();
+    } else if (event.key === 'Escape') {
+      const close = menu.querySelector('[data-close], [aria-label*="Fechar" i], [title*="Fechar" i], .close-button');
+      if (close && close !== target) {
+        event.preventDefault();
+        close.click();
+      } else if (menu.matches('.notification-panel, .dropdown-menu, .context-menu, .reaction-picker, .emoji-picker')) {
+        event.preventDefault();
+        menu.hidden = true;
+        menu.setAttribute('aria-hidden', 'true');
+        if (target instanceof HTMLElement) target.blur();
+      }
+    }
+  });
+})();
+
 // A tela de carregamento só fecha quando a inicialização principal termina sem erro.
 window.dispatchEvent(new Event('lumi:app-ready'));
