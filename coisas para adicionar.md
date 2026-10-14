@@ -82,7 +82,7 @@
 ### Melhorias de navegação
 - [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
 - [x] Mostrar uma dica ao passar o mouse sobre a busca global explicando o atalho `/`
-- [ ] Adicionar navegação completa por teclado aos menus de mensagens, reações e notificações
+- [x] Adicionar navegação por teclado (setas, Home/End e Escape) aos menus de mensagens, reações e notificações
 
 
 ### Organização da barra lateral
