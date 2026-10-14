@@ -139,3 +139,11 @@ PRÓXIMAS ETAPAS
 ---------------
 - Chamadas em grupo dentro dos Espaços ainda não estão ativadas nesta versão. As chamadas privadas de voz/vídeo existentes continuam funcionando. Chamadas em Espaços precisam de sinalização e conexões WebRTC para vários participantes, além dos controles de entrada/saída da sala.
 - O envio de mídia nos Espaços aceita um arquivo por mensagem (imagem ou vídeo), com limite de 30 MB.
+
+
+CONFIGURAÇÕES, BIO E PREFERÊNCIAS — NOVO
+----------------------------------------
+- A aba Configurações inclui tema claro/escuro, Não Perturbe e alteração de senha.
+- Tema e Não Perturbe ficam salvos no navegador atual; por enquanto não sincronizam entre dispositivos.
+- Para habilitar a BIO no banco existente, execute database/profile-settings.sql no SQL Editor do Supabase.
+- Não Perturbe é a preferência que as próximas funções de retorno automático de chamadas devem respeitar. O retorno automático de chamadas ainda não existe nesta versão.
