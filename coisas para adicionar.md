@@ -81,5 +81,5 @@
 
 ### Melhorias de navegação
 - [x] Atalho `/` para focar a busca global quando o usuário não estiver digitando em um campo; `Ctrl+K` continua disponível
-- [ ] Mostrar uma dica visual do atalho `/` ao passar o mouse sobre a busca global
+- [x] Mostrar uma dica ao passar o mouse sobre a busca global explicando o atalho `/`
 - [ ] Adicionar navegação completa por teclado aos menus de mensagens, reações e notificações
