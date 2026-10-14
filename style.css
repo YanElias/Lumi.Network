@@ -2438,3 +2438,78 @@ html[data-theme="dark"] [style*="background-color: rgb(255"] {
   color: #f1f0e8 !important;
   border-color: #38392f !important;
 }
+
+
+/* LUMI — correção específica: Painel Pessoal e as duas barras laterais */
+html[data-theme="dark"] .app-shell > .rail,
+html[data-theme="dark"] .app-shell > .space-sidebar,
+html[data-theme="dark"] .app-shell > .right-panel,
+html[data-theme="dark"] .app-shell > .main-panel,
+html[data-theme="dark"] .app-shell .sidebar-top,
+html[data-theme="dark"] .app-shell .sidebar-bottom,
+html[data-theme="dark"] .app-shell .topbar,
+html[data-theme="dark"] .app-shell .page-content,
+html[data-theme="dark"] .app-shell .page-content > .welcome-row,
+html[data-theme="dark"] .app-shell .page-content > .section-block,
+html[data-theme="dark"] .app-shell .page-content .section-title-row,
+html[data-theme="dark"] .app-shell .page-content .feature-grid,
+html[data-theme="dark"] .app-shell .page-content .space-grid,
+html[data-theme="dark"] .app-shell .page-content .activity-grid {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .page-content .welcome-row {
+  background: linear-gradient(112deg, #20211b 0%, #25251d 57%, #302d1c 100%) !important;
+  border-color: #45412c !important;
+}
+html[data-theme="dark"] .app-shell .page-content :is(
+  .feature-card,.space-card,.activity-card,.quick-action-card,.stat-card,
+  .dashboard-card,.panel-card,.empty-card,.right-widget,.tip-card
+) {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .page-content :is(
+  .feature-card,.space-card,.activity-card,.quick-action-card,.stat-card,
+  .dashboard-card,.panel-card,.empty-card,.right-widget,.tip-card
+) :is(h1,h2,h3,h4,p,span,strong,small,label) {
+  color: inherit;
+}
+html[data-theme="dark"] .app-shell > .rail,
+html[data-theme="dark"] .app-shell > .space-sidebar,
+html[data-theme="dark"] .app-shell > .right-panel {
+  background-color: #1b1c16 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .rail-button,
+html[data-theme="dark"] .app-shell .space-entry,
+html[data-theme="dark"] .app-shell .account-card,
+html[data-theme="dark"] .app-shell .right-panel .icon-button,
+html[data-theme="dark"] .app-shell .sidebar-top .icon-button {
+  background-color: transparent !important;
+  color: #d7d5c8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .rail-button:hover,
+html[data-theme="dark"] .app-shell .rail-button.active,
+html[data-theme="dark"] .app-shell .space-entry:hover,
+html[data-theme="dark"] .app-shell .space-entry.active,
+html[data-theme="dark"] .app-shell .account-card:hover {
+  background-color: #302d1c !important;
+  color: #ffe47a !important;
+}
+html[data-theme="dark"] .app-shell .rail-rule,
+html[data-theme="dark"] .app-shell .sidebar-bottom {
+  border-color: #38392f !important;
+  background-color: transparent !important;
+}
+html[data-theme="dark"] .app-shell .sidebar-search,
+html[data-theme="dark"] .app-shell .global-search,
+html[data-theme="dark"] .app-shell .global-search kbd {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
