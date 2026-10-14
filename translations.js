@@ -81,6 +81,6 @@ const observer = new MutationObserver(() => {
   ensureLanguageSetting();
   applyTranslations();
 });
-observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+observer.observe(document.body, { childList: true, subtree: true });
 ensureLanguageSetting();
 applyTranslations();
