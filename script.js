@@ -464,7 +464,7 @@ function subscribeMessages() {
 // Sala de voz em grupo: conexões WebRTC independentes por participante.
 state.groupVoice = state.groupVoice || {
   channel: null, channelId: null, localStream: null,
-  peers: new Map(), muted: false, joining: false
+  peers: new Map(), muted: false, joining: false, localSpeaking: false, localMeterTimer: null, localMeterContext: null
 };
 
 async function leaveGroupVoice() {
@@ -475,7 +475,9 @@ async function leaveGroupVoice() {
   }
   for (const peer of v.peers.values()) {
     try { peer.pc.close(); } catch {}
+    clearInterval(peer.meterTimer); peer.meterContext?.close().catch(()=>{});
   }
+  clearInterval(v.localMeterTimer); v.localMeterTimer=null; v.localMeterContext?.close().catch(()=>{}); v.localMeterContext=null; v.localSpeaking=false;
   v.peers.clear();
   if (v.localStream) v.localStream.getTracks().forEach(t => t.stop());
   v.channel = null;
@@ -485,6 +487,15 @@ async function leaveGroupVoice() {
   v.muted = false;
   const area = document.querySelector('#voiceAudios');
   if (area) area.innerHTML = '';
+}
+
+function monitorGroupVoice(item, userId) {
+  if (!item?.stream || item.meterTimer) return;
+  try { const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx)return; item.meterContext=new Ctx(); const analyser=item.meterContext.createAnalyser(); analyser.fftSize=512; item.meterContext.createMediaStreamSource(item.stream).connect(analyser); const samples=new Uint8Array(analyser.fftSize); item.meterTimer=setInterval(()=>{if(!state.groupVoice?.peers.has(userId)){clearInterval(item.meterTimer);return;}analyser.getByteTimeDomainData(samples);let sum=0;for(const n of samples){const x=(n-128)/128;sum+=x*x;}const next=Math.sqrt(sum/samples.length)>0.055;if(next!==item.speaking){item.speaking=next;renderGroupVoiceMembers();}},130); } catch(error){console.debug('Medidor de voz indisponível',error);}
+}
+function monitorLocalGroupVoice() {
+  const v=state.groupVoice;if(!v.localStream||v.localMeterTimer)return;
+  try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;v.localMeterContext=new Ctx();const analyser=v.localMeterContext.createAnalyser();analyser.fftSize=512;v.localMeterContext.createMediaStreamSource(v.localStream).connect(analyser);const samples=new Uint8Array(analyser.fftSize);v.localMeterTimer=setInterval(()=>{analyser.getByteTimeDomainData(samples);let sum=0;for(const n of samples){const x=(n-128)/128;sum+=x*x;}const next=Math.sqrt(sum/samples.length)>0.055&&!v.muted;if(next!==v.localSpeaking){v.localSpeaking=next;renderGroupVoiceMembers();}},130);}catch(error){console.debug('Medidor local indisponível',error);}
 }
 
 function renderGroupVoiceMembers() {
@@ -520,15 +531,15 @@ function renderGroupVoiceMembers() {
   list.innerHTML = `<div class="voice-member self">
     ${voiceAvatar(myAvatar, myName)}
     <span>${escapeHTML(myName)}</span>
-    <small>Você${v.muted ? ' · Microfone desligado' : ''}</small>
+    <small class="voice-member-status"><span class="voice-mic-indicator ${v.localSpeaking && !v.muted ? 'is-speaking' : ''}"><span class="material-symbols-rounded">${v.muted ? 'mic_off' : 'mic'}</span></span>${v.muted ? 'Microfone desligado' : (v.localSpeaking ? 'Você está falando' : 'Microfone ligado')}</small>
   </div>` + members.map(([id, item]) => {
     const name = item.name || 'Participante';
     const avatar = item.avatar_url || item.avatar || item.photo_url || item.picture || '';
 
-    return `<div class="voice-member">
+    return `<div class="voice-member ${item.speaking ? 'is-speaking' : ''}">
       ${voiceAvatar(avatar, name)}
       <span>${escapeHTML(name)}</span>
-      <small>${item.pc.connectionState === 'connected' ? 'Conectado' : 'Conectando…'}</small>
+      <small class="voice-member-status"><span class="voice-mic-indicator ${item.speaking ? 'is-speaking' : ''}"><span class="material-symbols-rounded">${item.speaking ? 'graphic_eq' : 'mic'}</span></span>${item.speaking ? 'Está falando' : (item.pc.connectionState === 'connected' ? 'Conectado' : 'Conectando…')}</small>
     </div>`;
   }).join('');
 
@@ -600,6 +611,7 @@ async function createGroupVoicePeer(userId, name, initiator, avatar_url = '') {
     } else if (!item.stream.getTracks().some(t => t.id === event.track.id)) {
       item.stream.addTrack(event.track);
     }
+    monitorGroupVoice(item, userId);
     renderGroupVoiceMembers();
   };
 
@@ -788,6 +800,7 @@ function renderWorkspace() {
         <div class="voice-room-symbol"><span class="material-symbols-rounded">graphic_eq</span></div>
         <h3>${joined ? 'Você está na sala' : 'Sala de voz'}</h3>
         <p>${joined ? 'Seu microfone está conectado à sala.' : 'Entre na sala para conversar em tempo real.'}</p>
+        <div class="voice-presence-header"><span class="material-symbols-rounded">graphic_eq</span><div><strong>Quem está falando</strong><small>O indicador acende quando detecta voz no microfone.</small></div><span class="voice-live-pill"><i></i> AO VIVO</span></div>
         <div id="voiceMemberList" class="voice-member-list"></div>
         <div id="voiceAudios" hidden></div>
         <div class="voice-room-controls">
@@ -1828,7 +1841,7 @@ function renderProfile() {
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Perfil';
   const name=state.profile?.display_name || state.user?.email?.split('@')[0] || 'Visitante';
   const photo = state.profile?.avatar_url;
-  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview">${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
+  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview" style="--profile-highlight:${escapeHTML(state.profile?.profile_color||'#ffd83d')}">${state.profile?.pronouns ? `<span class="profile-pronouns">${escapeHTML(state.profile.pronouns)}</span><br>` : ''}${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profilePronouns">Pronomes <span class="optional">OPCIONAL</span></label><input class="form-input" id="profilePronouns" maxlength="32" value="${escapeHTML(state.profile?.pronouns||'')}" placeholder="Ex.: ele/dele, ela/dela, elu/delu"><label class="field-label" for="profileColor">Cor do perfil</label><select class="form-input" id="profileColor"><option value="#ffd83d" ${(state.profile?.profile_color||'#ffd83d')==='#ffd83d'?'selected':''}>Amarelo LUMI</option><option value="#8ec5ff" ${state.profile?.profile_color==='#8ec5ff'?'selected':''}>Azul céu</option><option value="#a7e6b5" ${state.profile?.profile_color==='#a7e6b5'?'selected':''}>Verde suave</option><option value="#d8b4fe" ${state.profile?.profile_color==='#d8b4fe'?'selected':''}>Lilás</option><option value="#ffb4c8" ${state.profile?.profile_color==='#ffb4c8'?'selected':''}>Rosa</option><option value="#ffffff" ${state.profile?.profile_color==='#ffffff'?'selected':''}>Branco</option></select><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
 }
 async function saveProfile(event) {
   event.preventDefault(); if (!state.user) return;
