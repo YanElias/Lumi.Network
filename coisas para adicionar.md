@@ -5,37 +5,46 @@
 - [x] Ligações não aparecem nos espaços
 - [x] Foto de perfil das pessoas na chamada
 - [x] Fotos nos espaços
+- [x] Fotos de perfil respeitam o tamanho dos quadros
+- [x] Avatares nas mensagens diretas não esticam com o tamanho da mensagem
 - [x] Canais não aparecem no mobile
 - [x] Espaços não aparecem no mobile
 
 ## Funcionalidades para adicionar
 
 ### Comunicação e chamadas
-- [ ] Compartilhamento de tela
-- [ ] Mensagens de áudio — sugestão de Fabrício (tester)
-- [ ] Notificações
+- [x] Compartilhamento de tela
+- [x] Mensagens de áudio — sugestão de Fabrício (tester)
+- [x] Notificações no navegador enquanto o LUMI está aberto
 - [ ] Poder atender chamadas fora do app
 - [ ] Música ao iniciar uma chamada
-- [ ] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
-  - [ ] O retorno automático deve parar quando a pessoa atender ou quando o usuário cancelar as tentativas.
-  - [ ] Se o modo **Não Perturbe** estiver ativado, não fazer retorno automático nem insistir em chamadas.
+- [x] Retorno automático de chamada: se a pessoa não atender em 5 segundos, tentar chamar novamente e permitir personalizar a mensagem — sugestão de Paulo Vitor
+  - [x] O retorno automático para quando a pessoa atende ou quando o usuário cancela as tentativas.
+  - [x] Se o modo **Não Perturbe** estiver ativado, não fazer retorno automático nem insistir em chamadas.
 
 ### Perfil e contatos
-- [ ] Bloquear e desbloquear pessoas
-- [ ] Adicionar BIO ao perfil
-- [ ] Adicionar status
-- [ ] Card de contato (pesquisar referências e definir o visual)
+- [x] Bloquear e desbloquear pessoas
+- [x] Adicionar BIO ao perfil
+- [x] Adicionar status
+- [x] Card de contato
 - [ ] Mostrar qual jogo a pessoa está jogando, como o Discord Rich Presence
 
 ### Configurações e personalização
-- [ ] Adicionar uma aba de configurações
-- [ ] Modo claro e modo escuro
-- [ ] Temas personalizados
+- [x] Adicionar uma aba de configurações
+- [x] Modo claro e modo escuro
+- [x] Temas personalizados (cores de destaque)
 - [ ] Suporte a outros idiomas
-- [ ] Alterar senha
+- [x] Alterar senha
 
 ### Comunidade e VIP
-- [ ] Selos de Tester e Staff
+- [x] Selos de Tester e Staff
 - [ ] VIP por **R$ 10,00, pago uma única vez**
   - Sem assinatura, mensalidade ou renovação automática.
   - A compra deve liberar o VIP permanentemente para a conta.
+
+
+### Limitações que ainda precisam de integração
+- Notificações de chamada só chegam enquanto o navegador/site está em execução; atender com o site fechado precisa de push, service worker e sinalização no servidor.
+- O pagamento VIP de R$ 10,00 precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir.
+- A atividade do perfil é manual; detectar automaticamente jogos/apps exige integração específica.
+- Música ao iniciar chamadas e interface totalmente traduzida para outros idiomas ainda não estão implementadas.
