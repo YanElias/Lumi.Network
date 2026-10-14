@@ -128,6 +128,15 @@ function setPage(page) {
   renderHome();
 }
 
+function canManageChannels(space = state.activeSpace) {
+  return !!state.user && !!space && (space.owner_id === state.user.id || ['owner', 'admin'].includes(space.role));
+}
+
+function channelManageActionsHTML(channel) {
+  if (!channel || !canManageChannels()) return '';
+  return `<div class="channel-header-actions"><button type="button" class="secondary-button" data-action="edit-channel" data-channel-edit="${channel.id}" title="Editar canal"><span class="material-symbols-rounded">edit</span> Editar canal</button><button type="button" class="channel-delete-button" data-action="delete-channel" data-channel-delete="${channel.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></div>`;
+}
+
 function renderSpaceNav() {
   const inWorkspace = state.page === 'space' && !!state.activeSpace;
   const inInbox = state.page === 'inbox';
@@ -152,9 +161,9 @@ function renderSpaceNav() {
         <button class="icon-button active-space-menu" data-action="invite" title="Opções do espaço" aria-label="Opções do espaço"><span class="material-symbols-rounded">expand_more</span></button>
       </div>
       <details class="space-manage-details"><summary><span class="material-symbols-rounded">tune</span> Gerenciar espaço <span class="material-symbols-rounded manage-chevron">expand_more</span></summary><div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="edit-space"><span class="material-symbols-rounded">edit</span> Editar espaço</button><button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div></details>
-      <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
-      <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${['owner','admin'].includes(space.role) ? `<span class="channel-entry-actions"><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
-      <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
+      <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
+      <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
+      <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
       <div class="channel-list sidebar-channel-list voice-channel-list">${state.channels.filter(c => c.kind === 'voice').map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">volume_up</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${['owner','admin'].includes(space.role) ? `<span class="channel-entry-actions"><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('') || '<div class="channel-empty-hint">Nenhum canal de voz</div>'}</div>
 `;
   }
@@ -772,7 +781,7 @@ function renderWorkspace() {
       <header class="channel-chat-head"><div>
         <h2><span class="material-symbols-rounded">headphones</span> ${escapeHTML(channel.name)}</h2>
         <p>${escapeHTML(channel.topic || 'Entre para conversar por voz com as pessoas deste espaço.')}</p>
-      </div><div class="chat-head-actions"><button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button></div></header>
+      </div><div class="chat-head-actions">${channelManageActionsHTML(channel)}<button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button></div></header>
       <div class="voice-room-card">
         <div class="voice-room-symbol"><span class="material-symbols-rounded">graphic_eq</span></div>
         <h3>${joined ? 'Você está na sala' : 'Sala de voz'}</h3>
@@ -790,7 +799,7 @@ function renderWorkspace() {
   }
   if (state.groupVoice?.channel && state.groupVoice.channelId !== channel?.id) leaveGroupVoice();
   $('#crumbParent').textContent = space.name; $('#crumbCurrent').textContent = channel ? `# ${channel.name}` : 'Espaço';
-  $('#pageContent').innerHTML = `<section class="workspace-chat-view"><header class="channel-chat-head"><div><h2>${channel ? `<span class="chat-hash material-symbols-rounded">tag</span> ${escapeHTML(channel.name)}` : 'Nenhum canal ainda'}</h2><p>${escapeHTML(channel?.topic || (channel ? 'Esse é o começo de uma boa conversa.' : 'Crie um canal para começar a conversar.'))}</p></div><div class="chat-head-actions"><button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button><button class="icon-button" data-action="invite" title="Convidar pessoas" aria-label="Convidar pessoas"><span class="material-symbols-rounded">person_add</span></button></div></header><div class="chat-message-list" id="chatMessageList">${messagesHTML()}</div>${channel ? `<form class="message-composer" id="messageForm"><input id="spaceFileInput" type="file" accept="image/*,video/*" hidden><button class="dm-attach-button" type="button" id="spaceAttachButton" title="Enviar foto ou vídeo"><span class="material-symbols-rounded">add_photo_alternate</span></button><textarea id="messageInput" maxlength="4000" rows="1" placeholder="Mensagem em #${escapeHTML(channel.name)}" aria-label="Escreva uma mensagem"></textarea><button class="send-button" type="submit" title="Enviar mensagem"><span class="material-symbols-rounded">send</span></button></form>${state.spaceReplyTo?`<div class="space-reply-banner">Respondendo a uma mensagem <button type="button" data-space-reply-cancel aria-label="Cancelar resposta">×</button></div>`:''}` : ''}</section>`;
+  $('#pageContent').innerHTML = `<section class="workspace-chat-view"><header class="channel-chat-head"><div><h2>${channel ? `<span class="chat-hash material-symbols-rounded">tag</span> ${escapeHTML(channel.name)}` : 'Nenhum canal ainda'}</h2><p>${escapeHTML(channel?.topic || (channel ? 'Esse é o começo de uma boa conversa.' : 'Crie um canal para começar a conversar.'))}</p></div><div class="chat-head-actions">${channelManageActionsHTML(channel)}<button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button><button class="icon-button" data-action="invite" title="Convidar pessoas" aria-label="Convidar pessoas"><span class="material-symbols-rounded">person_add</span></button></div></header><div class="chat-message-list" id="chatMessageList">${messagesHTML()}</div>${channel ? `<form class="message-composer" id="messageForm"><input id="spaceFileInput" type="file" accept="image/*,video/*" hidden><button class="dm-attach-button" type="button" id="spaceAttachButton" title="Enviar foto ou vídeo"><span class="material-symbols-rounded">add_photo_alternate</span></button><textarea id="messageInput" maxlength="4000" rows="1" placeholder="Mensagem em #${escapeHTML(channel.name)}" aria-label="Escreva uma mensagem"></textarea><button class="send-button" type="submit" title="Enviar mensagem"><span class="material-symbols-rounded">send</span></button></form>${state.spaceReplyTo?`<div class="space-reply-banner">Respondendo a uma mensagem <button type="button" data-space-reply-cancel aria-label="Cancelar resposta">×</button></div>`:''}` : ''}</section>`;
   renderSpaceNav();
 }
 function messagesHTML() {
@@ -845,7 +854,7 @@ function resetChannelModal() {
 }
 function openEditChannel(id) {
   const channel = state.channels.find(item => item.id === id);
-  if (!channel || !state.activeSpace || !['owner','admin'].includes(state.activeSpace.role)) return;
+  if (!channel || !canManageChannels()) { toast('Somente o dono ou um administrador pode editar canais.', 'error'); return; }
   state.editingChannelId = channel.id;
   $('#channelName').value = channel.name || '';
   $('#channelTopic').value = channel.topic || '';
@@ -857,7 +866,7 @@ function openEditChannel(id) {
 }
 async function deleteChannel(id) {
   const channel = state.channels.find(item => item.id === id);
-  if (!channel || !state.activeSpace || !['owner','admin'].includes(state.activeSpace.role)) return;
+  if (!channel || !canManageChannels()) { toast('Somente o dono ou um administrador pode excluir canais.', 'error'); return; }
   const kindLabel = channel.kind === 'voice' ? 'canal de voz' : 'canal de texto';
   if (!confirm(`Excluir o ${kindLabel} “${channel.name}”? As mensagens e os arquivos associados podem ser removidos e esta ação não pode ser desfeita.`)) return;
   const previousChannelId = state.activeChannel?.id;
@@ -876,7 +885,7 @@ async function deleteChannel(id) {
 }
 async function createChannel(event) {
   event.preventDefault(); if (!requireAuth() || !state.activeSpace) return;
-  if (!['owner','admin'].includes(state.activeSpace.role)) { toast('Somente donos e administradores podem gerenciar canais.', 'error'); return; }
+  if (!canManageChannels()) { toast('Somente o dono ou um administrador pode gerenciar canais.', 'error'); return; }
   const name = $('#channelName').value.trim().toLowerCase().replace(/\s+/g,'-');
   const topic = $('#channelTopic').value.trim();
   const kind = $('#channelKind')?.value === 'voice' ? 'voice' : 'text';
