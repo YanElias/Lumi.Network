@@ -1293,7 +1293,7 @@ async function handleCallSignal(signal) {
   if(signal.signal_type==='offer') {
     const blocked=await isUserBlocked(signal.sender_id);
     const {data:myPrefs}=await supabase.from('profiles').select('do_not_disturb').eq('id',state.user.id).maybeSingle();
-    if(blocked||myPrefs?.do_not_disturb){try{await sendCallSignal(signal.sender_id,signal.conversation_id,'end',{reason:blocked?'blocked':'do_not_disturb'});}catch{}return;}
+    if(blocked||getDoNotDisturb()||myPrefs?.do_not_disturb){try{await sendCallSignal(signal.sender_id,signal.conversation_id,'end',{reason:blocked?'blocked':'do_not_disturb'});}catch{}return;}
     if(state.callStatus!=='idle') { try{await sendCallSignal(signal.sender_id,signal.conversation_id,'busy',{});}catch{} return; }
     if(!state.conversations.some(c=>c.id===signal.conversation_id)) await loadConversations();
     const conversation=state.conversations.find(c=>c.id===signal.conversation_id);
@@ -1411,10 +1411,19 @@ function applyTheme(theme) {
 function getDoNotDisturb() {
   try { return localStorage.getItem('lumi-do-not-disturb') === 'true'; } catch { return false; }
 }
-function setDoNotDisturb(enabled) {
-  try { localStorage.setItem('lumi-do-not-disturb', String(Boolean(enabled))); } catch {}
-  document.documentElement.dataset.doNotDisturb = String(Boolean(enabled));
-  if (state.user) supabase.from('profiles').update({do_not_disturb:Boolean(enabled)}).eq('id',state.user.id).then(({error})=>{if(error)console.warn('Não Perturbe não sincronizado:',error.message);});
+async function setDoNotDisturb(enabled) {
+  const next = Boolean(enabled);
+  try { localStorage.setItem('lumi-do-not-disturb', String(next)); } catch {}
+  document.documentElement.dataset.doNotDisturb = String(next);
+  if (!state.user) return true;
+  const { error } = await supabase.from('profiles').update({ do_not_disturb: next }).eq('id', state.user.id);
+  if (error) {
+    console.error('Não Perturbe não sincronizado:', error.message);
+    toast('Não consegui salvar Não Perturbe na conta. Confira sua conexão e tente novamente.', 'error');
+    return false;
+  }
+  if (state.profile) state.profile.do_not_disturb = next;
+  return true;
 }
 function applyAccent(accent) {
   const allowed = ['yellow','blue','green','purple'];
@@ -1603,7 +1612,7 @@ document.addEventListener('click', async event=>{
 });
 
 $('#authForm').addEventListener('submit',handleAuth);
-document.addEventListener('change',e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiDnd'){setDoNotDisturb(e.target.checked);toast(e.target.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');}});
+document.addEventListener('change',async e=>{if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
