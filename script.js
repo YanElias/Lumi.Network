@@ -58,6 +58,7 @@ const INFINITY_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // Contas co
 const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de contas verificadas, aprovadas por você
 const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Testers autorizados
 const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Equipe do LUMI
+const CREATOR_USER_IDS = []; // IDs aprovados de criadores de conteúdo que usam o LUMI
 function accountBadges(userId, isInfinity = false) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
@@ -65,11 +66,13 @@ function accountBadges(userId, isInfinity = false) {
   const verified = owner || VERIFIED_USER_IDS.includes(userId);
   const tester = TESTER_USER_IDS.includes(userId);
   const staff = owner || STAFF_USER_IDS.includes(userId);
+  const creator = CREATOR_USER_IDS.includes(userId);
   return (infinity ? '<span class="lumi-badge infinity-badge" title="LUMI INFINITY" aria-label="LUMI INFINITY">∞</span>' : '')
     + (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
     + (owner ? '<span class="lumi-badge owner-badge" title="Dono do LUMI" aria-label="Dono do LUMI">✦</span>' : '')
     + (tester ? '<span class="lumi-badge tester-badge" title="Tester do LUMI" aria-label="Tester do LUMI">T</span>' : '')
-    + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '');
+    + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '')
+    + (creator ? '<span class="lumi-badge creator-badge" title="Criador de conteúdo LUMI" aria-label="Criador de conteúdo LUMI">▶</span>' : '');
 }
 function avatarMarkup(name, url, className='avatar') {
   return url ? `<img class="${className} avatar-image" src="${escapeHTML(url)}" alt="Foto de ${escapeHTML(name)}">` : `<span class="${className}">${escapeHTML(initials(name))}</span>`;
@@ -1399,7 +1402,7 @@ function attachCallMedia() {
   monitorDMCallVoice();
 }
 async function createCallPeer(recipientId, conversationId, mode) {
-  state.callPeerId=recipientId; state.callConversationId=conversationId; state.callMode=mode; state.callSeenSignals=new Set(); state.pendingIceSignals=[];
+  state.callPeerId=recipientId; state.callConversationId=conversationId; state.callMode=mode; state.callSeenSignals=new Set(); state.pendingIceSignals=state.pendingIceSignals.filter(entry => entry?.conversation_id===conversationId && entry?.sender_id===recipientId);
   state.callRemoteStream=new MediaStream();
   state.callPC=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
   state.callPC.ontrack=e=>{ e.streams[0]?.getTracks().forEach(t=>{if(!state.callRemoteStream.getTracks().some(x=>x.id===t.id))state.callRemoteStream.addTrack(t);}); attachCallMedia(); };
