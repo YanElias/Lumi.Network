@@ -1888,14 +1888,7 @@ html[data-theme="dark"] .notification-item small,
 html[data-theme="dark"] .search-result small { color: var(--muted); }
 
 
-/* LUMI — identidade amarela fixa; cores alternativas reservadas para VIP futuro */
-html[data-accent="blue"], html[data-accent="green"], html[data-accent="purple"] {
-  --yellow:#ffd83d !important; --yellow-soft:#fff6c9 !important; --yellow-pale:#fffbed !important; --yellow-deep:#b28a00 !important;
-}
-html[data-accent="blue"] .brand-mark, html[data-accent="green"] .brand-mark, html[data-accent="purple"] .brand-mark,
-html[data-accent="blue"] .primary-button, html[data-accent="green"] .primary-button, html[data-accent="purple"] .primary-button {
-  background:#ffd83d !important; border-color:#f5ce29 !important; color:#3b3100 !important;
-}
+/* As paletas VIP são definidas no final deste arquivo e só podem ser escolhidas por contas INFINITY. */
 .lumi-badge.tester-badge, .lumi-badge.staff-badge { background:#fff1a8; color:#745b00; }
 html[data-theme="dark"] .lumi-badge.tester-badge, html[data-theme="dark"] .lumi-badge.staff-badge { background:#3b351e; color:#ffe47a; }
 .space-owner-delete { color:#8a6c00; border:1px solid #e5cf70; background:#fff8d8; border-radius:9px; padding:8px 10px; }
