@@ -50,7 +50,7 @@ import { supabase } from './database/supabase.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const state = { user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [] };
+const state = { user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [], callRetryTimer: null };
 const symbols = ['✳','🎮','🎨','☕','✦','🌙'];
 // Configure os selos oficiais aqui. Use IDs de usuários obtidos no Supabase Auth.
 const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona do LUMI
@@ -1237,10 +1237,27 @@ async function recordDMVoice() {
   }catch(error){state.dmRecordStream?.getTracks().forEach(t=>t.stop());state.dmRecordStream=null;toast('Não consegui acessar o microfone: '+error.message,'error');}
 }
 
+
+function scheduleCallRetry() {
+  clearTimeout(state.callRetryTimer);
+  state.callRetryTimer=setTimeout(async()=>{
+    if(state.callStatus!=='calling'||!state.callPeerId||!state.activeConversation)return;
+    const targetId=state.callPeerId, mode=state.callMode;
+    const {data:preferences,error}=await supabase.from('profiles').select('do_not_disturb').eq('id',targetId).maybeSingle();
+    if(!error&&preferences?.do_not_disturb){toast('Retorno automático interrompido: a pessoa ativou Não Perturbe.','success');await cleanupCall(false);return;}
+    if(await isUserBlocked(targetId)){await cleanupCall(false);toast('Retorno automático interrompido porque a pessoa foi bloqueada.');return;}
+    await cleanupCall(false);
+    if(state.activeConversation?.otherUser?.id===targetId)setTimeout(()=>{if(state.callStatus==='idle')startCall(mode);},250);
+  },5000);
+}
+
 async function startCall(mode) {
   if(!requireAuth())return;
   const conversation=state.activeConversation;
   if(!conversation){toast('Abra uma conversa antes de ligar.');return;}
+  if(await isUserBlocked(conversation.otherUser.id)){toast('Você bloqueou essa pessoa. Desbloqueie para ligar.','error');return;}
+  const {data:targetPrefs,error:prefError}=await supabase.from('profiles').select('do_not_disturb').eq('id',conversation.otherUser.id).maybeSingle();
+  if(!prefError&&targetPrefs?.do_not_disturb){toast('Essa pessoa ativou Não Perturbe.','error');return;}
   if(!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection){toast('Este navegador não permite chamadas. Tente no Chrome/Firefox ou no app desktop atualizado.','error');return;}
   if(state.callStatus!=='idle'){toast('Já existe uma chamada ativa.');return;}
   ensureCallSignalSubscription();
@@ -1249,6 +1266,7 @@ async function startCall(mode) {
     callStatus(`Chamando ${conversation.otherUser.display_name||conversation.otherUser.username||'seu contato'}…`);
     const offer=await state.callPC.createOffer(); await state.callPC.setLocalDescription(offer);
     await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode});
+    scheduleCallRetry();
     toast(mode==='video'?'Ligação de vídeo iniciada.':'Ligação de voz iniciada.','success');
     await navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => stream.getTracks().forEach(track => track.stop()));
@@ -1266,6 +1284,9 @@ async function handleCallSignal(signal) {
   if(!signal || signal.sender_id===state.user?.id)return;
   if(signal.signal_type==='ice' && state.pendingCallOffer?.conversation_id===signal.conversation_id && !state.callPC){state.pendingIceSignals.push(signal.payload);return;}
   if(signal.signal_type==='offer') {
+    const blocked=await isUserBlocked(signal.sender_id);
+    const {data:myPrefs}=await supabase.from('profiles').select('do_not_disturb').eq('id',state.user.id).maybeSingle();
+    if(blocked||myPrefs?.do_not_disturb){try{await sendCallSignal(signal.sender_id,signal.conversation_id,'end',{reason:blocked?'blocked':'do_not_disturb'});}catch{}return;}
     if(state.callStatus!=='idle') { try{await sendCallSignal(signal.sender_id,signal.conversation_id,'busy',{});}catch{} return; }
     if(!state.conversations.some(c=>c.id===signal.conversation_id)) await loadConversations();
     const conversation=state.conversations.find(c=>c.id===signal.conversation_id);
@@ -1278,7 +1299,7 @@ async function handleCallSignal(signal) {
   if(signal.signal_type==='busy' && state.callPeerId===signal.sender_id){callStatus('A pessoa já está em outra chamada.');setTimeout(()=>cleanupCall(false),1800);return;}
   if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId || !state.callPC)return;
   try {
-    if(signal.signal_type==='answer' && state.callPC.signalingState==='have-local-offer') { await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload)); await flushPendingIce(); }
+    if(signal.signal_type==='answer' && state.callPC.signalingState==='have-local-offer') { clearTimeout(state.callRetryTimer); state.callRetryTimer=null; await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload)); await flushPendingIce(); }
     else if(signal.signal_type==='ice' && signal.payload) { if(!state.callPC.remoteDescription){state.pendingIceSignals.push(signal.payload);}else{try{await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload));}catch(err){console.warn('Candidato ICE ignorado:',err.message);}} }
     else if(signal.signal_type==='end') await cleanupCall(false);
   } catch(error) { console.error(error); callStatus('Erro ao conectar a chamada.'); }
@@ -1311,6 +1332,7 @@ async function declineIncomingCall() {
   state.pendingCallOffer=null;
 }
 async function cleanupCall(notifyPeer=true) {
+  clearTimeout(state.callRetryTimer);state.callRetryTimer=null;
   if(notifyPeer && state.callPeerId && state.callConversationId)try{await sendCallSignal(state.callPeerId,state.callConversationId,'end',{});}catch{}
   if(state.callPC){state.callPC.onicecandidate=null;state.callPC.ontrack=null;state.callPC.close();}
   state.callScreenStream?.getTracks().forEach(t=>t.stop()); state.callScreenStream=null;
@@ -1472,7 +1494,9 @@ async function onSessionChange(user) {
   if(state.realtime){await supabase.removeChannel(state.realtime);state.realtime=null;}
   if(!user){if(state.callRealtime){await supabase.removeChannel(state.callRealtime);state.callRealtime=null;}state.profile=null;state.spaces=[];state.activeSpace=null;state.channels=[];state.activeChannel=null;state.messages=[];updateIdentity();renderSpaceNav();renderHome();return;}
   ensureCallSignalSubscription();
-  await loadProfile();await loadSpaces();updateIdentity();if(state.page==='home')renderHome();
+  await loadProfile();
+  if(typeof state.profile?.do_not_disturb==='boolean'){try{localStorage.setItem('lumi-do-not-disturb',String(state.profile.do_not_disturb));}catch{}document.documentElement.dataset.doNotDisturb=String(state.profile.do_not_disturb);}
+  await loadSpaces();updateIdentity();if(state.page==='home')renderHome();
 }
 async function signOut(){await supabase.auth.signOut();state.activeSpace=null;state.activeChannel=null;toast('Você saiu da sua conta.');}
 
