@@ -1558,12 +1558,18 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
   flex: none !important;
 }
 
-/* Moldura da foto de perfil nas DMs */
+/* Moldura amarela das fotos de perfil nas DMs */
 .dm-avatar {
     border: 2px solid #ffd83d;
     border-radius: 50%;
     box-sizing: border-box;
-    padding: 2px;
     outline: 1px solid rgba(255, 216, 61, 0.35);
     outline-offset: 2px;
+}
+
+/* A moldura não deve deformar nem reduzir a foto */
+img.dm-avatar.avatar-image {
+    display: block;
+    padding: 0;
+    object-fit: cover;
 }
