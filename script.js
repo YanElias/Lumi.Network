@@ -1815,9 +1815,10 @@ async function onSessionChange(user) {
   if (state.user?.id && state.user.id !== user?.id) { if(state.callRealtime){await supabase.removeChannel(state.callRealtime);state.callRealtime=null;} await cleanupCall(false); }
   state.user=user;
   if(state.realtime){await supabase.removeChannel(state.realtime);state.realtime=null;}
-  if(!user){if(state.callRealtime){await supabase.removeChannel(state.callRealtime);state.callRealtime=null;}state.profile=null;state.spaces=[];state.activeSpace=null;state.channels=[];state.activeChannel=null;state.messages=[];updateIdentity();renderSpaceNav();renderHome();return;}
+  if(!user){if(state.callRealtime){await supabase.removeChannel(state.callRealtime);state.callRealtime=null;}state.profile=null;applyAccent('yellow');state.spaces=[];state.activeSpace=null;state.channels=[];state.activeChannel=null;state.messages=[];updateIdentity();renderSpaceNav();renderHome();return;}
   ensureCallSignalSubscription();
   await loadProfile();
+  applyAccent(localStorage.getItem('lumi-accent') || 'yellow');
   if(typeof state.profile?.do_not_disturb==='boolean'){try{localStorage.setItem('lumi-do-not-disturb',String(state.profile.do_not_disturb));}catch{}document.documentElement.dataset.doNotDisturb=String(state.profile.do_not_disturb);}
   await loadSpaces();updateIdentity();if(state.page==='home')renderHome();checkPendingIncomingCall();
 }
