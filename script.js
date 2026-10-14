@@ -914,7 +914,7 @@ async function openConversation(id, refreshList = true) {
   $('.app-shell')?.classList.add('mobile-chat-open');
   if (state.dmRealtime) { await supabase.removeChannel(state.dmRealtime); state.dmRealtime = null; }
   const panel = $('#dmChatPanel'); if (!panel) return;
-  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
+  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button" type="button" data-share-contact title="Compartilhar cartão de contato" aria-label="Compartilhar cartão de contato"><span class="material-symbols-rounded">contact_page</span></button><button class="icon-button" type="button" data-block-user="${conversation.otherUser.id}" title="Bloquear ou desbloquear pessoa" aria-label="Bloquear ou desbloquear pessoa"><span class="material-symbols-rounded">block</span></button><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
   <div class="dm-call-person-card" id="dmRemotePerson">
     <div class="dm-call-person-avatar" id="dmRemoteAvatar"></div>
     <video id="dmRemoteVideo" autoplay playsinline></video>
@@ -925,7 +925,7 @@ async function openConversation(id, refreshList = true) {
     <video id="dmLocalVideo" autoplay playsinline muted></video>
     <div class="dm-call-person-name" id="dmLocalName"></div>
   </div>
-</div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
+</div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
   if (refreshList) renderConversationList();
   const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
   if (error) { console.error(error); $('#dmMessageList').innerHTML=`<div class="dm-empty-small">Não consegui carregar as mensagens: ${escapeHTML(error.message)}</div>`; return; }
@@ -1180,6 +1180,63 @@ async function createCallPeer(recipientId, conversationId, mode) {
   state.callLocalStream.getTracks().forEach(track=>state.callPC.addTrack(track,state.callLocalStream));
   attachCallMedia(); showCallStage();
 }
+
+async function isUserBlocked(userId) {
+  if(!state.user||!userId)return false;
+  const {data,error}=await supabase.from('user_blocks').select('blocked_id').eq('blocker_id',state.user.id).eq('blocked_id',userId).maybeSingle();
+  if(error){if(!error.message?.toLowerCase().includes('does not exist'))console.warn('Verificação de bloqueio:',error.message);return false;}
+  return Boolean(data);
+}
+async function toggleBlockUser(userId) {
+  if(!requireAuth()||!userId||userId===state.user.id)return;
+  const blocked=await isUserBlocked(userId);
+  if(blocked){
+    const {error}=await supabase.from('user_blocks').delete().eq('blocker_id',state.user.id).eq('blocked_id',userId);
+    if(error){toast('Não consegui desbloquear. Execute database/lumi-feature-pack.sql no Supabase.','error');return;}
+    toast('Pessoa desbloqueada.','success');
+  } else {
+    const {error}=await supabase.from('user_blocks').insert({blocker_id:state.user.id,blocked_id:userId});
+    if(error){toast('Não consegui bloquear. Execute database/lumi-feature-pack.sql no Supabase.','error');return;}
+    toast('Pessoa bloqueada.','success');
+  }
+  const button=$('[data-block-user]');
+  if(button){button.title=blocked?'Bloquear pessoa':'Desbloquear pessoa';button.querySelector('.material-symbols-rounded').textContent=blocked?'block':'person_check';}
+}
+async function shareContactCard() {
+  if(!state.activeConversation||!state.user)return;
+  const p=state.profile||{};
+  const content='LUMI_CONTACT:'+JSON.stringify({name:p.display_name||state.user.email?.split('@')[0]||'Pessoa LUMI',username:p.username||'',bio:p.bio||''});
+  const {error}=await supabase.from('direct_messages').insert({conversation_id:state.activeConversation.id,sender_id:state.user.id,content});
+  if(error){toast('Não consegui compartilhar o contato: '+error.message,'error');return;}
+  toast('Cartão de contato enviado!','success');
+}
+async function recordDMVoice() {
+  if(!requireAuth()||!state.activeConversation)return;
+  const button=$('#dmRecordAudio'), input=$('#dmFileInput');
+  if(state.dmRecorder?.state==='recording'){state.dmRecorder.stop();return;}
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){toast('Este navegador não suporta gravação de áudio.','error');return;}
+  try {
+    state.dmRecordStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    state.dmRecordChunks=[];
+    const mime=['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'].find(t=>MediaRecorder.isTypeSupported(t));
+    state.dmRecorder=new MediaRecorder(state.dmRecordStream,mime?{mimeType:mime}:{});
+    state.dmRecorder.ondataavailable=e=>{if(e.data?.size)state.dmRecordChunks.push(e.data);};
+    state.dmRecorder.onstop=async()=>{
+      const blob=new Blob(state.dmRecordChunks,{type:state.dmRecorder?.mimeType||'audio/webm'});
+      state.dmRecordStream?.getTracks().forEach(t=>t.stop());state.dmRecordStream=null;
+      if(button){button.classList.remove('recording');button.title='Gravar mensagem de áudio';button.querySelector('.material-symbols-rounded').textContent='mic';}
+      if(blob.size>20*1024*1024){toast('O áudio passou de 20 MB. Grave uma mensagem menor.','error');return;}
+      if(!blob.size)return;
+      const ext=blob.type.includes('ogg')?'ogg':'webm';
+      const file=new File([blob],'lumi-audio-'+Date.now()+'.'+ext,{type:blob.type||'audio/webm'});
+      try{const transfer=new DataTransfer();transfer.items.add(file);input.files=transfer.files;sendDM({preventDefault(){}});}catch(error){toast('Não consegui preparar o áudio para envio.','error');}
+    };
+    state.dmRecorder.start();
+    if(button){button.classList.add('recording');button.title='Parar e enviar áudio';button.querySelector('.material-symbols-rounded').textContent='stop';}
+    toast('Gravando áudio… clique no microfone para parar.','success');
+  }catch(error){state.dmRecordStream?.getTracks().forEach(t=>t.stop());state.dmRecordStream=null;toast('Não consegui acessar o microfone: '+error.message,'error');}
+}
+
 async function startCall(mode) {
   if(!requireAuth())return;
   const conversation=state.activeConversation;
@@ -1282,6 +1339,7 @@ function dmMessagesHTML() {
 function renderDMMessages() { const list=$('#dmMessageList'); if(!list)return; const nearBottom=list.scrollHeight-list.scrollTop-list.clientHeight<120; list.innerHTML=dmMessagesHTML(); if(nearBottom)list.scrollTop=list.scrollHeight; }
 async function sendDM(event) {
   event.preventDefault(); if(!requireAuth()||!state.activeConversation)return;
+  if(await isUserBlocked(state.activeConversation.otherUser.id)){toast('Você bloqueou essa pessoa. Desbloqueie para enviar mensagens.','error');return;}
   const input=$('#dmMessageInput'); const fileInput=$('#dmFileInput'); const content=input.value.trim(); const file=fileInput.files?.[0]; if(!content&&!file)return;
   if(file && file.size>20*1024*1024){toast('O arquivo precisa ter no máximo 20 MB.','error');return;}
   const submit=$('#dmMessageForm button[type="submit"]'); if(submit)submit.disabled=true;
@@ -1572,4 +1630,11 @@ document.addEventListener('change', event => {
   if (event.target.id === 'spacePhotoChange' && event.target.files?.[0]) {
     changeSpacePhoto(event.target.files[0]);
   }
+});
+
+document.addEventListener('click',event=>{
+  const block=event.target.closest('[data-block-user]');
+  if(block){event.preventDefault();toggleBlockUser(block.dataset.blockUser);return;}
+  if(event.target.closest('[data-share-contact]')){event.preventDefault();shareContactCard();return;}
+  if(event.target.closest('#dmRecordAudio')){event.preventDefault();recordDMVoice();return;}
 });
