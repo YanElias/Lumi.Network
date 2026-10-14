@@ -151,7 +151,7 @@ function renderSpaceNav() {
         <div class="active-space-name"><small>SEU ESPAÇO · COMUNIDADE</small><strong>${escapeHTML(space.name)}</strong>${space.description ? `<p>${escapeHTML(space.description)}</p>` : ''}</div>
         <button class="icon-button active-space-menu" data-action="invite" title="Opções do espaço" aria-label="Opções do espaço"><span class="material-symbols-rounded">expand_more</span></button>
       </div>
-      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button>' : ''}</div>
+      <div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div>
       <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
       <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
       <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
@@ -316,6 +316,34 @@ async function createSpace(event) {
   } else {
     toast('Espaço criado! Sua comunidade já tem um canal #geral.', 'success');
   }
+}
+
+async function deleteActiveSpace() {
+  const space = state.activeSpace;
+  if (!state.user || !space) return;
+  if (space.owner_id !== state.user.id) {
+    toast('Somente o dono pode apagar este espaço.', 'error');
+    return;
+  }
+  const confirmation = prompt(`Para apagar "${space.name}", digite APAGAR:`);
+  if (confirmation !== 'APAGAR') {
+    if (confirmation !== null) toast('Exclusão cancelada: o texto não corresponde.', 'error');
+    return;
+  }
+  const { error } = await supabase.from('spaces').delete().eq('id', space.id).eq('owner_id', state.user.id);
+  if (error) {
+    console.error('Falha ao apagar espaço:', error);
+    toast('Não consegui apagar. Confira se a migração database/owner-space-controls.sql foi aplicada no Supabase.', 'error');
+    return;
+  }
+  state.spaces = state.spaces.filter(item => item.id !== space.id);
+  state.activeSpace = null;
+  state.channels = [];
+  state.activeChannel = null;
+  state.messages = [];
+  await loadSpaces();
+  setPage('home');
+  toast('Espaço apagado.', 'success');
 }
 
 async function changeSpacePhoto(file) {
@@ -1498,10 +1526,9 @@ async function setDoNotDisturb(enabled) {
   return true;
 }
 function applyAccent(accent) {
-  const allowed = ['yellow','blue','green','purple'];
-  const selected = allowed.includes(accent) ? accent : 'yellow';
-  document.documentElement.dataset.accent = selected;
-  try { localStorage.setItem('lumi-accent', selected); } catch {}
+  // O amarelo é a identidade fixa do LUMI; cores alternativas ficam reservadas para o VIP futuro.
+  document.documentElement.dataset.accent = 'yellow';
+  try { localStorage.setItem('lumi-accent', 'yellow'); } catch {}
 }
 function renderSettings() {
   $('.main-panel').classList.remove('workspace-mode');
@@ -1517,7 +1544,7 @@ function renderSettings() {
       <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
       <p>Personalize sua experiência e cuide da sua conta.</p>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
-      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">color_lens</div><div class="settings-card-content"><h2>Cor de destaque</h2><p>Escolha uma cor para os detalhes do LUMI.</p><label class="field-label" for="lumiAccent">Cor</label><select class="form-input" id="lumiAccent"><option value="yellow">Amarelo LUMI</option><option value="blue">Azul</option><option value="green">Verde</option><option value="purple">Roxo</option></select></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">color_lens</div><div class="settings-card-content"><h2>Identidade visual</h2><p>O amarelo é a cor oficial do LUMI e não pode ser alterado. Cores alternativas poderão fazer parte do VIP no futuro.</p><label class="field-label" for="lumiAccent">Cor padrão</label><select class="form-input" id="lumiAccent"><option value="yellow">Amarelo LUMI</option><option value="blue" disabled>Azul — VIP em breve</option><option value="green" disabled>Verde — VIP em breve</option><option value="purple" disabled>Roxo — VIP em breve</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">chat</div><div class="settings-card-content"><h2>Mensagem nas chamadas</h2><p>Escreva uma mensagem curta que aparecerá para a pessoa quando você ligar. Ela será reutilizada nas tentativas automáticas.</p><label class="field-label" for="lumiCallRetryMessage">Mensagem (opcional)</label><input class="form-input" id="lumiCallRetryMessage" maxlength="160" value="${escapeHTML(retryMessage)}" placeholder="Ex.: Opa, me atende quando puder!"><small class="settings-help">Até 160 caracteres. Salva neste navegador.</small></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><h2>LUMI VIP</h2><p>Pagamento único de <strong>R$ 10,00</strong>. Sem assinatura e sem renovação automática.</p><p>${isVip ? "Seu perfil já tem VIP ativado." : "O checkout ainda precisa ser conectado a um provedor de pagamento seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "VIP ativado" : "Pagamento ainda não conectado"}</button></div></section>
@@ -1708,6 +1735,7 @@ document.addEventListener('click', async event=>{
   else if(action==='show-inbox')setPage('inbox');
   else if(action==='create-channel'){if(requireAuth()&&state.activeSpace)openModal('channelModal');else if(!state.activeSpace)toast('Abra um espaço primeiro.');}
   else if(action==='invite')showInvite();
+  else if(action==='delete-space')await deleteActiveSpace();
   else if(action==='manage-members')await manageMembers();
   else if(action==='search-spaces'){state.search=$('#discoverQuery')?.value.trim()||'';renderDiscover();}
   else if(action==='signout')await signOut();
