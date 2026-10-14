@@ -1902,8 +1902,9 @@ async function acceptIncomingCall() {
     });
     state.pendingCallOffer = null;
     if (layer) layer.hidden = true;
-    setPage('inbox');
-    await openConversation(conversation.id);
+    await setPage('inbox');
+    showCallStage();
+    attachCallMedia();
     callStatus('Resposta enviada. Estabelecendo áudio/vídeo…');
   } catch (error) {
     console.error('Falha ao atender chamada:', error);
