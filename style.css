@@ -2246,3 +2246,23 @@ html[data-theme="dark"] .space-manage-details[open] > summary {
 @media (max-width: 950px) and (min-width: 651px) {
   .app-shell { grid-template-columns: 62px 220px minmax(320px,1fr); }
 }
+
+
+/* LUMI — gerenciamento de pessoas bloqueadas nas configurações */
+.lumi-blocked-users{display:grid;gap:9px;margin-top:12px;min-width:0}
+.lumi-blocked-row{display:flex;align-items:center;gap:10px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-bg,#fff)}
+.lumi-blocked-avatar{width:38px;height:38px;flex:0 0 38px;object-fit:cover;border-radius:50%}
+.lumi-blocked-avatar-fallback{display:grid;place-items:center;background:var(--yellow-pale);color:var(--yellow-deep);font-size:12px;font-weight:800}
+.lumi-blocked-person{display:grid;gap:3px;flex:1;min-width:0}
+.lumi-blocked-person strong,.lumi-blocked-person small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lumi-blocked-person strong{font-size:13px}
+.lumi-blocked-person small,.lumi-blocked-empty small{font-size:11px;color:var(--muted-color,#77766c)}
+.lumi-blocked-row button{flex:0 0 auto;padding:8px 10px;font-size:12px}
+.lumi-blocked-row button:disabled{opacity:.6;cursor:wait}
+.lumi-blocked-empty{display:flex;align-items:center;gap:10px;padding:13px;border:1px dashed var(--line);border-radius:12px;color:var(--muted-color,#77766c)}
+.lumi-blocked-empty>.material-symbols-rounded{font-size:23px;color:var(--yellow-deep)}
+.lumi-blocked-empty>span:last-child{display:grid;gap:3px}
+.lumi-blocked-empty strong{font-size:13px;color:var(--ink)}
+html[data-theme="dark"] .lumi-blocked-row{background:#20211b;border-color:#38392f}
+html[data-theme="dark"] .lumi-blocked-avatar-fallback{background:#302d1c;color:#ffe47a}
+@media(max-width:560px){.lumi-blocked-row{flex-wrap:wrap}.lumi-blocked-person{min-width:calc(100% - 58px)}.lumi-blocked-row button{margin-left:48px}}
