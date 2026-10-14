@@ -2123,3 +2123,34 @@ html[data-theme="dark"] .space-manage-details[open] > summary {
   .app-shell.workspace-mode .channel-group-heading { padding-top:9px; padding-bottom:7px; }
   .app-shell.workspace-mode .channel-entry { padding-top:7px; padding-bottom:7px; }
 }
+
+
+/* LUMI — sidebar enxuta: remove ações duplicadas sem remover recursos */
+@media (min-width: 651px) {
+  .space-sidebar { padding: 20px 14px 12px; }
+  .sidebar-top { padding-bottom: 16px; }
+  /* A criação continua disponível no botão da rail; evita três botões + iguais. */
+  #createSpaceTop { display: none !important; }
+  #createSpaceInline { display: none !important; }
+  .side-heading { padding-top: 19px; padding-bottom: 9px; }
+  .space-entry { padding: 7px 7px; margin-bottom: 2px; gap: 8px; }
+  .space-entry-icon { width: 32px; height: 32px; flex-basis: 32px; border-radius: 10px; }
+  .space-entry-copy strong { font-size: 11px; }
+  .space-entry-copy small { font-size: 9px; }
+  .sidebar-bottom { padding-top: 8px; }
+  .account-card { padding: 6px; }
+  .rail { gap: 9px; }
+  .rail-bottom { gap: 10px; }
+}
+@media (max-width: 950px) and (min-width: 651px) {
+  .app-shell { grid-template-columns: 70px 220px minmax(320px, 1fr); }
+  .right-panel { display: none !important; }
+  .rail-button { width: 56px; }
+}
+@media (max-height: 760px) and (min-width: 651px) {
+  .space-sidebar { padding-top: 14px; }
+  .sidebar-top { padding-bottom: 12px; }
+  .side-heading { padding-top: 13px; padding-bottom: 7px; }
+  .space-entry { padding-top: 5px; padding-bottom: 5px; }
+  .rail { padding-top: 14px; }
+}
