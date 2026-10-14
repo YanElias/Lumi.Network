@@ -1871,7 +1871,19 @@ function showIncomingCall(name,mode,message='') {
   let layer=$('#lumiIncomingCall'); if(!layer){layer=document.createElement('div');layer.id='lumiIncomingCall';layer.className='lumi-incoming-call';document.body.append(layer);}
   layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p>${message ? `<div class="lumi-call-custom-message">${escapeHTML(message)}</div>` : ''}<div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
   layer.hidden=false;
-  if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification('Chamada recebida no LUMI',{body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.'});n.onclick=()=>window.focus();}catch{}}
+  if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){
+    const notificationOptions = {
+      body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.',
+      icon:'./logo.png',tag:'lumi-incoming-call-'+(state.pendingCallOffer?.conversation_id||'unknown'),
+      data:{url:'./',conversation_id:state.pendingCallOffer?.conversation_id||null},
+      actions:[{action:'accept',title:'Atender'},{action:'open',title:'Abrir LUMI'}]
+    };
+    if('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration=>registration.showNotification('Chamada recebida no LUMI',notificationOptions))
+        .catch(()=>{try{new Notification('Chamada recebida no LUMI',notificationOptions);}catch{}});
+    } else { try { new Notification('Chamada recebida no LUMI',notificationOptions); } catch {} }
+  }
 }
 async function acceptIncomingCall() {
   const offer = state.pendingCallOffer;
