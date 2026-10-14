@@ -1413,11 +1413,15 @@ function getDoNotDisturb() {
 }
 async function setDoNotDisturb(enabled) {
   const next = Boolean(enabled);
+  const previous = getDoNotDisturb();
   try { localStorage.setItem('lumi-do-not-disturb', String(next)); } catch {}
   document.documentElement.dataset.doNotDisturb = String(next);
   if (!state.user) return true;
   const { error } = await supabase.from('profiles').update({ do_not_disturb: next }).eq('id', state.user.id);
   if (error) {
+    try { localStorage.setItem('lumi-do-not-disturb', String(previous)); } catch {}
+    document.documentElement.dataset.doNotDisturb = String(previous);
+    if (state.profile) state.profile.do_not_disturb = previous;
     console.error('Não Perturbe não sincronizado:', error.message);
     toast('Não consegui salvar Não Perturbe na conta. Confira sua conexão e tente novamente.', 'error');
     return false;
