@@ -131,3 +131,5 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [ ] Adicionar banner de perfil e opções de privacidade para status/atividade
 - [ ] Revisar todos os componentes do tema escuro em desktop e celular
 - [ ] Agrupar canais visualmente por categoria e testar permissões em canais existentes
+
+- [x] Adicionar medidor visual de voz ativa nas salas de voz em grupo (precisa de teste real com duas contas/dispositivos)
