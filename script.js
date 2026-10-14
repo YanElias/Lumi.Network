@@ -50,7 +50,7 @@ import { supabase } from './database/supabase.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const state = { user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [], callRetryTimer: null, editingChannelId: null };
+const state = { callOperationId: 0, handledOfferIds: new Set(), user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [], callRetryTimer: null, editingChannelId: null };
 const symbols = ['✳','🎮','🎨','☕','✦','🌙'];
 // Configure os selos oficiais aqui. Use IDs de usuários obtidos no Supabase Auth.
 const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona do LUMI
@@ -1420,16 +1420,89 @@ function attachCallMedia() {
   monitorDMCallVoice();
 }
 async function createCallPeer(recipientId, conversationId, mode) {
-  state.callPeerId=recipientId; state.callConversationId=conversationId; state.callMode=mode; state.callSeenSignals=new Set(); state.pendingIceSignals=state.pendingIceSignals.filter(entry => entry?.conversation_id===conversationId && entry?.sender_id===recipientId);
-  state.callRemoteStream=new MediaStream();
-  state.callPC=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
-  state.callPC.ontrack=e=>{ e.streams[0]?.getTracks().forEach(t=>{if(!state.callRemoteStream.getTracks().some(x=>x.id===t.id))state.callRemoteStream.addTrack(t);}); attachCallMedia(); };
-  state.callPC.onicecandidate=e=>{ if(e.candidate && state.callPeerId && state.callConversationId) sendCallSignal(state.callPeerId,state.callConversationId,'ice',e.candidate.toJSON()).catch(err=>console.warn('ICE:',err.message)); };
-  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')stopLumiCallTone();if(status==='failed')stopLumiCallTone();if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
-  state.callLocalStream=await navigator.mediaDevices.getUserMedia({audio:true,video:mode==='video'});
-  state.callLocalStream.getTracks().forEach(track=>state.callPC.addTrack(track,state.callLocalStream));
-  attachCallMedia(); showCallStage();
+  const operationId = ++state.callOperationId;
+  state.callPeerId = recipientId;
+  state.callConversationId = conversationId;
+  state.callMode = mode === 'video' ? 'video' : 'audio';
+  state.callSeenSignals = new Set();
+  state.pendingIceSignals = state.pendingIceSignals.filter(entry =>
+    entry?.conversation_id === conversationId && entry?.sender_id === recipientId
+  );
+
+  const iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' }
+  ];
+  // Optional TURN server for networks that block direct peer-to-peer connections.
+  try {
+    const relay = JSON.parse(localStorage.getItem('lumi-turn-config') || 'null');
+    if (relay?.urls && relay?.username && relay?.credential) {
+      iceServers.push({ urls: relay.urls, username: relay.username, credential: relay.credential });
+    }
+  } catch {}
+
+  const pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 10 });
+  state.callPC = pc;
+  state.callRemoteStream = new MediaStream();
+  pc.ontrack = event => {
+    const tracks = event.streams?.[0]?.getTracks() || (event.track ? [event.track] : []);
+    for (const track of tracks) {
+      if (!state.callRemoteStream.getTracks().some(existing => existing.id === track.id)) state.callRemoteStream.addTrack(track);
+    }
+    attachCallMedia();
+  };
+  pc.onicecandidate = event => {
+    if (event.candidate && state.callPC === pc && state.callPeerId && state.callConversationId) {
+      sendCallSignal(state.callPeerId, state.callConversationId, 'ice', event.candidate.toJSON())
+        .catch(error => console.warn('Não consegui enviar candidato ICE:', error.message));
+    }
+  };
+  pc.oniceconnectionstatechange = () => {
+    if (state.callPC !== pc) return;
+    const ice = pc.iceConnectionState;
+    if (ice === 'connected' || ice === 'completed') callStatus('Conexão de áudio/vídeo estabelecida.');
+    else if (ice === 'checking') callStatus('Encontrando uma rota segura…');
+    else if (ice === 'disconnected') callStatus('Conexão instável. Tentando recuperar…');
+    else if (ice === 'failed') {
+      callStatus('A conexão direta falhou. Tentando recuperar…');
+      try { pc.restartIce?.(); } catch {}
+    }
+  };
+  pc.onconnectionstatechange = () => {
+    if (state.callPC !== pc) return;
+    if (pc.connectionState === 'connected') {
+      stopLumiCallTone();
+      callStatus(state.callMode === 'video' ? 'Chamada de vídeo conectada' : 'Chamada de voz conectada');
+    } else if (pc.connectionState === 'failed') {
+      stopLumiCallTone();
+      callStatus('A conexão falhou. Redes restritivas podem precisar de um servidor TURN.');
+    } else if (pc.connectionState === 'disconnected') callStatus('Reconectando…');
+  };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: state.callMode === 'video' ? { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 24, max: 30 } } : false
+    });
+    if (operationId !== state.callOperationId || state.callPC !== pc) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new Error('A chamada foi cancelada durante a preparação.');
+    }
+    state.callLocalStream = stream;
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    attachCallMedia();
+    showCallStage();
+    return pc;
+  } catch (error) {
+    if (state.callPC === pc) {
+      pc.close();
+      state.callPC = null;
+    }
+    throw error;
+  }
 }
+
 
 async function isUserBlocked(userId) {
   if(!state.user||!userId)return false;
@@ -1717,32 +1790,82 @@ async function checkPendingIncomingCall() {
   }
 }
 async function handleCallSignal(signal) {
-  if(!signal || signal.sender_id===state.user?.id)return;
-  if (signal.signal_type === 'ice' && !state.callPC) {
-    if (signal.payload) state.pendingIceSignals.push({conversation_id: signal.conversation_id, sender_id: signal.sender_id, candidate: signal.payload});
+  if (!signal || signal.sender_id === state.user?.id || !state.user) return;
+
+  if (signal.signal_type === 'ice') {
+    if (!signal.payload) return;
+    const matches = state.callPC &&
+      signal.conversation_id === state.callConversationId &&
+      signal.sender_id === state.callPeerId;
+    if (!matches || !state.callPC?.remoteDescription) {
+      const key = signal.payload.candidate || JSON.stringify(signal.payload);
+      const exists = state.pendingIceSignals.some(entry =>
+        entry?.conversation_id === signal.conversation_id &&
+        entry?.sender_id === signal.sender_id &&
+        (entry?.candidate?.candidate || JSON.stringify(entry?.candidate)) === key
+      );
+      if (!exists) state.pendingIceSignals.push({
+        conversation_id: signal.conversation_id,
+        sender_id: signal.sender_id,
+        candidate: signal.payload
+      });
+      return;
+    }
+    try { await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload)); }
+    catch (error) {
+      console.warn('Candidato ICE guardado para tentar novamente:', error.message);
+      state.pendingIceSignals.push({ conversation_id: signal.conversation_id, sender_id: signal.sender_id, candidate: signal.payload });
+    }
     return;
   }
-  if(signal.signal_type==='offer') {
-    const blocked=await isUserBlocked(signal.sender_id);
-    const {data:myPrefs}=await supabase.from('profiles').select('do_not_disturb').eq('id',state.user.id).maybeSingle();
-    if(blocked||getDoNotDisturb()||myPrefs?.do_not_disturb){try{await sendCallSignal(signal.sender_id,signal.conversation_id,'end',{reason:blocked?'blocked':'do_not_disturb'});}catch{}return;}
-    if(state.callStatus!=='idle') { try{await sendCallSignal(signal.sender_id,signal.conversation_id,'busy',{});}catch{} return; }
-    if(!state.conversations.some(c=>c.id===signal.conversation_id)) await loadConversations();
-    const conversation=state.conversations.find(c=>c.id===signal.conversation_id);
-    if(!conversation || conversation.otherUser.id!==signal.sender_id) return;
-    state.pendingCallOffer=signal;
-    const caller=conversation.otherUser.display_name||conversation.otherUser.username||'Seu contato';
-    showIncomingCall(caller,signal.payload?.mode==='video'?'video':'audio',signal.payload?.retryMessage||'');
+
+  if (signal.signal_type === 'offer') {
+    if (state.handledOfferIds.has(signal.id) || state.pendingCallOffer?.id === signal.id) return;
+    const blocked = await isUserBlocked(signal.sender_id);
+    const { data: prefs } = await supabase.from('profiles').select('do_not_disturb').eq('id', state.user.id).maybeSingle();
+    if (blocked || getDoNotDisturb() || prefs?.do_not_disturb) {
+      try { await sendCallSignal(signal.sender_id, signal.conversation_id, 'end', { reason: blocked ? 'blocked' : 'do_not_disturb' }); } catch {}
+      return;
+    }
+    if (state.callStatus !== 'idle') {
+      try { await sendCallSignal(signal.sender_id, signal.conversation_id, 'busy', {}); } catch {}
+      return;
+    }
+    if (!state.conversations.some(item => item.id === signal.conversation_id)) await loadConversations();
+    const conversation = state.conversations.find(item => item.id === signal.conversation_id);
+    if (!conversation || conversation.otherUser?.id !== signal.sender_id) return;
+    state.pendingCallOffer = signal;
+    showIncomingCall(
+      conversation.otherUser.display_name || conversation.otherUser.username || 'Seu contato',
+      signal.payload?.mode === 'video' ? 'video' : 'audio',
+      signal.payload?.retryMessage || ''
+    );
     return;
   }
-  if(signal.signal_type==='busy' && state.callPeerId===signal.sender_id){callStatus('A pessoa já está em outra chamada.');setTimeout(()=>cleanupCall(false),1800);return;}
-  if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId || !state.callPC)return;
+
+  if (signal.signal_type === 'busy' && state.callPeerId === signal.sender_id) {
+    callStatus('A pessoa já está em outra chamada.');
+    setTimeout(() => cleanupCall(false), 1800);
+    return;
+  }
+  if (signal.conversation_id !== state.callConversationId || signal.sender_id !== state.callPeerId || !state.callPC) return;
+
   try {
-    if(signal.signal_type==='answer' && state.callPC.signalingState==='have-local-offer') { clearTimeout(state.callRetryTimer); state.callRetryTimer=null; await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload)); await flushPendingIce(); }
-    else if(signal.signal_type==='ice' && signal.payload) { if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId)return; if(!state.callPC.remoteDescription){state.pendingIceSignals.push(signal.payload);}else{try{await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload));}catch(err){console.warn('Candidato ICE ignorado:',err.message);}} }
-    else if(signal.signal_type==='end') await cleanupCall(false);
-  } catch(error) { console.error(error); callStatus('Erro ao conectar a chamada.'); }
+    if (signal.signal_type === 'answer' && state.callPC.signalingState === 'have-local-offer') {
+      clearTimeout(state.callRetryTimer);
+      state.callRetryTimer = null;
+      await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload));
+      await flushPendingIce();
+    } else if (signal.signal_type === 'end') {
+      await cleanupCall(false);
+    }
+  } catch (error) {
+    console.error('Falha na sinalização da chamada:', error);
+    callStatus('Erro ao negociar a chamada. Tente desligar e ligar novamente.');
+  }
 }
+
+
 function showIncomingCall(name,mode,message='') {
   let layer=$('#lumiIncomingCall'); if(!layer){layer=document.createElement('div');layer.id='lumiIncomingCall';layer.className='lumi-incoming-call';document.body.append(layer);}
   layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p>${message ? `<div class="lumi-call-custom-message">${escapeHTML(message)}</div>` : ''}<div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
@@ -1750,35 +1873,71 @@ function showIncomingCall(name,mode,message='') {
   if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification('Chamada recebida no LUMI',{body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.'});n.onclick=()=>window.focus();}catch{}}
 }
 async function acceptIncomingCall() {
-  const offer=state.pendingCallOffer; if(!offer)return;
-  const layer=$('#lumiIncomingCall'); if(layer)layer.hidden=true;
-  const conversation=state.conversations.find(c=>c.id===offer.conversation_id); if(conversation){state.activeConversation=conversation; if(state.page!=='inbox')setPage('inbox'); await openConversation(conversation.id);}
+  const offer = state.pendingCallOffer;
+  if (!offer || state.callStatus !== 'idle') return;
+  const layer = $('#lumiIncomingCall');
+  const acceptButton = layer?.querySelector('[data-incoming-call="accept"]');
+  if (acceptButton) { acceptButton.disabled = true; acceptButton.textContent = 'Conectando…'; }
   try {
-    state.callStatus='connecting'; await createCallPeer(offer.sender_id,offer.conversation_id,offer.payload?.mode==='video'?'video':'audio');
-    await state.callPC.setRemoteDescription(new RTCSessionDescription({type:'offer',sdp:offer.payload.sdp})); await flushPendingIce();
-    const answer=await state.callPC.createAnswer(); await state.callPC.setLocalDescription(answer);
-    await sendCallSignal(offer.sender_id,offer.conversation_id,'answer',{type:answer.type,sdp:answer.sdp});
-    callStatus('Conectando…'); state.pendingCallOffer=null;
-  } catch(error) { console.error(error); await cleanupCall(false); toast(`Não consegui atender: ${error.message||error}. Verifique as permissões e o SQL de chamadas.`, 'error'); }
+    if (!offer.payload?.sdp) throw new Error('A oferta chegou incompleta. Peça para a pessoa ligar novamente.');
+    const conversation = state.conversations.find(item => item.id === offer.conversation_id);
+    if (!conversation) throw new Error('Não encontrei a conversa desta chamada. Atualize e tente de novo.');
+    state.activeConversation = conversation;
+    state.callStatus = 'connecting';
+    state.handledOfferIds.add(offer.id);
+    if (state.handledOfferIds.size > 100) state.handledOfferIds.clear();
+
+    // Não renderizar/navegar antes de aplicar a oferta: isso evita atrasar o atendimento.
+    const pc = await createCallPeer(
+      offer.sender_id, offer.conversation_id,
+      offer.payload?.mode === 'video' ? 'video' : 'audio'
+    );
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: offer.payload.sdp }));
+    await flushPendingIce();
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await sendCallSignal(offer.sender_id, offer.conversation_id, 'answer', {
+      type: answer.type, sdp: answer.sdp
+    });
+    state.pendingCallOffer = null;
+    if (layer) layer.hidden = true;
+    setPage('inbox');
+    await openConversation(conversation.id);
+    callStatus('Resposta enviada. Estabelecendo áudio/vídeo…');
+  } catch (error) {
+    console.error('Falha ao atender chamada:', error);
+    await cleanupCall(false);
+    state.pendingCallOffer = offer;
+    if (layer) layer.hidden = false;
+    toast('Não consegui atender: ' + (error.message || error) + '. Confira a permissão do microfone/câmera.', 'error');
+  } finally {
+    if (acceptButton) { acceptButton.disabled = false; acceptButton.innerHTML = '<span class="material-symbols-rounded">call</span> Atender'; }
+  }
 }
+
+
 async function flushPendingIce() {
-  if (!state.callPC?.remoteDescription || !state.pendingIceSignals.length) return;
+  const pc = state.callPC;
+  if (!pc?.remoteDescription || !state.pendingIceSignals.length) return;
   const pending = state.pendingIceSignals.splice(0);
   for (const entry of pending) {
     const candidate = entry?.candidate || entry;
     if (entry?.conversation_id && entry.conversation_id !== state.callConversationId) continue;
     if (entry?.sender_id && entry.sender_id !== state.callPeerId) continue;
-    if (!candidate) continue;
-    try { await state.callPC.addIceCandidate(new RTCIceCandidate(candidate)); }
+    if (!candidate || state.callPC !== pc) continue;
+    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
     catch (error) { console.warn('Candidato ICE pendente ignorado:', error.message); }
   }
 }
+
+
 async function declineIncomingCall() {
   const offer=state.pendingCallOffer; const layer=$('#lumiIncomingCall'); if(layer)layer.hidden=true;
   if(offer)try{await sendCallSignal(offer.sender_id,offer.conversation_id,'end',{});}catch{}
   state.pendingCallOffer=null;
 }
 async function cleanupCall(notifyPeer=true) {
+  state.callOperationId++;
   stopLumiCallTone();
   clearTimeout(state.callRetryTimer);state.callRetryTimer=null;
   if(notifyPeer && state.callPeerId && state.callConversationId)try{await sendCallSignal(state.callPeerId,state.callConversationId,'end',{});}catch{}
