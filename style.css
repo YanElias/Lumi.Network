@@ -1984,3 +1984,24 @@ html[data-theme="dark"] #lumiBootScreen #lumiBootMessage { color: #b9b8aa !impor
 
 /* Call push setup card */
 .lumi-push-card .lumi-push-status{font-size:12px;color:var(--muted-color,#77776d);margin-top:8px}.lumi-push-card button[disabled]{opacity:.55;cursor:not-allowed}
+
+/* LUMI INFINITY — paletas alternativas liberadas apenas para contas VIP */
+html[data-accent="blue"] { --yellow:#60a5fa; --yellow-soft:#dbeafe; --yellow-pale:#eff6ff; --yellow-deep:#1d4ed8; }
+html[data-accent="green"] { --yellow:#4ade80; --yellow-soft:#dcfce7; --yellow-pale:#f0fdf4; --yellow-deep:#15803d; }
+html[data-accent="purple"] { --yellow:#c084fc; --yellow-soft:#f3e8ff; --yellow-pale:#faf5ff; --yellow-deep:#7e22ce; }
+html[data-accent="blue"] .brand-mark,html[data-accent="green"] .brand-mark,html[data-accent="purple"] .brand-mark,
+html[data-accent="blue"] .primary-button,html[data-accent="green"] .primary-button,html[data-accent="purple"] .primary-button {
+  background:var(--yellow)!important;border-color:var(--yellow-deep)!important;color:#202018!important;
+}
+html[data-theme="dark"][data-accent="blue"] { --yellow:#60a5fa; --yellow-soft:#1e3a5f; --yellow-pale:#172b43; --yellow-deep:#93c5fd; }
+html[data-theme="dark"][data-accent="green"] { --yellow:#4ade80; --yellow-soft:#173b2b; --yellow-pale:#122c20; --yellow-deep:#86efac; }
+html[data-theme="dark"][data-accent="purple"] { --yellow:#c084fc; --yellow-soft:#3b2453; --yellow-pale:#2b1c3d; --yellow-deep:#d8b4fe; }
+.lumi-infinity-card{position:relative;overflow:hidden;border-color:var(--yellow-deep,#b28a00)!important;background:linear-gradient(135deg,var(--surface-bg,#fffdf5),var(--yellow-pale,#fffbed))!important}
+.lumi-infinity-eyebrow{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--yellow-deep,#8a6c00);margin-bottom:5px}
+.lumi-infinity-card h2{font-size:22px;letter-spacing:.4px}
+.lumi-infinity-perks{list-style:none;display:grid;gap:12px;padding:0;margin:16px 0}
+.lumi-infinity-perks li{display:flex;align-items:flex-start;gap:10px}
+.lumi-infinity-perks li>.material-symbols-rounded{font-size:22px;color:var(--yellow-deep,#8a6c00)}
+.lumi-infinity-perks li>span:last-child{display:grid;gap:3px}
+.lumi-infinity-perks small{font-size:12px;color:var(--muted-color,#77776d);line-height:1.45}
+html[data-theme="dark"] .lumi-infinity-card{background:linear-gradient(135deg,#202119,#29281c)!important;border-color:var(--yellow-deep,#b28a00)!important}
