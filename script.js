@@ -2367,7 +2367,12 @@ $('#messageForm')?.addEventListener('submit',sendMessage);
 document.addEventListener('submit',e=>{if(e.target.id==='dmMessageForm')sendDM(e);});
 window.addEventListener('lumi:gif-sent', event => {
   const message = event.detail?.message;
-  if (!message || message.conversation_id !== state.activeConversation?.id) return;
+  // A conversa visível é a referência principal: o estado pode estar um ciclo
+  // atrás durante a troca de conversa, mesmo com o envio já concluído.
+  const visibleConversationId = window.lumiActiveConversationId
+    || document.querySelector('#dmChatPanel')?.dataset.conversationId
+    || state.activeConversation?.id;
+  if (!message || message.conversation_id !== visibleConversationId) return;
   if (!state.dmMessages.some(item => item.id === message.id)) {
     state.dmMessages.push(message);
     renderDMMessages();
