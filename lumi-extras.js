@@ -43,6 +43,20 @@ function installStyles() {
     .lumi-gif-results button{padding:3px;overflow:hidden}
     .lumi-gif-results img{display:block;width:100%;height:92px;object-fit:cover;border-radius:8px}
     .lumi-gif-hint{font-size:11px;opacity:.7;line-height:1.4}
+    .lumi-gif-tabs{display:flex;gap:5px;margin:10px 0;flex-wrap:wrap}
+    .lumi-gif-tabs button{flex:1;min-width:0;padding:7px 8px;border-radius:9px;font-size:11px}
+    .lumi-gif-tabs button.active{background:var(--accent,#ffd83d);border-color:var(--accent,#ffd83d);color:#222;font-weight:800}
+    .lumi-gif-browser-results{margin-top:8px}
+    .lumi-gif-results-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    .lumi-gif-results-grid button{padding:3px;min-width:0;overflow:hidden}
+    .lumi-gif-results-grid img{display:block;width:100%;height:82px;object-fit:cover;border-radius:8px}
+    .lumi-gif-category-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    .lumi-gif-category{position:relative;min-height:66px;overflow:hidden;padding:0!important;text-align:left;background:#222!important;color:#fff!important}
+    .lumi-gif-category img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.72}
+    .lumi-gif-category span{position:relative;display:block;padding:10px;font-size:11px;font-weight:800;text-shadow:0 1px 4px #000}
+    .lumi-space-gif-panel [data-tenor-search-form]{display:flex;gap:7px;margin:9px 0}
+    .lumi-space-gif-panel [data-tenor-search-form] input{min-width:0;flex:1}
+
     .dm-message-gif{display:block;max-width:min(320px,65vw);max-height:260px;object-fit:contain;border-radius:12px;margin-top:6px}
     .lumi-assistant-person{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line,rgba(0,0,0,.08))}
     .lumi-assistant-person img,.lumi-assistant-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--panel,#eee)}
@@ -163,6 +177,114 @@ async function startConversation(userId) {
   toast('Conversa preparada. Abra Mensagens para continuar.');
 }
 
+
+function tenorApiUrl(endpoint, params={}) {
+  const key = localStorage.getItem('lumi-tenor-api-key') || '';
+  return 'https://tenor.googleapis.com/v2/' + endpoint + '?' + new URLSearchParams({
+    key, client_key:'lumi_network', locale:'pt_BR', country:'BR',
+    contentfilter:'medium', ...params
+  });
+}
+function normalizeTenorGifs(data, fallback='GIF') {
+  return (data.results || []).map(item => ({
+    url: item.media_formats?.gif?.url || item.media_formats?.mediumgif?.url || item.media_formats?.tinygif?.url,
+    preview: item.media_formats?.tinygif?.url || item.media_formats?.nanogif?.url || item.media_formats?.gif?.url,
+    alt: item.content_description || item.title || fallback
+  })).filter(gif => gif.url && /^https:\/\/(media\.tenor\.com|tenor\.com)\//i.test(gif.url));
+}
+async function fetchTenorJson(endpoint, params={}) {
+  const key = localStorage.getItem('lumi-tenor-api-key') || '';
+  if (!key) throw new Error('Configure sua chave de API do Tenor no seletor de GIF das mensagens diretas.');
+  const response = await fetch(tenorApiUrl(endpoint, params));
+  if (!response.ok) throw new Error('O Tenor respondeu com erro ' + response.status + '.');
+  return response.json();
+}
+function installTenorBrowser(panel, results, queryInput, onSelect) {
+  const load = async (mode, query='') => {
+    const key = localStorage.getItem('lumi-tenor-api-key') || '';
+    if (!key) {
+      results.innerHTML = '<p class="lumi-gif-hint">Configure sua chave de API do Tenor para carregar GIFs.</p>';
+      return;
+    }
+    results.innerHTML = '<p class="lumi-gif-hint">Carregando…</p>';
+    try {
+      if (mode === 'categories') {
+        const data = await fetchTenorJson('categories', {type:'featured'});
+        const categories = (data.tags || []).slice(0,18).map(item => ({
+          name: item.name || item.searchterm || 'GIF',
+          term: item.searchterm || item.name || '',
+          image: item.image || item.image_url || item.gif?.url || ''
+        })).filter(item => item.term);
+        if (!categories.length) {
+          results.innerHTML = '<p class="lumi-gif-hint">As categorias não estão disponíveis agora.</p>';
+          return;
+        }
+        results.innerHTML = '<div class="lumi-gif-category-grid">' + categories.map((item,index) =>
+          '<button type="button" class="lumi-gif-category" data-tenor-category="' + index + '">' +
+          (item.image && /^https:\/\//i.test(item.image) ? '<img loading="lazy" src="' + esc(item.image) + '" alt="">' : '') +
+          '<span>' + esc(item.name) + '</span></button>'
+        ).join('') + '</div>';
+        results._categories = categories;
+        results._gifs = [];
+        return;
+      }
+      const endpoint = mode === 'search' ? 'search' : 'featured';
+      const params = mode === 'search'
+        ? {q:query, limit:'18', media_filter:'gif,tinygif'}
+        : {limit:'18', media_filter:'gif,tinygif'};
+      const data = await fetchTenorJson(endpoint, params);
+      const gifs = normalizeTenorGifs(data, query || 'Em alta');
+      if (!gifs.length) {
+        results.innerHTML = '<p class="lumi-gif-hint">Nenhum GIF encontrado. Tente outra busca.</p>';
+        return;
+      }
+      results.innerHTML = '<div class="lumi-gif-results-grid">' + gifs.map((gif,index) =>
+        '<button type="button" data-gif-index="' + index + '" title="' + esc(gif.alt) + '">' +
+        '<img loading="lazy" src="' + esc(gif.preview) + '" alt="' + esc(gif.alt) + '"></button>'
+      ).join('') + '</div>';
+      results._gifs = gifs;
+      results._categories = [];
+    } catch (error) {
+      results.innerHTML = '<p class="lumi-gif-hint">' + esc(error.message || 'Não consegui carregar os GIFs.') + '</p>';
+    }
+  };
+  panel.querySelectorAll('[data-tenor-tab]').forEach(tab => tab.addEventListener('click', () => {
+    panel.querySelectorAll('[data-tenor-tab]').forEach(item => item.classList.toggle('active', item === tab));
+    const mode = tab.dataset.tenorTab;
+    if (mode === 'search') {
+      queryInput?.focus();
+      if (queryInput?.value.trim()) load('search', queryInput.value.trim());
+      else results.innerHTML = '<p class="lumi-gif-hint">Digite algo na busca para encontrar GIFs.</p>';
+    } else load(mode);
+  }));
+  const searchForm = panel.querySelector('[data-tenor-search-form]');
+  searchForm?.addEventListener('submit', event => {
+    event.preventDefault();
+    const query = queryInput?.value.trim() || '';
+    if (!query) return;
+    panel.querySelectorAll('[data-tenor-tab]').forEach(item => item.classList.toggle('active', item.dataset.tenorTab === 'search'));
+    load('search', query);
+  });
+  results.addEventListener('click', event => {
+    const categoryButton = event.target.closest('[data-tenor-category]');
+    if (categoryButton) {
+      const category = results._categories?.[Number(categoryButton.dataset.tenorCategory)];
+      if (category) {
+        if (queryInput) queryInput.value = category.term;
+        panel.querySelectorAll('[data-tenor-tab]').forEach(item => item.classList.toggle('active', item.dataset.tenorTab === 'search'));
+        load('search', category.term);
+      }
+      return;
+    }
+    const gifButton = event.target.closest('[data-gif-index]');
+    if (gifButton) {
+      const gif = results._gifs?.[Number(gifButton.dataset.gifIndex)];
+      if (gif) onSelect(gif.url);
+    }
+  });
+  load('featured');
+}
+
 function installGifButton() {
   const form = $('#dmMessageForm');
   const spaceFormObserver = new MutationObserver(() => installSpaceGifPicker());
@@ -173,43 +295,41 @@ function installGifButton() {
   const attach = $('#dmAttachButton',form);
   const button = document.createElement('button');
   button.id = 'lumiGifButton'; button.type='button'; button.className='lumi-gif-button';
-  button.textContent='GIF'; button.title='Buscar GIF';
+  button.textContent='GIF'; button.title='Buscar GIFs'; button.setAttribute('aria-label','Buscar GIFs');
   const panel = document.createElement('section');
   panel.id='lumiGifPanel'; panel.className='lumi-gif-panel'; panel.hidden=true;
-  panel.innerHTML = `<strong>Enviar um GIF</strong><p class="lumi-gif-hint">Busca pelo Tenor. Sua chave de API fica salva apenas neste navegador.</p><label class="lumi-gif-hint" for="lumiTenorKey">Chave de API do Tenor</label><input id="lumiTenorKey" class="lumi-gif-search" placeholder="Cole sua chave de API" autocomplete="off"><form id="lumiGifSearchForm"><input id="lumiGifQuery" class="lumi-gif-search" placeholder="Buscar GIFs…" required><button class="lumi-gif-search-button" type="submit">Buscar</button></form><div class="lumi-gif-results" id="lumiGifResults"></div>`;
+  panel.innerHTML = '<strong>Enviar um GIF</strong><p class="lumi-gif-hint">Em alta, categorias e busca do Tenor. Sua chave fica salva neste navegador.</p>' +
+    '<label class="lumi-gif-hint" for="lumiTenorKey">Chave de API do Tenor</label><input id="lumiTenorKey" class="lumi-gif-search" placeholder="Cole sua chave de API" autocomplete="off">' +
+    '<div class="lumi-gif-tabs"><button type="button" data-tenor-tab="featured" class="active">Em alta</button><button type="button" data-tenor-tab="categories">Categorias</button><button type="button" data-tenor-tab="search">Buscar</button></div>' +
+    '<form data-tenor-search-form><input id="lumiGifQuery" class="lumi-gif-search" placeholder="Buscar GIFs…"><button class="lumi-gif-search-button" type="submit">Buscar</button></form>' +
+    '<div class="lumi-gif-browser-results" id="lumiGifResults"></div>';
   const wrap = document.createElement('div'); wrap.style='position:relative;display:flex;align-items:center;';
   wrap.append(button,panel);
   if (attach?.nextSibling) form.insertBefore(wrap,attach.nextSibling); else form.prepend(wrap);
-  $('#lumiTenorKey').value = localStorage.getItem('lumi-tenor-api-key') || '';
-  button.addEventListener('click',()=>{panel.hidden=!panel.hidden;gifPanelOpen=!panel.hidden;if(!panel.hidden)$('#lumiGifQuery').focus();});
-  $('#lumiTenorKey').addEventListener('change',event=>{localStorage.setItem('lumi-tenor-api-key',event.target.value.trim());});
-  $('#lumiGifSearchForm').addEventListener('submit',async event=>{
-    event.preventDefault();
-    const key=$('#lumiTenorKey').value.trim();
-    const query=$('#lumiGifQuery').value.trim();
-    localStorage.setItem('lumi-tenor-api-key',key);
-    const host=$('#lumiGifResults');
-    if(!key){host.innerHTML='<p class="lumi-gif-hint">Crie uma chave de API no portal do Tenor e cole acima para habilitar a busca.</p>';return;}
-    host.textContent='Buscando…';
-    try {
-      const url='https://tenor.googleapis.com/v2/search?'+new URLSearchParams({q:query,key,client_key:'lumi_network',limit:'12',media_filter:'gif,tinygif',contentfilter:'medium'});
-      const response=await fetch(url);
-      if(!response.ok)throw new Error('A busca do Tenor respondeu '+response.status);
-      const data=await response.json();
-      const gifs=(data.results||[]).map(item=>({url:item.media_formats?.gif?.url||item.media_formats?.tinygif?.url,preview:item.media_formats?.tinygif?.url||item.media_formats?.gif?.url,alt:item.content_description||query})).filter(g=>g.url&&/^https:\/\/(media\.tenor\.com|tenor\.com)\//i.test(g.url));
-      if(!gifs.length){host.innerHTML='<p class="lumi-gif-hint">Nenhum GIF encontrado. Tente outra busca.</p>';return;}
-      host.innerHTML=gifs.map((gif,index)=>'<button type="button" data-gif-index="'+index+'" title="'+esc(gif.alt)+'"><img loading="lazy" src="'+esc(gif.preview)+'" alt="'+esc(gif.alt)+'"></button>').join('');
-      host._gifs=gifs;
-    } catch(error) {host.innerHTML='<p class="lumi-gif-hint">Não consegui buscar GIFs: '+esc(error.message)+'</p>';}
+  const keyInput = $('#lumiTenorKey', panel);
+  const queryInput = $('#lumiGifQuery', panel);
+  const results = $('#lumiGifResults', panel);
+  keyInput.value = localStorage.getItem('lumi-tenor-api-key') || '';
+  keyInput.addEventListener('change', event => {
+    localStorage.setItem('lumi-tenor-api-key', event.target.value.trim());
+    if (!panel.hidden) {
+      const active = panel.querySelector('[data-tenor-tab].active')?.dataset.tenorTab || 'featured';
+      if (active === 'search' && queryInput.value.trim()) queryInput.form?.requestSubmit();
+      else panel.querySelector('[data-tenor-tab="' + (active === 'search' ? 'featured' : active) + '"]')?.click();
+    }
   });
-  panel.addEventListener('click',async event=>{
-    const choice=event.target.closest('[data-gif-index]');
-    if(!choice)return;
-    const gif=panel.querySelector('#lumiGifResults')._gifs?.[Number(choice.dataset.gifIndex)];
-    if(!gif)return;
-    await sendGif(gif.url);
+  let browserReady = false;
+  button.addEventListener('click', () => {
+    panel.hidden = !panel.hidden; gifPanelOpen = !panel.hidden;
+    if (!panel.hidden) {
+      if (!browserReady) { installTenorBrowser(panel, results, queryInput, url => sendGif(url)); browserReady = true; }
+      queryInput.focus();
+    }
   });
+  // Defer the browser setup until the panel is first opened, but keep the key field available.
+  keyInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); keyInput.blur(); } });
 }
+
 async function sendGif(url) {
   if (!currentUser) {toast('Entre para enviar GIFs.',true);return;}
   const conversationId = window.lumiActiveConversationId || document.querySelector('#dmChatPanel')?.dataset.conversationId;
@@ -242,6 +362,7 @@ async function processNotificationReply() {
   else toast('Resposta enviada pela notificação!');
 }
 
+
 function installSpaceGifPicker() {
   const form = $('#messageForm');
   if (!form || form.dataset.lumiSpaceGifReady === 'true') return;
@@ -253,41 +374,35 @@ function installSpaceGifPicker() {
   wrap.className = 'lumi-space-gif-wrap';
   wrap.style.cssText = 'position:relative;display:flex;align-items:center;';
   const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'dm-attach-button';
-  button.title = 'Enviar GIF';
+  button.type = 'button'; button.className = 'dm-attach-button'; button.title = 'Enviar GIF';
   button.setAttribute('aria-label','Enviar GIF');
   button.innerHTML = '<span class="material-symbols-rounded">gif</span>';
   const panel = document.createElement('div');
-  panel.className = 'lumi-gif-panel';
-  panel.hidden = true;
-  panel.style.cssText = 'position:absolute;left:0;bottom:calc(100% + 10px);width:min(340px,calc(100vw - 48px));max-height:340px;overflow:auto;padding:12px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);box-shadow:0 12px 35px #0002;z-index:100;';
-  panel.innerHTML = '<form class="lumi-space-gif-search" style="display:flex;gap:6px;margin-bottom:10px"><input class="lumi-space-gif-query" placeholder="Buscar GIFs…" required style="min-width:0;flex:1"><button type="submit">Buscar</button></form><div class="lumi-space-gif-results" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div><p style="font-size:11px;opacity:.7;margin:8px 0 0">A chave Tenor é a mesma configurada nas DMs.</p>';
+  panel.className = 'lumi-gif-panel lumi-space-gif-panel'; panel.hidden = true;
+  panel.style.cssText = 'position:absolute;left:0;bottom:calc(100% + 10px);width:min(360px,calc(100vw - 48px));max-height:390px;overflow:auto;padding:12px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);box-shadow:0 12px 35px #0002;z-index:100;';
+  panel.innerHTML = '<strong>GIFs para o Espaço</strong><p class="lumi-gif-hint">Em alta, categorias e busca. Usa a mesma chave Tenor das mensagens diretas.</p>' +
+    '<div class="lumi-gif-tabs"><button type="button" data-tenor-tab="featured" class="active">Em alta</button><button type="button" data-tenor-tab="categories">Categorias</button><button type="button" data-tenor-tab="search">Buscar</button></div>' +
+    '<form data-tenor-search-form><input class="lumi-gif-search lumi-space-gif-query" placeholder="Buscar GIFs…"><button class="lumi-gif-search-button" type="submit">Buscar</button></form>' +
+    '<div class="lumi-gif-browser-results lumi-space-gif-results"></div>';
   wrap.append(button,panel);
   attach.insertAdjacentElement('afterend',wrap);
-  button.addEventListener('click',()=>{panel.hidden=!panel.hidden;if(!panel.hidden)panel.querySelector('input').focus();});
-  panel.querySelector('form').addEventListener('submit',async event=>{
-    event.preventDefault();
-    const key=localStorage.getItem('lumi-tenor-api-key')||'';
-    const query=panel.querySelector('input').value.trim();
-    const results=panel.querySelector('.lumi-space-gif-results');
-    if(!key){results.innerHTML='<p style="grid-column:1/-1">Configure a chave da API Tenor no seletor de GIF das mensagens diretas primeiro.</p>';return;}
-    results.textContent='Buscando…';
-    try {
-      const url='https://tenor.googleapis.com/v2/search?'+new URLSearchParams({q:query,key,client_key:'lumi_network',limit:'12',media_filter:'gif,tinygif',contentfilter:'medium'});
-      const response=await fetch(url);
-      if(!response.ok)throw new Error('Tenor '+response.status);
-      const data=await response.json();
-      const gifs=(data.results||[]).map(item=>({url:item.media_formats?.gif?.url||item.media_formats?.tinygif?.url,preview:item.media_formats?.tinygif?.url||item.media_formats?.gif?.url,alt:item.content_description||'GIF'})).filter(item=>item.url&&/^https:\/\/(media\.tenor\.com|tenor\.com)\//i.test(item.url));
-      results.innerHTML=gifs.length?gifs.map((gif,index)=>'<button type="button" data-gif-index="'+index+'" style="border:0;background:transparent;padding:0;cursor:pointer"><img src="'+esc(gif.preview)+'" alt="'+esc(gif.alt)+'" loading="lazy" style="width:100%;height:100px;object-fit:cover;border-radius:8px"></button>').join(''):'<p style="grid-column:1/-1">Nenhum GIF encontrado.</p>';
-      results.querySelectorAll('[data-gif-index]').forEach((node,index)=>node.addEventListener('click',()=>{
-        const gif=gifs[index];
-        if(!gif)return;
-        input.value='LUMI_GIF:'+gif.url;
-        panel.hidden=true;
-        form.requestSubmit();
-      }));
-    } catch(error) { results.textContent='Não consegui buscar GIFs. Confira a chave Tenor e tente novamente.';console.warn('LUMI GIF nos Espaços:',error); }
+  const queryInput = panel.querySelector('.lumi-space-gif-query');
+  const results = panel.querySelector('.lumi-space-gif-results');
+  let browserReady = false;
+  button.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) {
+      if (!browserReady) {
+        installTenorBrowser(panel, results, queryInput, url => {
+          if (!/^https:\/\/(media\.tenor\.com|tenor\.com)\//i.test(url)) return;
+          input.value = 'LUMI_GIF:' + url;
+          panel.hidden = true;
+          form.requestSubmit();
+        });
+        browserReady = true;
+      }
+      queryInput.focus();
+    }
   });
 }
 
