@@ -158,9 +158,9 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [ ] Configurar chave pública/privada VAPID e validar atendimento por notificação com a aba fechada
 - [x] Adicionar ação de resposta às notificações de mensagens enquanto o LUMI está aberto (suporte depende do navegador; testar no dispositivo)
 - [ ] Testar resposta por notificação com o site em segundo plano/fechado e confirmar suporte à ação de texto no navegador
-- [x] Implementar busca e envio de GIF nas DMs via Tenor (requer chave de API configurada pelo usuário)
-- [x] GIFs também nos Espaços — implementado com a mesma chave Tenor das DMs
-- [x] Adicionar LUMI Assist com ajuda rápida e recomendações de perfis baseadas em interesses/bio (regras locais, sem modelo generativo externo)
+- [x] Implementar busca e envio de GIF nas DMs via KLIPY (requer chave de API configurada pelo usuário)
+- [x] GIFs também nos Espaços — implementado com a mesma chave KLIPY das DMs
+- [x] LUMI Assist chegou a ser implementado; removido na rodada final por não ser útil para o produto
 - [ ] Criar componente local do LUMI Orbit para detectar jogos/aplicativos; o status atual ainda é manual e local ao navegador
 - [ ] Refinar paletas e revisar o tema escuro em todos os painéis e tamanhos de tela
 
