@@ -59,7 +59,6 @@
   - A compra deve liberar o VIP permanentemente para a conta.
   - Poderá cancelar se quiser colocar em outra conta ou perder a antiga conta
 
-
 ### Limitações que ainda precisam de integração
 - [ ] Chamadas fora do app: service worker, tabela de inscrições push e Edge Function já estão preparados; falta configurar as chaves VAPID e testar em HTTPS com duas contas.
 - O pagamento do LUMI INFINITY por R$ 10,00 ainda precisa de um provedor de pagamento e validação segura no backend; o botão continua desativado até isso existir. Paletas azul, verde e roxa já ficam disponíveis para contas com VIP ativo.
