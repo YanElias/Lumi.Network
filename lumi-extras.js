@@ -187,7 +187,7 @@ async function startConversation(userId) {
  function isKlipyMediaUrl(value) {
   try {
     const url = new URL(String(value || ''));
-    return url.protocol === 'https:' && /(^|\\.)klipy\\.com$/i.test(url.hostname);
+    return url.protocol === 'https:' && /(^|\.)klipy\.com$/i.test(url.hostname);
   } catch { return false; }
 }
 function klipyAppKey() {
