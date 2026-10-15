@@ -244,7 +244,9 @@ function installTenorBrowser(panel, results, queryInput, onSelect) {
       nextPos = data.next || '';
       const gifs = normalizeTenorGifs(data, query || 'Em alta');
       if (!gifs.length) {
-        results.innerHTML = '<p class="lumi-gif-hint">Nenhum GIF encontrado. Tente outra busca.</p>';
+        if (append && results._gifs?.length) {
+          results.innerHTML = '<div class="lumi-gif-results-grid">' + results._gifs.map((gif,index) => '<button type="button" data-gif-index="' + index + '" title="' + esc(gif.alt) + '"><img loading="lazy" src="' + esc(gif.preview) + '" alt="' + esc(gif.alt) + '"></button>').join('') + '</div><p class="lumi-gif-hint">Não há mais GIFs para carregar.</p>';
+        } else results.innerHTML = '<p class="lumi-gif-hint">Nenhum GIF encontrado. Tente outra busca.</p>';
         return;
       }
       if (append) results._gifs = [...(results._gifs || []), ...gifs];
@@ -256,7 +258,10 @@ function installTenorBrowser(panel, results, queryInput, onSelect) {
       results.innerHTML = grid + (nextPos ? '<button type="button" data-tenor-more style="width:100%;margin-top:8px">Carregar mais GIFs</button>' : '');
       results._categories = [];
     } catch (error) {
-      results.innerHTML = '<p class="lumi-gif-hint">' + esc(error.message || 'Não consegui carregar os GIFs.') + '</p>';
+      if (thisRequest !== requestId) return;
+      if (append && results._gifs?.length) {
+        results.insertAdjacentHTML('beforeend', '<p class="lumi-gif-hint">' + esc(error.message || 'Não consegui carregar mais GIFs.') + '</p>');
+      } else results.innerHTML = '<p class="lumi-gif-hint">' + esc(error.message || 'Não consegui carregar os GIFs.') + '</p>';
     }
   };
   panel.querySelectorAll('[data-tenor-tab]').forEach(tab => tab.addEventListener('click', () => {
