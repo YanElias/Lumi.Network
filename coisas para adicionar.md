@@ -159,7 +159,7 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Adicionar ação de resposta às notificações de mensagens enquanto o LUMI está aberto (suporte depende do navegador; testar no dispositivo)
 - [ ] Testar resposta por notificação com o site em segundo plano/fechado e confirmar suporte à ação de texto no navegador
 - [x] Implementar busca e envio de GIF nas DMs via Tenor (requer chave de API configurada pelo usuário)
-- [ ] Adicionar GIFs também nos Espaços
+- [x] GIFs também nos Espaços — implementado com a mesma chave Tenor das DMs
 - [x] Adicionar LUMI Assist com ajuda rápida e recomendações de perfis baseadas em interesses/bio (regras locais, sem modelo generativo externo)
 - [ ] Criar componente local do LUMI Orbit para detectar jogos/aplicativos; o status atual ainda é manual e local ao navegador
 - [ ] Refinar paletas e revisar o tema escuro em todos os painéis e tamanhos de tela
