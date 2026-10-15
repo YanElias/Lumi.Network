@@ -4,9 +4,7 @@ import { supabase } from './database/supabase.js';
 const $ = (s, root=document) => root.querySelector(s);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let currentUser = null;
-let assistantOpen = false;
 let gifPanelOpen = false;
-let assistantBusy = false;
 
 function toast(message, error=false) {
   const region = $('#toastRegion');
@@ -73,118 +71,7 @@ function installStyles() {
   document.head.append(style);
 }
 
-function installAssistant() {
-  if ($('#lumiAssistantFab')) return;
-  const fab = document.createElement('button');
-  fab.id = 'lumiAssistantFab'; fab.className = 'lumi-extras-fab';
-  fab.type = 'button'; fab.title = 'Abrir LUMI Assist'; fab.setAttribute('aria-label','Abrir LUMI Assist');
-  fab.textContent = '✦';
-  fab.addEventListener('click', () => {
-    const panel = $('#lumiAssistantPanel');
-    panel.hidden = !panel.hidden;
-    assistantOpen = !panel.hidden;
-    if (assistantOpen) $('#lumiAssistantInput')?.focus();
-  });
-  const panel = document.createElement('section');
-  panel.id = 'lumiAssistantPanel'; panel.className = 'lumi-assistant'; panel.hidden = true;
-  panel.innerHTML = `
-    <header class="lumi-assistant-head"><div>LUMI Assist<small>Ajuda rápida e sugestões de pessoas</small></div><button type="button" data-assistant-close aria-label="Fechar">×</button></header>
-    <div class="lumi-assistant-log" id="lumiAssistantLog"><div class="lumi-assistant-msg">Oi! Posso ajudar a encontrar pessoas com interesses parecidos, explicar recursos do LUMI ou te dar dicas de uso.</div><div class="lumi-assistant-actions"><button type="button" data-assistant-action="people">Encontrar pessoas parecidas</button><button type="button" data-assistant-action="help">O que você faz?</button></div></div>
-    <form class="lumi-assistant-form" id="lumiAssistantForm"><input id="lumiAssistantInput" maxlength="300" placeholder="Pergunte alguma coisa…" autocomplete="off"><button type="submit">Enviar</button></form>`;
-  document.body.append(fab,panel);
-  panel.addEventListener('click', async event => {
-    if (event.target.closest('[data-assistant-close]')) { panel.hidden = true; assistantOpen = false; return; }
-    const action = event.target.closest('[data-assistant-action]')?.dataset.assistantAction;
-    if (action === 'people') await recommendPeople();
-    if (action === 'help') addAssistantMessage('Consigo dar dicas rápidas e sugerir pessoas com base nos interesses informados nos perfis. Ainda não sou uma IA generativa conectada a um modelo externo.');
-    const start = event.target.closest('[data-assistant-start-dm]')?.dataset.assistantStartDm;
-    if (start) await startConversation(start);
-  });
-  $('#lumiAssistantForm').addEventListener('submit', event => {
-    event.preventDefault();
-    const input = $('#lumiAssistantInput');
-    const value = input.value.trim();
-    if (!value) return;
-    input.value = '';
-    addAssistantMessage(value, true);
-    respondToAssistant(value);
-  });
-}
-
-function addAssistantMessage(message, mine=false) {
-  const log = $('#lumiAssistantLog');
-  if (!log) return;
-  const node = document.createElement('div');
-  node.className = 'lumi-assistant-msg' + (mine ? ' mine' : '');
-  node.textContent = message;
-  log.append(node); log.scrollTop = log.scrollHeight;
-}
-function assistantActions(html) {
-  const log = $('#lumiAssistantLog');
-  const node = document.createElement('div'); node.className = 'lumi-assistant-actions'; node.innerHTML = html;
-  log.append(node); log.scrollTop = log.scrollHeight;
-}
-async function respondToAssistant(message) {
-  const q = message.toLowerCase();
-  if (/amig|pessoa|interesse|conhecer|encontrar/.test(q)) { await recommendPeople(); return; }
-  if (/chamad|lig|web.?rtc/.test(q)) {
-    addAssistantMessage('Para atender, deixe o LUMI aberto, permita microfone/câmera e clique em Atender assim que o cartão aparecer. Se a chamada ficar em “conectando”, a rede pode precisar de um servidor TURN — STUN sozinho não resolve todos os roteadores.');
-    return;
-  }
-  if (/gif/.test(q)) {
-    addAssistantMessage('Nas mensagens diretas, use o botão GIF ao lado do campo de mensagem. A busca de GIF precisa de uma chave de API do KLIPY configurada por você.');
-    return;
-  }
-  if (/privacidade|streamer/.test(q)) {
-    addAssistantMessage('Ative Modo streamer em Configurações para ocultar visualmente nomes e selos. Para privacidade real durante uma live, use uma conta de teste e evite mostrar conversas privadas.');
-    return;
-  }
-  if (/obrigad|valeu/.test(q)) { addAssistantMessage('De nada! ✨'); return; }
-  addAssistantMessage('Ainda não tenho uma resposta pronta para isso. Posso ajudar com chamadas, GIFs, amizades e privacidade.');
-  assistantActions('<button type="button" data-assistant-action="people">Encontrar pessoas parecidas</button><button type="button" data-assistant-action="help">Ajuda</button>');
-}
-async function recommendPeople() {
-  if (!currentUser) { addAssistantMessage('Entre na sua conta para eu procurar pessoas.'); return; }
-  if (assistantBusy) return;
-  assistantBusy = true;
-  addAssistantMessage('Vou procurar perfis com atividades ou descrições parecidas com as suas…');
-  try {
-    const {data: me} = await supabase.from('profiles').select('bio,activity_text,status_text').eq('id',currentUser.id).maybeSingle();
-    const ownText = [me?.bio,me?.activity_text,me?.status_text].filter(Boolean).join(' ').toLowerCase();
-    const tokens = [...new Set(ownText.split(/[^\p{L}\p{N}]+/u).filter(word=>word.length>2))].slice(0,12);
-    const {data,error} = await supabase.from('profiles').select('id,username,display_name,avatar_url,bio,activity_text').neq('id',currentUser.id).limit(80);
-    if (error) throw error;
-    const people = (data||[]).map(person => {
-      const text = [person.bio,person.activity_text].filter(Boolean).join(' ').toLowerCase();
-      const score = tokens.reduce((total,token)=>total+(text.includes(token)?1:0),0);
-      return {...person,score};
-    }).filter(person=>person.score>0).sort((a,b)=>b.score-a.score).slice(0,5);
-    const log = $('#lumiAssistantLog');
-    if (!people.length) {
-      addAssistantMessage(tokens.length ? 'Ainda não achei perfis com interesses parecidos. Adicione seus jogos e interesses na bio/atividade do perfil para melhorar as sugestões.' : 'Adicione uma bio ou atividade ao seu perfil primeiro. Assim consigo comparar interesses de forma simples.');
-      return;
-    }
-    const host = document.createElement('div');
-    host.innerHTML = people.map(person => `<div class="lumi-assistant-person">${person.avatar_url?'<img src="'+esc(person.avatar_url)+'" alt="">':'<span class="lumi-assistant-avatar">'+esc((person.display_name||person.username||'?').slice(0,1).toUpperCase())+'</span>'}<div><strong>${esc(person.display_name||person.username||'Pessoa LUMI')}</strong><small>${esc(person.activity_text||person.bio||'Interesses parecidos')}</small></div><button type="button" data-assistant-start-dm="${esc(person.id)}">Conversar</button></div>`).join('');
-    log.append(host); log.scrollTop=log.scrollHeight;
-  } catch (error) {
-    addAssistantMessage('Não consegui carregar sugestões agora. ' + (error.message || 'Tente novamente mais tarde.'));
-  } finally { assistantBusy = false; }
-}
-async function startConversation(userId) {
-  if (!currentUser || !userId || userId === currentUser.id) return;
-  const {data,error} = await supabase.rpc('start_direct_conversation',{p_user_id:userId});
-  if (error) { toast('Não consegui abrir a conversa: '+error.message,true); return; }
-  const id = typeof data === 'string' ? data : data?.conversation_id || data?.id;
-  const url = new URL(window.location.href);
-  url.searchParams.set('lumi_open_conversation',id);
-  window.history.replaceState({},'',url);
-  window.dispatchEvent(new CustomEvent('lumi:open-conversation',{detail:{id}}));
-  toast('Conversa preparada. Abra Mensagens para continuar.');
-}
-
-
- function isKlipyMediaUrl(value) {
+function isKlipyMediaUrl(value) {
   try {
     const url = new URL(String(value || ''));
     return url.protocol === 'https:' && /(^|\.)klipy\.com$/i.test(url.hostname);
@@ -473,7 +360,6 @@ function installSpaceGifPicker() {
 
 function install() {
   installStyles();
-  installAssistant();
   installGifButton();
   installSpaceGifPicker();
   const form = $('#dmMessageForm');
