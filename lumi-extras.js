@@ -200,13 +200,20 @@ async function fetchTenorJson(endpoint, params={}) {
   return response.json();
 }
 function installTenorBrowser(panel, results, queryInput, onSelect) {
-  const load = async (mode, query='') => {
+  let nextPos = '';
+  let activeMode = 'featured';
+  let activeQuery = '';
+  let requestId = 0;
+  const load = async (mode, query='', append=false) => {
+    if (!append) { activeMode = mode; activeQuery = query; nextPos = ''; }
+    const thisRequest = ++requestId;
     const key = localStorage.getItem('lumi-tenor-api-key') || '';
     if (!key) {
       results.innerHTML = '<p class="lumi-gif-hint">Configure sua chave de API do Tenor para carregar GIFs.</p>';
       return;
     }
-    results.innerHTML = '<p class="lumi-gif-hint">Carregando…</p>';
+    if (!append) results.innerHTML = '<p class="lumi-gif-hint">Carregando GIFs…</p>';
+    else results.querySelector('[data-tenor-more]')?.remove();
     try {
       if (mode === 'categories') {
         const data = await fetchTenorJson('categories', {type:'featured'});
@@ -230,19 +237,23 @@ function installTenorBrowser(panel, results, queryInput, onSelect) {
       }
       const endpoint = mode === 'search' ? 'search' : 'featured';
       const params = mode === 'search'
-        ? {q:query, limit:'18', media_filter:'gif,tinygif'}
-        : {limit:'18', media_filter:'gif,tinygif'};
+        ? {q:query, limit:'18', media_filter:'gif,tinygif', ...(append && nextPos ? {pos:nextPos} : {})}
+        : {limit:'18', media_filter:'gif,tinygif', ...(append && nextPos ? {pos:nextPos} : {})};
       const data = await fetchTenorJson(endpoint, params);
+      if (thisRequest !== requestId) return;
+      nextPos = data.next || '';
       const gifs = normalizeTenorGifs(data, query || 'Em alta');
       if (!gifs.length) {
         results.innerHTML = '<p class="lumi-gif-hint">Nenhum GIF encontrado. Tente outra busca.</p>';
         return;
       }
-      results.innerHTML = '<div class="lumi-gif-results-grid">' + gifs.map((gif,index) =>
+      if (append) results._gifs = [...(results._gifs || []), ...gifs];
+      else results._gifs = gifs;
+      const grid = '<div class="lumi-gif-results-grid">' + results._gifs.map((gif,index) =>
         '<button type="button" data-gif-index="' + index + '" title="' + esc(gif.alt) + '">' +
         '<img loading="lazy" src="' + esc(gif.preview) + '" alt="' + esc(gif.alt) + '"></button>'
       ).join('') + '</div>';
-      results._gifs = gifs;
+      results.innerHTML = grid + (nextPos ? '<button type="button" data-tenor-more style="width:100%;margin-top:8px">Carregar mais GIFs</button>' : '');
       results._categories = [];
     } catch (error) {
       results.innerHTML = '<p class="lumi-gif-hint">' + esc(error.message || 'Não consegui carregar os GIFs.') + '</p>';
@@ -266,6 +277,10 @@ function installTenorBrowser(panel, results, queryInput, onSelect) {
     load('search', query);
   });
   results.addEventListener('click', event => {
+    if (event.target.closest('[data-tenor-more]')) {
+      load(activeMode, activeQuery, true);
+      return;
+    }
     const categoryButton = event.target.closest('[data-tenor-category]');
     if (categoryButton) {
       const category = results._categories?.[Number(categoryButton.dataset.tenorCategory)];
