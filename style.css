@@ -2950,3 +2950,33 @@ html[data-theme="dark"] .dm-message-item.mine .dm-message-text {
 
 /* LUMI: agrupamento visual de canais por categoria */
 .channel-category-group{min-width:0}.channel-category-heading{padding:12px 10px 5px;color:var(--muted,#89897e);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.channel-category-group:first-child .channel-category-heading{padding-top:5px}.channel-category-group+.channel-category-group{margin-top:3px}.channel-category-group .channel-entry-row{margin-top:1px}
+
+
+/* LUMI final polish — consistent dark surfaces, focus states and responsive cards */
+html[data-theme="dark"] #lumiBootScreen { background:#141510!important; color:#f1f0e8!important; }
+html[data-theme="dark"] .lumi-boot-card { background:#20211b!important; border-color:#38392f!important; color:#f1f0e8!important; box-shadow:0 20px 70px #0006!important; }
+html[data-theme="dark"] .lumi-boot-card p { color:#a6a69b!important; }
+html[data-theme="dark"] .lumi-boot-spinner { border-color:#38392f!important; border-top-color:var(--accent,#ffd83d)!important; }
+html[data-theme="dark"] :is(.settings-card,.inbox-note,.notice-box,.empty-card,.modal-card,.dropdown-menu,.context-menu,.popover,.search-overlay,.notification-panel,.search-result,.notification-item,.dm-file-card,.lumi-contact-card,.lumi-global-announcement) { background-color:var(--white,#22231d); color:var(--ink,#f1f0e8); border-color:var(--line,#38382f); }
+html[data-theme="dark"] :is(.settings-card p,.settings-card small,.settings-help,.inbox-note p,.notice-box p,.empty-card p,.dm-attachment-hint) { color:var(--muted,#a6a69b); }
+html[data-theme="dark"] :is(input,textarea,select,.form-input,.lumi-select-trigger) { background-color:#1a1b16; color:var(--ink,#f1f0e8); border-color:var(--line,#38382f); }
+html[data-theme="dark"] :is(input,textarea,select,.form-input)::placeholder { color:#858579; }
+html[data-theme="dark"] :is(.secondary-button,.text-button,.icon-button,.round-arrow) { color:var(--ink,#f1f0e8); }
+html[data-theme="dark"] :is(.secondary-button,.icon-button):hover { background:var(--accent-pale,#302d1c); border-color:var(--accent,#ffd83d); }
+html[data-theme="dark"] .lumi-infinity-card { background:linear-gradient(135deg,#20211b,#25251f)!important; }
+.lumi-global-announcement { display:flex; align-items:flex-start; gap:14px; margin:0 0 22px; padding:16px 18px; border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:16px; background:var(--white); color:var(--ink); box-shadow:var(--shadow); }
+.lumi-global-announcement>.material-symbols-rounded { color:var(--accent-strong); font-size:24px; flex:0 0 auto; }
+.lumi-global-announcement strong { display:block; font-size:13px; }
+.lumi-global-announcement p { margin:5px 0 0; color:var(--muted); line-height:1.55; overflow-wrap:anywhere; }
+.lumi-owner-card { border-color:var(--accent)!important; }
+.lumi-owner-card textarea { min-height:100px; resize:vertical; }
+.lumi-owner-card form { display:grid; gap:9px; max-width:560px; }
+.lumi-owner-card .text-button { justify-self:start; }
+@media(max-width:640px) {
+  .settings-card { gap:12px; padding:16px; }
+  .settings-card-icon { flex-basis:38px; width:38px; height:38px; }
+  .lumi-global-announcement { padding:13px; gap:10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+}
