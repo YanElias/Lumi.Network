@@ -21,19 +21,6 @@ function installStyles() {
   const style = document.createElement('style');
   style.id = 'lumiExtrasStyles';
   style.textContent = `
-    .lumi-extras-fab{position:fixed;left:22px;bottom:22px;z-index:8000;width:48px;height:48px;border:1px solid var(--line,rgba(0,0,0,.12));border-radius:17px;background:var(--surface,#fff);color:var(--text,#222);box-shadow:0 8px 30px #0002;font-size:20px;cursor:pointer}
-    .lumi-assistant{position:fixed;left:22px;bottom:80px;z-index:8000;width:min(360px,calc(100vw - 32px));max-height:min(520px,70vh);display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line,rgba(0,0,0,.12));border-radius:20px;background:var(--surface,#fff);color:var(--text,#222);box-shadow:0 20px 60px #0003}
-    .lumi-assistant[hidden],.lumi-gif-panel[hidden]{display:none!important}
-    .lumi-assistant-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line,rgba(0,0,0,.1));font-weight:700}
-    .lumi-assistant-head small{display:block;font-weight:400;opacity:.65;font-size:11px;margin-top:3px}
-    .lumi-assistant-log{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:9px;min-height:150px}
-    .lumi-assistant-msg{padding:10px 12px;border-radius:13px;background:var(--panel,#f3f3f3);font-size:13px;line-height:1.45;max-width:95%;overflow-wrap:anywhere}
-    .lumi-assistant-msg.mine{align-self:flex-end;background:var(--accent-soft,#fff4bf)}
-    .lumi-assistant-actions{display:flex;gap:7px;flex-wrap:wrap}
-    .lumi-assistant-actions button,.lumi-gif-panel button{border:1px solid var(--line,rgba(0,0,0,.12));background:var(--surface,#fff);color:inherit;border-radius:10px;padding:8px 10px;cursor:pointer;font-size:12px}
-    .lumi-assistant-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line,rgba(0,0,0,.1))}
-    .lumi-assistant-form input,.lumi-gif-search{min-width:0;flex:1;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:11px;padding:10px;background:var(--surface,#fff);color:inherit}
-    .lumi-assistant-form button,.lumi-gif-search-button{border:0;border-radius:11px;padding:0 13px;background:var(--accent,#ffd83d);color:#191919;font-weight:700;cursor:pointer}
     .lumi-gif-button{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:42px;height:40px;padding:0 11px;border:1px solid var(--line,rgba(0,0,0,.12));border-radius:13px;background:var(--panel,#f6f6f6);color:var(--text,#333);cursor:pointer;font:700 12px/1 inherit;letter-spacing:.02em;transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}
     .lumi-gif-button .material-symbols-rounded{font-size:21px;line-height:1}
     .lumi-gif-button:hover{background:var(--accent-soft,rgba(255,216,61,.18));border-color:var(--accent,#ffd83d);box-shadow:0 3px 10px #0000000d}
@@ -62,11 +49,6 @@ function installStyles() {
     .lumi-space-gif-panel [data-klipy-search-form] input{min-width:0;flex:1}
 
     .dm-message-gif{display:block;max-width:min(320px,65vw);max-height:260px;object-fit:contain;border-radius:12px;margin-top:6px}
-    .lumi-assistant-person{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line,rgba(0,0,0,.08))}
-    .lumi-assistant-person img,.lumi-assistant-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--panel,#eee)}
-    .lumi-assistant-person div{min-width:0;flex:1}.lumi-assistant-person strong{display:block;font-size:12px}.lumi-assistant-person small{display:block;opacity:.7;font-size:11px}
-    @media(max-width:600px){.lumi-extras-fab{left:12px;bottom:12px}.lumi-assistant{left:12px;bottom:68px}}
-    html[data-theme="dark"] .lumi-assistant-msg.mine{background:rgba(255,216,61,.17);color:var(--text,#f4f4f4)}
   `;
   document.head.append(style);
 }
