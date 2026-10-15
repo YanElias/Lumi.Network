@@ -184,6 +184,12 @@ async function startConversation(userId) {
 }
 
 
+ function isKlipyMediaUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' && /(^|\\.)klipy\\.com$/i.test(url.hostname);
+  } catch { return false; }
+}
 function klipyAppKey() {
   return (localStorage.getItem('lumi-klipy-app-key') || '').trim();
 }
@@ -203,7 +209,7 @@ function normalizeKlipyGifs(payload, fallback='GIF') {
     const preview = files.md?.webp?.url || files.sm?.webp?.url || files.xs?.webp?.url ||
       files.md?.gif?.url || files.sm?.gif?.url || files.xs?.gif?.url || url;
     return {url, preview, alt:item.title || item.slug || fallback, slug:item.slug || ''};
-  }).filter(gif => gif.url && /^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(gif.url));
+  }).filter(gif => gif.url && isKlipyMediaUrl(gif.url));
 }
 async function fetchKlipyJson(endpoint, params={}) {
   const key = klipyAppKey();
@@ -264,7 +270,7 @@ function installKlipyBrowser(panel, results, queryInput, onSelect) {
         results._gifs = [];
         results.innerHTML = '<div class="lumi-gif-category-grid">' + categories.map((item,index) =>
           '<button type="button" class="lumi-gif-category" data-klipy-category="' + index + '">' +
-          (item.image && /^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(item.image) ? '<img loading="lazy" src="' + esc(item.image) + '" alt="">' : '') +
+          (item.image && isKlipyMediaUrl(item.image) ? '<img loading="lazy" src="' + esc(item.image) + '" alt="">' : '') +
           '<span>' + esc(item.name.replace(/[_-]+/g,' ')) + '</span></button>'
         ).join('') + '</div>';
         return;
@@ -392,12 +398,13 @@ async function sendGif(url) {
   if (!currentUser) {toast('Entre para enviar GIFs.',true);return;}
   const conversationId = window.lumiActiveConversationId || document.querySelector('#dmChatPanel')?.dataset.conversationId;
   if (!conversationId) {toast('Abra uma conversa antes de enviar GIF.',true);return;}
-  if (!/^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(url)) {toast('Esse endereço de GIF não é aceito.',true);return;}
-  const {error} = await supabase.from('direct_messages').insert({
+  if (!isKlipyMediaUrl(url)) {toast('Esse endereço de GIF não é aceito.',true);return;}
+  const {data,error} = await supabase.from('direct_messages').insert({
     conversation_id:conversationId,sender_id:currentUser.id,content:'LUMI_GIF:'+url,
     attachment_path:null,attachment_name:null,attachment_type:null,attachment_size:null
-  });
+  }).select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').single();
   if(error){toast('Não consegui enviar o GIF: '+error.message,true);return;}
+  if (data) window.dispatchEvent(new CustomEvent('lumi:gif-sent', {detail:{message:data}}));
   $('#lumiGifPanel').hidden=true;
   toast('GIF enviado! ✨');
 }
@@ -452,7 +459,7 @@ function installSpaceGifPicker() {
     if (!panel.hidden) {
       if (!browserReady) {
         installKlipyBrowser(panel, results, queryInput, url => {
-          if (!/^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(url)) return;
+          if (!isKlipyMediaUrl(url)) return;
           input.value = 'LUMI_GIF:' + url;
           panel.hidden = true;
           form.requestSubmit();
