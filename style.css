@@ -2266,3 +2266,687 @@ html[data-theme="dark"] .space-manage-details[open] > summary {
 html[data-theme="dark"] .lumi-blocked-row{background:#20211b;border-color:#38392f}
 html[data-theme="dark"] .lumi-blocked-avatar-fallback{background:#302d1c;color:#ffe47a}
 @media(max-width:560px){.lumi-blocked-row{flex-wrap:wrap}.lumi-blocked-person{min-width:calc(100% - 58px)}.lumi-blocked-row button{margin-left:48px}}
+
+
+/* LUMI — acabamento do modo escuro: superfícies fixas que ainda ficavam brancas */
+html[data-theme="dark"] .workspace-chat-view,
+html[data-theme="dark"] .dm-chat-full,
+html[data-theme="dark"] .app-shell.inbox-mode .space-sidebar,
+html[data-theme="dark"] .app-shell.inbox-mode #dmMobileInbox,
+html[data-theme="dark"] .dm-chat-full .dm-composer,
+html[data-theme="dark"] .dm-chat-full .dm-chat-head,
+html[data-theme="dark"] .workspace-chat-view .channel-chat-head,
+html[data-theme="dark"] .workspace-chat-view .message-composer,
+html[data-theme="dark"] .dm-chat-full .dm-attachment-hint,
+html[data-theme="dark"] .dm-sidebar-results .dm-person-result,
+html[data-theme="dark"] .active-space-name,
+html[data-theme="dark"] .active-space-actions button,
+html[data-theme="dark"] .sidebar-create-channel,
+html[data-theme="dark"] .dm-start-button,
+html[data-theme="dark"] .dm-conversation-entry,
+html[data-theme="dark"] .dm-mobile-back {
+  background-color:#20211b !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .workspace-chat-view .message-composer textarea,
+html[data-theme="dark"] .dm-chat-full .dm-composer textarea,
+html[data-theme="dark"] .dm-chat-full .dm-composer input,
+html[data-theme="dark"] .dm-chat-full .dm-composer [contenteditable="true"] {
+  background-color:#171812 !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:#414237 !important;
+}
+html[data-theme="dark"] .space-message-actions button,
+html[data-theme="dark"] .dm-chat-full .dm-call-actions .dm-call-button,
+html[data-theme="dark"] .dm-call-controls .icon-button,
+html[data-theme="dark"] .dm-attach-button,
+html[data-theme="dark"] .dm-start-button {
+  background-color:#292a23 !important;
+  color:#e6e4d8 !important;
+  border-color:#414237 !important;
+}
+html[data-theme="dark"] .space-message-actions button:hover,
+html[data-theme="dark"] .dm-chat-full .dm-call-actions .dm-call-button:hover,
+html[data-theme="dark"] .dm-call-controls .icon-button:hover,
+html[data-theme="dark"] .dm-attach-button:hover {
+  background-color:var(--accent-pale,#302d1c) !important;
+  color:var(--accent,#ffe47a) !important;
+}
+html[data-theme="dark"] .space-reply-preview,
+html[data-theme="dark"] .space-reply-banner,
+html[data-theme="dark"] .space-reaction,
+html[data-theme="dark"] .active-space-actions,
+html[data-theme="dark"] .channel-entry,
+html[data-theme="dark"] .dm-conversation-entry.active {
+  background-color:#292a23 !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .lumi-incoming-card,
+html[data-theme="dark"] .lumi-friends-dialog,
+html[data-theme="dark"] .lumi-blocked-row,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .context-menu,
+html[data-theme="dark"] .notification-panel,
+html[data-theme="dark"] .reaction-picker,
+html[data-theme="dark"] .emoji-picker,
+html[data-theme="dark"] .search-results,
+html[data-theme="dark"] [role="menu"],
+html[data-theme="dark"] [role="dialog"] {
+  background-color:#20211b !important;
+  color:var(--ink,#f1f0e8) !important;
+  border-color:var(--line,#38382f) !important;
+}
+html[data-theme="dark"] .lumi-incoming-card p,
+html[data-theme="dark"] .lumi-incoming-card small,
+html[data-theme="dark"] .lumi-friends-dialog p,
+html[data-theme="dark"] .lumi-blocked-row small {
+  color:var(--muted,#aaa99c) !important;
+}
+html[data-theme="dark"] .sidebar-create-channel:hover,
+html[data-theme="dark"] .active-space-actions button:hover,
+html[data-theme="dark"] .dm-mobile-back:hover {
+  background-color:var(--accent-pale,#302d1c) !important;
+  color:var(--accent,#ffe47a) !important;
+}
+
+
+/* LUMI — modo escuro de verdade: cobre superfícies restantes sem afetar imagens */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --white: #20211b;
+  --canvas: #151611;
+  --surface-bg: #20211b;
+  --ink: #f1f0e8;
+  --muted-color: #aaa99c;
+  --muted: #aaa99c;
+  --line: #38392f;
+}
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-panel,
+html[data-theme="dark"] .page-content,
+html[data-theme="dark"] .workspace-mode,
+html[data-theme="dark"] .inbox-mode,
+html[data-theme="dark"] .workspace-chat-view,
+html[data-theme="dark"] .dm-chat-full,
+html[data-theme="dark"] .page-placeholder,
+html[data-theme="dark"] .settings-view,
+html[data-theme="dark"] .settings-content,
+html[data-theme="dark"] .profile-view,
+html[data-theme="dark"] .friends-view,
+html[data-theme="dark"] .calls-view,
+html[data-theme="dark"] .notifications-view {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.section-block,.feature-card,.space-card,.empty-card,.empty-state,
+  .empty-illustration,.settings-card,.settings-section,.settings-panel,.settings-row,
+  .profile-summary,.profile-preview-card,.profile-card,.right-widget,.tip-card,
+  .inbox-note,.notice-box,.notification-panel,.notification-item,.search-overlay,
+  .search-results,.search-result,.dropdown-menu,.popover,.context-menu,.modal-card,
+  .dialog-card,.lumi-friends-dialog,.lumi-incoming-card,.call-panel,.call-controls,
+  .voice-room-card,.member-list,.member-row,.dm-chat-panel,.dm-conversation-list,
+  .dm-mobile-inbox,.dm-chat-head,.dm-chat-header,.dm-composer,.dm-message-composer,
+  .dm-file-card,.attachment-card,.chat-panel,.chat-header,.channel-header,
+  .channel-chat-head,.message-composer,.workspace-sidebar,.workspace-header,
+  .workspace-content,.workspace-chat-view,.dm-chat-full,.dm-conversation-entry,
+  .dm-person-result,.dm-sidebar-results,.active-space-name,.active-space-actions,
+  .space-manage-details,.lumi-blocked-row,.lumi-blocked-empty,.space-reply-preview,
+  .space-reply-banner,.space-reaction,.channel-entry,.sidebar-search,.global-search
+) {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  input,textarea,select,.form-input,[contenteditable="true"],
+  .sidebar-search input,.global-search input
+) {
+  background-color: #171812 !important;
+  color: #f1f0e8 !important;
+  border-color: #414237 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row p,.feature-card p,.space-card p,.settings-help,.settings-description,
+  .profile-bio-preview,.notification-item small,.dm-file-card small,
+  .muted,.secondary-text,.empty-state p
+) { color: #b9b8aa !important; }
+html[data-theme="dark"] .app-shell :is(
+  button:not(.primary-button):not(.brand-mark):not(.rail-space):not(.avatar):not(.user-avatar):not(.top-avatar)
+) {
+  border-color: #414237;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.feature-card,.space-card,.empty-card,.settings-card,.settings-section,
+  .profile-summary,.profile-preview-card,.right-widget,.tip-card,.inbox-note,.notice-box
+) {
+  box-shadow: none;
+}
+html[data-theme="dark"] [style*="background: white"],
+html[data-theme="dark"] [style*="background:white"],
+html[data-theme="dark"] [style*="background-color: white"],
+html[data-theme="dark"] [style*="background-color:white"],
+html[data-theme="dark"] [style*="background: #fff"],
+html[data-theme="dark"] [style*="background:#fff"],
+html[data-theme="dark"] [style*="background-color: #fff"],
+html[data-theme="dark"] [style*="background-color:#fff"],
+html[data-theme="dark"] [style*="background: rgb(255"],
+html[data-theme="dark"] [style*="background-color: rgb(255"] {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+
+
+/* LUMI — correção específica: Painel Pessoal e as duas barras laterais */
+html[data-theme="dark"] .app-shell > .rail,
+html[data-theme="dark"] .app-shell > .space-sidebar,
+html[data-theme="dark"] .app-shell > .right-panel,
+html[data-theme="dark"] .app-shell > .main-panel,
+html[data-theme="dark"] .app-shell .sidebar-top,
+html[data-theme="dark"] .app-shell .sidebar-bottom,
+html[data-theme="dark"] .app-shell .topbar,
+html[data-theme="dark"] .app-shell .page-content,
+html[data-theme="dark"] .app-shell .page-content > .welcome-row,
+html[data-theme="dark"] .app-shell .page-content > .section-block,
+html[data-theme="dark"] .app-shell .page-content .section-title-row,
+html[data-theme="dark"] .app-shell .page-content .feature-grid,
+html[data-theme="dark"] .app-shell .page-content .space-grid,
+html[data-theme="dark"] .app-shell .page-content .activity-grid {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .page-content .welcome-row {
+  background: linear-gradient(112deg, #20211b 0%, #25251d 57%, #302d1c 100%) !important;
+  border-color: #45412c !important;
+}
+html[data-theme="dark"] .app-shell .page-content :is(
+  .feature-card,.space-card,.activity-card,.quick-action-card,.stat-card,
+  .dashboard-card,.panel-card,.empty-card,.right-widget,.tip-card
+) {
+  background-color: #20211b !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .page-content :is(
+  .feature-card,.space-card,.activity-card,.quick-action-card,.stat-card,
+  .dashboard-card,.panel-card,.empty-card,.right-widget,.tip-card
+) :is(h1,h2,h3,h4,p,span,strong,small,label) {
+  color: inherit;
+}
+html[data-theme="dark"] .app-shell > .rail,
+html[data-theme="dark"] .app-shell > .space-sidebar,
+html[data-theme="dark"] .app-shell > .right-panel {
+  background-color: #1b1c16 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .rail-button,
+html[data-theme="dark"] .app-shell .space-entry,
+html[data-theme="dark"] .app-shell .account-card,
+html[data-theme="dark"] .app-shell .right-panel .icon-button,
+html[data-theme="dark"] .app-shell .sidebar-top .icon-button {
+  background-color: transparent !important;
+  color: #d7d5c8 !important;
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell .rail-button:hover,
+html[data-theme="dark"] .app-shell .rail-button.active,
+html[data-theme="dark"] .app-shell .space-entry:hover,
+html[data-theme="dark"] .app-shell .space-entry.active,
+html[data-theme="dark"] .app-shell .account-card:hover {
+  background-color: #302d1c !important;
+  color: #ffe47a !important;
+}
+html[data-theme="dark"] .app-shell .rail-rule,
+html[data-theme="dark"] .app-shell .sidebar-bottom {
+  border-color: #38392f !important;
+  background-color: transparent !important;
+}
+html[data-theme="dark"] .app-shell .sidebar-search,
+html[data-theme="dark"] .app-shell .global-search,
+html[data-theme="dark"] .app-shell .global-search kbd {
+  background-color: #151611 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+}
+
+
+/* LUMI — seletor personalizado de tipo de canal */
+.lumi-select{position:relative;width:100%;margin:0 0 17px}
+.lumi-select-trigger{width:100%;min-height:47px;display:flex;align-items:center;gap:11px;padding:10px 12px;border:1px solid #e9e7dc;border-radius:12px;background:#fdfdfa;color:var(--ink);text-align:left;transition:border-color .16s,box-shadow .16s,background .16s}
+.lumi-select-trigger:hover,.lumi-select-trigger[aria-expanded="true"]{border-color:#e2c43b;background:#fffef8}
+.lumi-select-trigger:focus-visible{outline:3px solid #ffd83d55;outline-offset:2px}
+.lumi-select-leading{width:28px;height:28px;flex:0 0 28px;display:grid;place-items:center;border-radius:9px;background:#fff2b6;color:#8f7100;font-size:19px;font-weight:800}
+.lumi-select-leading.material-symbols-rounded{font-size:19px}
+.lumi-select-value{flex:1;font-size:12px;font-weight:700}
+.lumi-select-chevron{font-size:20px;color:#9a9889;transition:transform .16s}
+.lumi-select-trigger[aria-expanded="true"] .lumi-select-chevron{transform:rotate(180deg)}
+.lumi-select-menu{position:absolute;z-index:1200;top:calc(100% + 6px);left:0;right:0;padding:6px;border:1px solid #e9e5d5;border-radius:14px;background:#fff;box-shadow:0 16px 40px #29291f1c;animation:lumiSelectIn .14s ease}
+.lumi-select-menu[hidden]{display:none!important}
+.lumi-select-option{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--ink);text-align:left}
+.lumi-select-option:hover,.lumi-select-option:focus-visible{outline:none;background:#fffbed;border-color:#f0e3a6}
+.lumi-select-option.selected{background:#fff8d7;border-color:#f0df8c}
+.lumi-select-option-icon{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:9px;background:#f5f2e6;color:#77715a;font-size:18px;font-weight:800}
+.lumi-select-option[data-value="voice"] .lumi-select-option-icon{background:#e9f4ec;color:#3d8058}
+.lumi-select-option>span:nth-child(2){display:grid;gap:3px;flex:1;min-width:0}
+.lumi-select-option strong{font-size:11px;font-weight:800}
+.lumi-select-option small{font-size:10px;color:#969487}
+.lumi-select-check{font-size:18px;color:#9d7c00;opacity:0}
+.lumi-select-option.selected .lumi-select-check{opacity:1}
+.lumi-native-select{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;opacity:0!important;pointer-events:none!important}
+@keyframes lumiSelectIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+html[data-theme="dark"] .lumi-select-trigger{background:#171812;color:#f1f0e8;border-color:#414237}
+html[data-theme="dark"] .lumi-select-trigger:hover,html[data-theme="dark"] .lumi-select-trigger[aria-expanded="true"]{background:#20211b;border-color:#8c782d}
+html[data-theme="dark"] .lumi-select-leading{background:#302d1c;color:#ffe47a}
+html[data-theme="dark"] .lumi-select-menu{background:#20211b;border-color:#414237;box-shadow:0 16px 40px #0005}
+html[data-theme="dark"] .lumi-select-option{color:#f1f0e8}
+html[data-theme="dark"] .lumi-select-option:hover,html[data-theme="dark"] .lumi-select-option:focus-visible{background:#292a23;border-color:#414237}
+html[data-theme="dark"] .lumi-select-option.selected{background:#302d1c;border-color:#62552a}
+html[data-theme="dark"] .lumi-select-option-icon{background:#292a23;color:#d7d5c8}
+html[data-theme="dark"] .lumi-select-option[data-value="voice"] .lumi-select-option-icon{background:#1d3427;color:#a5d6b4}
+html[data-theme="dark"] .lumi-select-option small{color:#b9b8aa}
+@media(prefers-reduced-motion:reduce){.lumi-select-menu{animation:none}.lumi-select-chevron{transition:none}}
+
+
+/* LUMI — acabamento do tema escuro: superfícies aninhadas e conteúdo dinâmico */
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app-shell,
+html[data-theme="dark"] .main-panel,
+html[data-theme="dark"] .right-panel,
+html[data-theme="dark"] .space-sidebar,
+html[data-theme="dark"] .rail,
+html[data-theme="dark"] dialog.modal,
+html[data-theme="dark"] .modal,
+html[data-theme="dark"] .modal-card {
+  color-scheme: dark;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row,.welcome-row>div,.section-block,.section-title-row,
+  .feature-grid,.feature-card>div,.space-card-top,.space-card-foot,
+  .right-panel-head,.profile-summary,.right-divider,.right-widget,
+  .widget-heading,.stat-row,.tip-card,.tip-card>div,.right-footer,
+  .spaces-directory,.space-list,.space-list-empty,.active-space-nav,
+  .mobile-spaces-panel,.mobile-channels-panel,.mobile-spaces-heading,
+  .mobile-channels-heading,.mobile-spaces-list,.mobile-channels-list,
+  .breadcrumbs,.topbar-actions,.rail-bottom,.rail-spaces,
+  .settings-page,.settings-layout,.settings-main,.settings-card-content,
+  .settings-card-icon,.settings-row,.settings-section,.settings-section-header,
+  .profile-header,.profile-details,.profile-actions,.friends-toolbar,
+  .friends-list,.calls-list,.notifications-list,.inbox-header,
+  .inbox-content,.workspace-content,.workspace-header,.workspace-sidebar,
+  .channel-header,.channel-chat-head,.dm-chat-head,.dm-chat-header,
+  .dm-conversation-list,.dm-mobile-inbox,.dm-sidebar-results,
+  .message-list,.messages-list,.chat-messages,.message-row,
+  .message-bubble,.message-content,.message-actions,.message-composer,
+  .dm-composer,.dm-message-composer,.attachment-list,.attachment-preview,
+  .voice-room-card,.call-panel,.call-controls,.member-list,.member-row,
+  .search-overlay,.search-results,.search-result,.notification-item,
+  .dropdown-menu,.context-menu,.popover,.reaction-picker,.emoji-picker,
+  .space-manage-details,.active-space-actions,.space-reply-banner,
+  .space-reply-preview,.space-reaction,.channel-entry,.dm-conversation-entry,
+  .dm-person-result,.lumi-blocked-row,.lumi-blocked-empty
+) {
+  background-color: #20211b;
+  color: #f1f0e8;
+  border-color: #38392f;
+}
+html[data-theme="dark"] .app-shell :is(
+  .welcome-row h1,.section-title-row h2,.feature-card h3,.space-card h3,
+  .profile-summary h3,.widget-heading strong,.stat-row strong,
+  .account-copy strong,.space-entry-copy strong,.settings-card h2,
+  .settings-section h2,.settings-row strong,.channel-header h1,
+  .dm-chat-head strong,.dm-chat-header strong,.message-author,
+  .notification-item strong,.search-result strong,.member-row strong
+) { color: #f6f4e9 !important; }
+html[data-theme="dark"] .app-shell :is(
+  .eyebrow,.breadcrumbs,.crumb-slash,.section-title-row .eyebrow,
+  .right-panel-head .eyebrow,.profile-summary p,.account-copy small,
+  .space-entry-copy small,.space-list-empty,.settings-card p,
+  .settings-help,.settings-description,.tip-card p,.right-footer,
+  .stat-row>span,.feature-card p,.space-card p,.space-card-foot,
+  .muted,.secondary-text,.empty-state p,.empty-card p,
+  .message-time,.message-edited,.message-meta,.channel-topic,
+  .dm-conversation-entry small,.notification-item small
+) { color: #b9b8aa !important; }
+html[data-theme="dark"] .app-shell :is(
+  .empty-card,.empty-state,.page-placeholder,.inbox-note,.notice-box,
+  .lumi-blocked-empty,.space-list-empty,.dm-empty-state,.no-results,
+  .no-messages,.empty-conversations
+) {
+  background: #1b1c16 !important;
+  border-color: #38392f !important;
+  color: #c8c6b8 !important;
+}
+html[data-theme="dark"] .app-shell :is(
+  .primary-button,.welcome-actions .primary-button,.full-button
+) {
+  background: var(--accent, #ffd83d);
+  color: #29291f;
+  border-color: var(--accent, #ffd83d);
+}
+html[data-theme="dark"] .app-shell :is(
+  .secondary-button,.outline-full,.text-button,.round-arrow,
+  .symbol-choice,.modal-close,.icon-button,.rail-add,
+  .sidebar-search,.global-search,.global-search kbd
+) {
+  background-color: #20211b;
+  color: #e4e1d2;
+  border-color: #414237;
+}
+html[data-theme="dark"] .app-shell :is(input,textarea,select,.form-input,[contenteditable="true"])::placeholder {
+  color: #858578 !important;
+  opacity: 1;
+}
+html[data-theme="dark"] .app-shell :is(input[type="checkbox"],input[type="radio"]) {
+  accent-color: var(--accent, #ffd83d);
+}
+html[data-theme="dark"] .app-shell :is(.rail-space,.space-entry-icon,.space-card-icon,.avatar,.profile-avatar,.user-avatar,.top-avatar) {
+  border-color: #49432b;
+}
+html[data-theme="dark"] .app-shell :is(.feature-yellow,.feature-white,.welcome-row) {
+  background-image: none;
+}
+html[data-theme="dark"] .app-shell .feature-yellow {
+  background-color: #292719 !important;
+  border-color: #45412c !important;
+}
+html[data-theme="dark"] .app-shell .feature-white {
+  background-color: #20211b !important;
+}
+html[data-theme="dark"] .app-shell :is(.online-dot,.notification-button i) {
+  border-color: #1b1c16;
+}
+html[data-theme="dark"] .app-shell :is(.right-divider,.rail-rule,.sidebar-bottom,.space-card-foot) {
+  border-color: #38392f !important;
+}
+html[data-theme="dark"] .app-shell :is(.mobile-spaces-panel,.mobile-channels-panel) {
+  background: #1b1c16 !important;
+  color: #f1f0e8 !important;
+  border-color: #38392f !important;
+  box-shadow: 0 12px 36px #0008;
+}
+html[data-theme="dark"] .app-shell :is(.mobile-spaces-panel,.mobile-channels-panel) button {
+  color: #f1f0e8;
+  border-color: #38392f;
+}
+html[data-theme="dark"] .modal::backdrop,
+html[data-theme="dark"] dialog::backdrop {
+  background: #0009;
+}
+html[data-theme="dark"] .app-shell :is(.lumi-select-menu,.lumi-select-option) {
+  color: #f1f0e8;
+}
+html[data-theme="dark"] .app-shell :is(.space-card,.feature-card,.settings-card,.tip-card,.right-widget,.empty-card) :is(img,video,canvas) {
+  background: transparent;
+}
+
+/* Acessibilidade: respeita a preferência do sistema por menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    caret-color: auto !important;
+  }
+}
+
+/* Ações de gerenciamento de canais: texto e voz. */
+.channel-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+}
+.channel-entry-row > .channel-entry {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.channel-entry-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  opacity: .72;
+}
+.channel-entry-actions button {
+  width: 27px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #969487;
+  padding: 0;
+}
+.channel-entry-actions button .material-symbols-rounded { font-size: 16px; }
+.channel-entry-actions button:hover {
+  color: #8c6b00;
+  border-color: #e9d98d;
+  background: #fff7d5;
+}
+.channel-entry-row:hover .channel-entry-actions,
+.channel-entry-row:focus-within .channel-entry-actions { opacity: 1; }
+html[data-theme="dark"] .channel-entry-actions button { color: #b8b7a9; }
+html[data-theme="dark"] .channel-entry-actions button:hover {
+  color: #ffe27a;
+  border-color: #5b512d;
+  background: #302b19;
+}
+@media (max-width: 600px) {
+  .channel-entry-row { width: max-content; max-width: 100%; flex: 0 0 auto; }
+  .channel-entry-row > .channel-entry { width: auto; max-width: 190px; flex: 0 1 auto; }
+  .channel-entry-actions { opacity: 1; }
+  .channel-entry-actions button { width: 28px; height: 32px; }
+}
+
+
+/* LUMI channel management: visible and easy to reach on desktop and mobile */
+.channel-entry-actions { opacity: 1 !important; visibility: visible !important; display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+.channel-entry-actions button { display: grid; place-items: center; width: 29px; height: 31px; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.channel-entry-actions button:hover { background: var(--yellow-pale); border-color: #eadb92; color: #806500; }
+.channel-entry-row { display: flex; align-items: center; gap: 3px; width: 100%; min-width: 0; }
+.channel-entry-row > .channel-entry { flex: 1 1 auto; min-width: 0; }
+.channel-header-actions { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.channel-header-actions .secondary-button { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; font-size: 11px; }
+.channel-header-actions .material-symbols-rounded { font-size: 16px; }
+.channel-delete-button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #f0d7d4; border-radius: 10px; background: #fff8f7; color: #b44e46; }
+.channel-delete-button:hover { background: #fce7e5; }
+html[data-theme="dark"] .channel-entry-actions button { color: #c2c1b5; }
+html[data-theme="dark"] .channel-entry-actions button:hover { background: var(--accent-pale, #343324); border-color: #5a5534; color: var(--accent, #f4d84b); }
+html[data-theme="dark"] .channel-delete-button { background: #352322; border-color: #63403d; color: #ffaaa2; }
+html[data-theme="dark"] .channel-delete-button:hover { background: #4a2927; }
+@media (max-width: 600px) {
+  #mobileChannelsList .channel-entry-row { width: 100%; max-width: 100%; }
+  #mobileChannelsList .channel-entry-row > .channel-entry { max-width: none; flex: 1 1 auto; }
+  #mobileChannelsList .channel-entry-actions { opacity: 1 !important; }
+  #mobileChannelsList .channel-entry-actions button { width: 30px; height: 34px; }
+  .channel-chat-head { align-items: flex-start; }
+  .chat-head-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .channel-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .channel-header-actions .secondary-button { padding: 7px 8px; }
+}
+
+
+/* LUMI: controles de organização de canais + contraste no tema escuro */
+.channel-entry-row{display:flex;align-items:center;gap:2px;min-width:0}.channel-entry-row .channel-entry{flex:1;min-width:0}.channel-entry-actions{display:flex;align-items:center;gap:1px;flex:0 0 auto}.channel-entry-actions button{display:grid;place-items:center;width:24px;height:27px;border:0;border-radius:7px;background:transparent;color:var(--muted);padding:0}.channel-entry-actions button:hover{background:var(--yellow-soft);color:var(--ink)}.channel-entry-actions .material-symbols-rounded{font-size:16px}.channel-entry-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.channel-empty-hint{font-size:11px;color:var(--muted);padding:8px}
+html[data-theme="dark"]{color-scheme:dark;--ink:#f0efe7;--muted:#aaa99f;--line:#34342e;--canvas:#171815;--white:#22231f;--yellow-soft:#393319;--yellow-pale:#2a281b;--shadow:0 12px 36px rgba(0,0,0,.22)}
+html[data-theme="dark"] body,html[data-theme="dark"] .app-shell,html[data-theme="dark"] .rail,html[data-theme="dark"] .space-sidebar,html[data-theme="dark"] .main-panel,html[data-theme="dark"] .right-panel{background:#1b1c18;color:var(--ink)}
+html[data-theme="dark"] .topbar,html[data-theme="dark"] .settings-card,html[data-theme="dark"] .member-manager-row,html[data-theme="dark"] .dm-layout,html[data-theme="dark"] .dm-conversation-panel,html[data-theme="dark"] .dm-chat-panel,html[data-theme="dark"] .dm-person-result,html[data-theme="dark"] .dm-conversation-entry,html[data-theme="dark"] .dm-composer textarea,html[data-theme="dark"] .form-input,html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] select,html[data-theme="dark"] .modal-card{background:#24251f!important;color:var(--ink)!important;border-color:#3b3c33!important}
+html[data-theme="dark"] .channel-entry,html[data-theme="dark"] .channel-entry span,html[data-theme="dark"] .dm-conversation-copy strong,html[data-theme="dark"] .dm-message-meta strong,html[data-theme="dark"] .message-text,html[data-theme="dark"] .dm-message-text,html[data-theme="dark"] .page-placeholder h1,html[data-theme="dark"] .settings-card h2{color:var(--ink)}
+html[data-theme="dark"] .channel-entry.active,html[data-theme="dark"] .channel-entry:hover,html[data-theme="dark"] .dm-conversation-entry:hover,html[data-theme="dark"] .dm-conversation-entry.active{background:#39351e!important;color:#ffe36a!important}
+html[data-theme="dark"] .workspace-head{background:linear-gradient(110deg,#25251d,#302b17);border-color:#3b3828}html[data-theme="dark"] .workspace-head p,html[data-theme="dark"] .page-placeholder>p,html[data-theme="dark"] .settings-card p,html[data-theme="dark"] .settings-card small{color:#b7b6aa}html[data-theme="dark"] .channel-chat-head,html[data-theme="dark"] .message-composer,html[data-theme="dark"] .dm-chat-head,html[data-theme="dark"] .dm-panel-title{border-color:#3b3c33}
+@media(max-width:600px){.channel-entry-row{flex:0 0 auto}.channel-entry-actions button{width:26px;height:32px}.channel-entry-row .channel-entry{width:auto;max-width:170px}.channel-entry-actions{opacity:1}}
+
+
+/* LUMI visual refresh: INFINITY, perfis, voz e tema escuro */
+.infinity-badge{display:inline-flex!important;align-items:center;justify-content:center;width:17px;height:17px;border-radius:6px;background:linear-gradient(135deg,#22232b,#6d4aff 58%,#b8a7ff);color:#fff!important;font:900 14px/1 'Manrope',sans-serif;vertical-align:middle;box-shadow:0 0 0 2px #8d78ff22;margin-left:2px}
+.profile-pronouns{display:inline-flex;align-items:center;padding:3px 8px;border-radius:99px;background:var(--profile-highlight,#ffd83d);color:#29291f;font-size:10px;font-weight:800;margin-bottom:7px}.profile-preview-card{position:relative;overflow:hidden}.profile-preview-card:before{content:'';display:block;height:5px;border-radius:5px;background:var(--profile-highlight,#ffd83d);margin:-20px -20px 18px}.profile-photo-preview{outline:4px solid color-mix(in srgb,var(--profile-highlight,#ffd83d) 40%,transparent);border-radius:24px}.profile-bio-preview{border-top:1px solid var(--line);margin-top:15px;padding-top:13px;overflow-wrap:anywhere}
+.channel-readonly-notice{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;background:var(--canvas);color:var(--muted);font-size:12px;padding:14px}.channel-readonly-notice .material-symbols-rounded{font-size:19px}
+.voice-room-card{position:relative;overflow:hidden;margin:18px auto 0;max-width:760px;border:1px solid #e6e4da;border-radius:24px;padding:26px;background:radial-gradient(ellipse at 50% -20%,#fff4b6 0%,#fffdf5 43%,#fff 100%);text-align:center;box-shadow:0 18px 48px #24210c0a}.voice-room-symbol{width:72px;height:72px;display:grid;place-items:center;border-radius:24px;margin:0 auto 13px;background:linear-gradient(145deg,#ffe984,#ffd83d);color:#775c00;box-shadow:0 10px 26px #d8b42c35}.voice-room-symbol .material-symbols-rounded{font-size:35px}.voice-room-card h3{font:800 22px 'Manrope',sans-serif;margin:0 0 7px;color:var(--ink)}.voice-room-card>p{color:var(--muted);font-size:12px;margin:0 auto 22px;max-width:430px;line-height:1.65}
+.voice-presence-header{display:flex;align-items:center;gap:11px;text-align:left;padding:14px 15px;border:1px solid #e9e5d3;border-radius:14px;background:#ffffffa8;margin:0 0 14px}.voice-presence-header>.material-symbols-rounded{width:36px;height:36px;border-radius:12px;background:#f5edc5;color:#8e7400;display:grid;place-items:center}.voice-presence-header div{display:flex;flex-direction:column;gap:4px;min-width:0}.voice-presence-header strong{font-size:12px;color:var(--ink)}.voice-presence-header small{font-size:10px;color:var(--muted)}.voice-live-pill{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:9px;font-weight:900;letter-spacing:.7px;color:#478b60;background:#e7f8eb;border-radius:99px;padding:6px 9px;white-space:nowrap}.voice-live-pill i{width:6px;height:6px;border-radius:50%;background:#4bb36c;box-shadow:0 0 0 4px #4bb36c20}
+.voice-member-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;text-align:left}.voice-member{display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto auto;column-gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:15px;background:#ffffffc9;transition:border-color .15s,box-shadow .15s,transform .15s}.voice-member>img,.voice-member>.material-symbols-rounded{grid-row:1/3;width:44px;height:44px;border-radius:15px;display:grid;place-items:center;background:#f5f0d5;color:#96802b;font-size:27px;object-fit:cover}.voice-member>span:not(.material-symbols-rounded){font-size:11px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.voice-member-status{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:9px;margin-top:4px}.voice-mic-indicator{display:inline-grid;place-items:center;color:#8e8e80}.voice-mic-indicator .material-symbols-rounded{font-size:14px}.voice-mic-indicator.is-speaking{color:#168a50;animation:voice-pulse .75s ease-in-out infinite alternate}.voice-member.is-speaking{border-color:#55c985;background:linear-gradient(130deg,#effff4,#fff);box-shadow:0 0 0 2px #39b96c20,0 8px 24px #249e5120;transform:translateY(-1px)}.voice-member.is-speaking>img,.voice-member.is-speaking>.material-symbols-rounded{outline:3px solid #55c985;outline-offset:2px}.voice-member.self{border-style:dashed}.voice-room-controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}.voice-room-controls button{min-width:145px}@keyframes voice-pulse{from{transform:scale(1);opacity:.75}to{transform:scale(1.18);opacity:1}}
+html[data-theme="dark"] .voice-room-card{background:radial-gradient(ellipse at 50% -20%,#3c351c 0%,#24251f 48%,#20211d 100%);border-color:#414237;box-shadow:0 18px 48px #0002}html[data-theme="dark"] .voice-presence-header,html[data-theme="dark"] .voice-member{background:#282922;border-color:#414237}html[data-theme="dark"] .voice-presence-header>.material-symbols-rounded{background:#3d371f;color:#f3d45a}html[data-theme="dark"] .voice-member.is-speaking{background:linear-gradient(130deg,#1e3828,#282922);border-color:#4bd181;box-shadow:0 0 0 2px #39b96c20,0 8px 24px #0002}html[data-theme="dark"] .voice-member>img,html[data-theme="dark"] .voice-member>.material-symbols-rounded{background:#3a392c;color:#f3d45a}html[data-theme="dark"] .channel-readonly-notice{background:#24251f;border-color:#414237;color:#bdbdb1}html[data-theme="dark"] .profile-pronouns{color:#29291f}html[data-theme="dark"] .infinity-badge{box-shadow:0 0 0 2px #a99bff33,0 0 12px #8666ff35}
+@media(max-width:600px){.voice-room-card{padding:17px 13px;border-radius:19px}.voice-room-symbol{width:60px;height:60px;border-radius:20px}.voice-room-card h3{font-size:19px}.voice-presence-header{padding:11px}.voice-presence-header small{max-width:180px;line-height:1.4}.voice-member-list{grid-template-columns:1fr 1fr;gap:8px}.voice-member{grid-template-columns:35px minmax(0,1fr);padding:9px;column-gap:8px}.voice-member>img,.voice-member>.material-symbols-rounded{width:35px;height:35px;border-radius:12px;font-size:22px}.voice-member>span:not(.material-symbols-rounded){font-size:10px}.voice-room-controls button{flex:1;min-width:0}}
+
+
+/* Voice activity indicators in direct calls */
+.dm-call-voice-presence{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:9px 12px}.dm-speaking-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid var(--line);border-radius:99px;background:var(--white);color:var(--muted);font-size:10px}.dm-speaking-chip .material-symbols-rounded{font-size:15px}.dm-speaking-chip.is-speaking{background:#e7f8ec;border-color:#53c981;color:#167b43;box-shadow:0 0 0 3px #46bd7120}html[data-theme="dark"] .dm-speaking-chip{background:#282922;border-color:#414237;color:#c0c0b4}html[data-theme="dark"] .dm-speaking-chip.is-speaking{background:#1d3928;border-color:#4bd181;color:#91f0b3}
+
+
+/* LUMI refresh: call dock, streamer privacy and improved dark surfaces */
+.lumi-active-call-dock {
+  position: fixed;
+  z-index: 10050;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(560px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--line, rgba(120,120,120,.25));
+  border-radius: 18px;
+  background: var(--white, #fff);
+  color: var(--ink, #29291f);
+  box-shadow: 0 18px 60px rgba(0,0,0,.25);
+  backdrop-filter: blur(18px);
+}
+.lumi-active-call-dock[hidden] { display: none !important; }
+.lumi-active-call-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: #36c98f; box-shadow: 0 0 0 5px rgba(54,201,143,.14); }
+.lumi-active-call-copy { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.lumi-active-call-copy strong { font-size: 13px; }
+.lumi-active-call-copy small { color: var(--muted, #89897e); font-size: 12px; }
+.lumi-active-call-dock .secondary-button { white-space: nowrap; padding: 9px 12px; }
+.lumi-active-call-dock .dm-hangup { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 0; background: #ef4444; color: #fff; }
+html[data-theme="dark"] .lumi-active-call-dock {
+  --white: #191b20;
+  --ink: #f3f4f6;
+  --line: #343740;
+  --muted: #a1a5b0;
+  background: rgba(25,27,32,.94);
+  border-color: #343740;
+  color: #f3f4f6;
+  box-shadow: 0 20px 70px rgba(0,0,0,.48);
+}
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .inbox-note,
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .dm-chat-panel {
+  border-color: #343740;
+}
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .inbox-note,
+html[data-theme="dark"] .space-card,
+html[data-theme="dark"] .dm-chat-panel {
+  background: #191b20;
+  color: #eef0f4;
+}
+html[data-theme="dark"] .settings-card p,
+html[data-theme="dark"] .settings-help,
+html[data-theme="dark"] .settings-card small {
+  color: #a5a9b4;
+}
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .settings-page select,
+html[data-theme="dark"] .settings-page input:not([type="checkbox"]):not([type="file"]) {
+  background: #111318;
+  border-color: #3a3d46;
+  color: #f3f4f6;
+}
+html[data-theme="dark"] .lumi-active-call-dock .secondary-button {
+  background: #292c34;
+  border-color: #3a3d46;
+  color: #f3f4f6;
+}
+html[data-streamer-mode="true"] .dm-head-identity,
+html[data-streamer-mode="true"] .dm-conversation-name,
+html[data-streamer-mode="true"] .dm-message-author,
+html[data-streamer-mode="true"] .message-author,
+html[data-streamer-mode="true"] .space-message-author,
+html[data-streamer-mode="true"] #accountName,
+html[data-streamer-mode="true"] #profileName,
+html[data-streamer-mode="true"] .dm-call-person-name,
+html[data-streamer-mode="true"] .lumi-incoming-card h3 {
+  filter: blur(7px);
+  user-select: none;
+}
+html[data-streamer-mode="true"] .lumi-badge { visibility: hidden !important; }
+@media (max-width: 520px) {
+  .lumi-active-call-dock { right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: calc(100vw - 20px); gap: 8px; padding: 10px; }
+  .lumi-active-call-dock .secondary-button { font-size: 11px; padding: 8px; }
+  .lumi-active-call-copy strong { font-size: 12px; }
+}
+
+
+.creator-badge { display:inline-grid; place-items:center; min-width:16px; height:16px; padding:0 3px; border-radius:5px; background:#ef4444; color:#fff!important; font-size:10px; font-weight:900; vertical-align:middle; }
+html[data-theme="dark"] .creator-badge { background:#f05252; color:#fff!important; }
+
+
+html[data-streamer-mode="true"] .dm-conversation-copy strong,
+html[data-streamer-mode="true"] .dm-conversation-copy small,
+html[data-streamer-mode="true"] .dm-person-result .dm-avatar,
+html[data-streamer-mode="true"] .dm-chat-head .dm-avatar {
+  filter: blur(7px);
+  user-select: none;
+}
+#lumiCallRemoteAudio { display: none; }
+
+
+/* LUMI — refinamento final das superfícies e estados interativos */
+:root {
+  --lumi-focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent, #ffd83d) 36%, transparent);
+}
+:where(button, a, input, textarea, select, summary):focus-visible {
+  outline: none;
+  box-shadow: var(--lumi-focus-ring);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --lumi-dark-surface: #191a1f;
+  --lumi-dark-raised: #202127;
+  --lumi-dark-input: #15161a;
+  --lumi-dark-line: rgba(255,255,255,.11);
+}
+html[data-theme="dark"] :is(.settings-card, .feature-card, .space-card, .empty-card, .tip-card, .stat-card, .dm-chat-panel, .dm-mobile-inbox, .dm-conversation-list, .dm-message-list, .dm-composer, .modal-card, .lumi-contact-card, .dm-file-card, .lumi-active-call-dock) {
+  background-color: var(--lumi-dark-surface);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(input, textarea, select, .form-input, .global-search input, .sidebar-search input) {
+  background-color: var(--lumi-dark-input);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(.secondary-button, .icon-button, .dm-attach-button, .lumi-gif-button, .dm-call-controls .icon-button) {
+  background-color: var(--lumi-dark-raised);
+  border-color: var(--lumi-dark-line);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] :is(.dm-message-item, .dm-message-body, .dm-message-meta, .dm-chat-head, .settings-card-content p, .settings-help, .dm-attachment-hint) {
+  color: var(--text, #e9e9ed);
+}
+html[data-theme="dark"] :is(.dm-message-text, .lumi-assistant-msg, .channel-empty-hint, .dm-empty-small) {
+  background-color: var(--lumi-dark-raised);
+  color: var(--text, #f1f1f3);
+}
+html[data-theme="dark"] .dm-message-item.mine .dm-message-text {
+  background: color-mix(in srgb, var(--accent, #ffd83d) 17%, #202127);
+}
+@media (max-width: 600px) {
+  .lumi-active-call-dock { max-width: calc(100vw - 20px); }
+  .lumi-active-call-dock .secondary-button { padding: 8px 10px; }
+}
+
+/* LUMI: agrupamento visual de canais por categoria */
+.channel-category-group{min-width:0}.channel-category-heading{padding:12px 10px 5px;color:var(--muted,#89897e);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.channel-category-group:first-child .channel-category-heading{padding-top:5px}.channel-category-group+.channel-category-group{margin-top:3px}.channel-category-group .channel-entry-row{margin-top:1px}

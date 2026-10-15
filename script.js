@@ -50,23 +50,29 @@ import { supabase } from './database/supabase.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const state = { user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [], callRetryTimer: null };
+const state = { callOperationId: 0, handledOfferIds: new Set(), user: null, profile: null, spaces: [], activeSpace: null, channels: [], activeChannel: null, messages: [], realtime: null, spaceReplyTo: null, spaceCallChannel: null, spaceReactions: [], authMode: 'signin', page: 'home', search: '', channelCount: 0, messageCount: 0, conversations: [], activeConversation: null, dmMessages: [], dmRealtime: null, dmSearchResults: [], callRealtime: null, callPC: null, callLocalStream: null, callRemoteStream: null, callPeerId: null, callConversationId: null, callMode: 'audio', callStatus: 'idle', pendingCallOffer: null, callSeenSignals: new Set(), callMuted: false, callVideoEnabled: true, pendingIceSignals: [], callScreenStream: null, dmRecorder: null, dmRecordStream: null, dmRecordChunks: [], callRetryTimer: null, editingChannelId: null };
 const symbols = ['✳','🎮','🎨','☕','✦','🌙'];
 // Configure os selos oficiais aqui. Use IDs de usuários obtidos no Supabase Auth.
 const APP_OWNER_USER_ID = '222eba63-627c-4cc9-bf49-09da8cb7550d'; // conta dona do LUMI
+const INFINITY_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // Contas com LUMI INFINITY
 const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de contas verificadas, aprovadas por você
-const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs de testers autorizados
-const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d']; // Adicione aqui UUIDs da equipe do LUMI
-function accountBadges(userId) {
+const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Testers autorizados
+const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Equipe do LUMI
+const CREATOR_USER_IDS = []; // IDs aprovados de criadores de conteúdo que usam o LUMI
+function accountBadges(userId, isInfinity = false) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
+  const infinity = owner || INFINITY_USER_IDS.includes(userId) || Boolean(isInfinity) || (userId === state.user?.id && Boolean(state.profile?.vip_purchased));
   const verified = owner || VERIFIED_USER_IDS.includes(userId);
   const tester = TESTER_USER_IDS.includes(userId);
   const staff = owner || STAFF_USER_IDS.includes(userId);
-  return (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
+  const creator = CREATOR_USER_IDS.includes(userId);
+  return (infinity ? '<span class="lumi-badge infinity-badge" title="LUMI INFINITY" aria-label="LUMI INFINITY">∞</span>' : '')
+    + (verified ? '<span class="lumi-badge verified-badge" title="Conta verificada" aria-label="Conta verificada">✓</span>' : '')
     + (owner ? '<span class="lumi-badge owner-badge" title="Dono do LUMI" aria-label="Dono do LUMI">✦</span>' : '')
     + (tester ? '<span class="lumi-badge tester-badge" title="Tester do LUMI" aria-label="Tester do LUMI">T</span>' : '')
-    + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '');
+    + (staff ? '<span class="lumi-badge staff-badge" title="Equipe LUMI" aria-label="Equipe LUMI">S</span>' : '')
+    + (creator ? '<span class="lumi-badge creator-badge" title="Criador de conteúdo LUMI" aria-label="Criador de conteúdo LUMI">▶</span>' : '');
 }
 function avatarMarkup(name, url, className='avatar') {
   return url ? `<img class="${className} avatar-image" src="${escapeHTML(url)}" alt="Foto de ${escapeHTML(name)}">` : `<span class="${className}">${escapeHTML(initials(name))}</span>`;
@@ -78,6 +84,13 @@ function toast(message, type = '') {
 }
 function initials(name = '?') { return name.trim().split(/\s+/).slice(0,2).map(part => part[0] || '').join('').toUpperCase() || '?'; }
 function escapeHTML(value = '') { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function isKlipyMediaUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' && /(^|\.)klipy\.com$/i.test(url.hostname);
+  } catch { return false; }
+}
+
 function shortDate(value) { const date = new Date(value); return date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}); }
 function openModal(id) { const dialog = document.getElementById(id); if (dialog && !dialog.open) dialog.showModal(); }
 function closeModal(id) { const dialog = document.getElementById(id); if (dialog?.open) dialog.close(); }
@@ -104,9 +117,9 @@ function updateIdentity() {
     if (photo) { el.innerHTML = `<img class="avatar-image" src="${escapeHTML(photo)}" alt="Foto de perfil">`; }
     else el.textContent = initials(name);
   });
-  $('#accountName').innerHTML = `${escapeHTML(name)} ${accountBadges(state.user?.id)}`;
+  $('#accountName').innerHTML = `${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}`;
   $('#accountStatus').textContent = state.user ? `@${state.profile?.username || 'lumi-user'}` : 'Entre para continuar';
-  $('#profileName').innerHTML = `${state.user ? escapeHTML(name) : 'Boas-vindas!'} ${accountBadges(state.user?.id)}`;
+  $('#profileName').innerHTML = `${state.user ? escapeHTML(name) : 'Boas-vindas!'} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}`;
   $('#profileHandle').textContent = state.user ? `@${state.profile?.username || 'lumi-user'}` : 'Entre para personalizar seu perfil';
   $('#accountButton').title = state.user ? 'Abrir opções da conta' : 'Entrar ou criar conta';
 }
@@ -122,10 +135,35 @@ function setPage(page) {
   if (page === 'home') { renderHome(); return; }
   if (page === 'space' && state.activeSpace) { renderWorkspace(); return; }
   if (page === 'discover') { renderDiscover(); return; }
-  if (page === 'inbox') { renderInbox(); return; }
+  if (page === 'inbox') { return renderInbox(); }
   if (page === 'profile') { renderProfile(); return; }
   if (page === 'settings') { renderSettings(); return; }
   renderHome();
+}
+
+function canManageChannels(space = state.activeSpace) {
+  return !!state.user && !!space && (space.owner_id === state.user.id || ['owner', 'admin'].includes(space.role));
+}
+
+function channelManageActionsHTML(channel) {
+  if (!channel || !canManageChannels()) return '';
+  return `<div class="channel-header-actions"><button type="button" class="secondary-button" data-action="edit-channel" data-channel-edit="${channel.id}" title="Editar canal"><span class="material-symbols-rounded">edit</span> Editar canal</button><button type="button" class="channel-delete-button" data-action="delete-channel" data-channel-delete="${channel.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></div>`;
+}
+
+function renderGroupedChannelEntries(kind, space) {
+  const channels = state.channels.filter(channel => kind === 'voice' ? channel.kind === 'voice' : channel.kind !== 'voice');
+  if (!channels.length) return '<div class="channel-empty-hint">Nenhum canal de ' + (kind === 'voice' ? 'voz' : 'texto') + '</div>';
+  const groups = new Map();
+  channels.forEach(channel => {
+    const category = String(channel.category || 'Geral').trim() || 'Geral';
+    if (!groups.has(category)) groups.set(category, []);
+    groups.get(category).push(channel);
+  });
+  return [...groups.entries()].map(([category, items]) => `
+    <section class="channel-category-group">
+      <div class="channel-category-heading" title="${escapeHTML(category)}">${escapeHTML(category)}</div>
+      ${items.map(c => `<div class="channel-entry-row"><button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">${kind === 'voice' ? 'volume_up' : 'tag'}</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>${canManageChannels(space) ? `<span class="channel-entry-actions"><button type="button" data-action="move-channel-up" data-move-channel="${c.id}" title="Mover canal para cima" aria-label="Mover canal para cima"><span class="material-symbols-rounded">keyboard_arrow_up</span></button><button type="button" data-action="move-channel-down" data-move-channel="${c.id}" title="Mover canal para baixo" aria-label="Mover canal para baixo"><span class="material-symbols-rounded">keyboard_arrow_down</span></button><button type="button" data-action="edit-channel" data-channel-edit="${c.id}" title="Editar canal" aria-label="Editar canal"><span class="material-symbols-rounded">edit</span></button><button type="button" data-action="delete-channel" data-channel-delete="${c.id}" title="Excluir canal" aria-label="Excluir canal"><span class="material-symbols-rounded">delete</span></button></span>` : ''}</div>`).join('')}
+    </section>`).join('');
 }
 
 function renderSpaceNav() {
@@ -152,10 +190,10 @@ function renderSpaceNav() {
         <button class="icon-button active-space-menu" data-action="invite" title="Opções do espaço" aria-label="Opções do espaço"><span class="material-symbols-rounded">expand_more</span></button>
       </div>
       <details class="space-manage-details"><summary><span class="material-symbols-rounded">tune</span> Gerenciar espaço <span class="material-symbols-rounded manage-chevron">expand_more</span></summary><div class="active-space-actions"><button type="button" data-action="invite"><span>↗</span> Convidar</button><button type="button" data-action="manage-members"><span>♙</span> Membros</button>${space.owner_id === state.user?.id ? '<button type="button" data-action="edit-space"><span class="material-symbols-rounded">edit</span> Editar espaço</button><button type="button" data-action="change-space-photo"><span class="material-symbols-rounded">image</span> Foto</button><button type="button" class="space-owner-delete" data-action="delete-space"><span class="material-symbols-rounded">delete</span> Apagar espaço</button>' : ''}</div></details>
-      <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
-      <div class="channel-list sidebar-channel-list text-channel-list">${state.channels.filter(c => c.kind !== 'voice').map(c => `<button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">tag</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>`).join('') || '<div class="channel-empty-hint">Nenhum canal de texto</div>'}</div>
-      <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${['owner','admin'].includes(space.role) ? '<button data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
-      <div class="channel-list sidebar-channel-list voice-channel-list">${state.channels.filter(c => c.kind === 'voice').map(c => `<button class="channel-entry ${c.id === state.activeChannel?.id ? 'active' : ''}" data-channel-id="${c.id}"><span class="material-symbols-rounded channel-type-icon">volume_up</span><span class="channel-entry-name">${escapeHTML(c.name)}</span></button>`).join('') || '<div class="channel-empty-hint">Nenhum canal de voz</div>'}</div>
+      <div class="channel-sidebar-title channel-group-heading"><span><span class="material-symbols-rounded">tag</span> CANAIS DE TEXTO</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="text" title="Criar canal de texto" aria-label="Criar canal de texto">＋</button>' : ''}</div>
+      <div class="channel-list sidebar-channel-list text-channel-list">${renderGroupedChannelEntries('text', space)}</div>
+      <div class="channel-sidebar-title channel-group-heading voice-channel-heading"><span><span class="material-symbols-rounded">headphones</span> CANAIS DE VOZ</span>${canManageChannels(space) ? '<button type="button" data-action="create-channel" data-channel-kind="voice" title="Criar canal de voz" aria-label="Criar canal de voz">＋</button>' : ''}</div>
+      <div class="channel-list sidebar-channel-list voice-channel-list">${renderGroupedChannelEntries('voice', space)}</div>
 `;
   }
   const search = $('#spaceSearch').value.trim().toLowerCase();
@@ -429,7 +467,7 @@ async function loadWorkspace(spaceId, preferredChannel = null) {
 
 async function loadMessages() {
   if (!state.activeChannel) { state.messages = []; renderWorkspace(); return; }
-  const {data,error} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').eq('channel_id',state.activeChannel.id).order('created_at',{ascending:true}).limit(100);
+  const {data,error} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').eq('channel_id',state.activeChannel.id).order('created_at',{ascending:true}).limit(100);
   if (error) { console.error(error); toast('Não consegui carregar as mensagens deste canal.', 'error'); state.messages = []; }
   else state.messages = await signSpaceMedia(data || []);
   if(state.messages.length){const {data:rx}=await supabase.from('message_reactions').select('message_id,user_id,emoji').in('message_id',state.messages.map(m=>m.id));state.spaceReactions=rx||[];}else state.spaceReactions=[];
@@ -443,7 +481,7 @@ function subscribeMessages() {
   state.realtime = supabase.channel(`lumi-channel-${state.activeChannel.id}`)
     .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:`channel_id=eq.${state.activeChannel.id}`},async payload=>{
       if (payload.eventType === 'DELETE') { state.messages = state.messages.filter(m=>m.id!==payload.old.id); renderMessages(); return; }
-      const {data} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').eq('id',payload.new.id).maybeSingle();
+      const {data} = await supabase.from('messages').select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').eq('id',payload.new.id).maybeSingle();
       if (data) { const signed=(data.attachment_path?await signSpaceMedia([data]):[data])[0]; const i=state.messages.findIndex(m=>m.id===signed.id); if(i>=0) state.messages[i]=signed; else state.messages.push(signed); state.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)); state.messageCount = state.messages.length; const count=$('#messageCount'); if(count)count.textContent=state.messageCount; if (state.page === 'space') renderMessages(); }
     }).on('postgres_changes',{event:'*',schema:'public',table:'message_reactions'},async payload=>{const ids=state.messages.map(m=>m.id);if(!ids.length)return;const {data}=await supabase.from('message_reactions').select('message_id,user_id,emoji').in('message_id',ids);state.spaceReactions=data||[];if(state.page==='space')renderMessages();}).subscribe();
 }
@@ -453,7 +491,7 @@ function subscribeMessages() {
 // Sala de voz em grupo: conexões WebRTC independentes por participante.
 state.groupVoice = state.groupVoice || {
   channel: null, channelId: null, localStream: null,
-  peers: new Map(), muted: false, joining: false
+  peers: new Map(), muted: false, joining: false, localSpeaking: false, localMeterTimer: null, localMeterContext: null
 };
 
 async function leaveGroupVoice() {
@@ -464,7 +502,9 @@ async function leaveGroupVoice() {
   }
   for (const peer of v.peers.values()) {
     try { peer.pc.close(); } catch {}
+    clearInterval(peer.meterTimer); peer.meterContext?.close().catch(()=>{});
   }
+  clearInterval(v.localMeterTimer); v.localMeterTimer=null; v.localMeterContext?.close().catch(()=>{}); v.localMeterContext=null; v.localSpeaking=false;
   v.peers.clear();
   if (v.localStream) v.localStream.getTracks().forEach(t => t.stop());
   v.channel = null;
@@ -474,6 +514,15 @@ async function leaveGroupVoice() {
   v.muted = false;
   const area = document.querySelector('#voiceAudios');
   if (area) area.innerHTML = '';
+}
+
+function monitorGroupVoice(item, userId) {
+  if (!item?.stream || item.meterTimer) return;
+  try { const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx)return; item.meterContext=new Ctx(); const analyser=item.meterContext.createAnalyser(); analyser.fftSize=512; item.meterContext.createMediaStreamSource(item.stream).connect(analyser); const samples=new Uint8Array(analyser.fftSize); item.meterTimer=setInterval(()=>{if(!state.groupVoice?.peers.has(userId)){clearInterval(item.meterTimer);return;}analyser.getByteTimeDomainData(samples);let sum=0;for(const n of samples){const x=(n-128)/128;sum+=x*x;}const next=Math.sqrt(sum/samples.length)>0.055;if(next!==item.speaking){item.speaking=next;renderGroupVoiceMembers();}},130); } catch(error){console.debug('Medidor de voz indisponível',error);}
+}
+function monitorLocalGroupVoice() {
+  const v=state.groupVoice;if(!v.localStream||v.localMeterTimer)return;
+  try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;v.localMeterContext=new Ctx();const analyser=v.localMeterContext.createAnalyser();analyser.fftSize=512;v.localMeterContext.createMediaStreamSource(v.localStream).connect(analyser);const samples=new Uint8Array(analyser.fftSize);v.localMeterTimer=setInterval(()=>{analyser.getByteTimeDomainData(samples);let sum=0;for(const n of samples){const x=(n-128)/128;sum+=x*x;}const next=Math.sqrt(sum/samples.length)>0.055&&!v.muted;if(next!==v.localSpeaking){v.localSpeaking=next;renderGroupVoiceMembers();}},130);}catch(error){console.debug('Medidor local indisponível',error);}
 }
 
 function renderGroupVoiceMembers() {
@@ -509,15 +558,15 @@ function renderGroupVoiceMembers() {
   list.innerHTML = `<div class="voice-member self">
     ${voiceAvatar(myAvatar, myName)}
     <span>${escapeHTML(myName)}</span>
-    <small>Você${v.muted ? ' · Microfone desligado' : ''}</small>
+    <small class="voice-member-status"><span class="voice-mic-indicator ${v.localSpeaking && !v.muted ? 'is-speaking' : ''}"><span class="material-symbols-rounded">${v.muted ? 'mic_off' : 'mic'}</span></span>${v.muted ? 'Microfone desligado' : (v.localSpeaking ? 'Você está falando' : 'Microfone ligado')}</small>
   </div>` + members.map(([id, item]) => {
     const name = item.name || 'Participante';
     const avatar = item.avatar_url || item.avatar || item.photo_url || item.picture || '';
 
-    return `<div class="voice-member">
+    return `<div class="voice-member ${item.speaking ? 'is-speaking' : ''}">
       ${voiceAvatar(avatar, name)}
       <span>${escapeHTML(name)}</span>
-      <small>${item.pc.connectionState === 'connected' ? 'Conectado' : 'Conectando…'}</small>
+      <small class="voice-member-status"><span class="voice-mic-indicator ${item.speaking ? 'is-speaking' : ''}"><span class="material-symbols-rounded">${item.speaking ? 'graphic_eq' : 'mic'}</span></span>${item.speaking ? 'Está falando' : (item.pc.connectionState === 'connected' ? 'Conectado' : 'Conectando…')}</small>
     </div>`;
   }).join('');
 
@@ -559,7 +608,7 @@ async function createGroupVoicePeer(userId, name, initiator, avatar_url = '') {
     pc,
     name: name && name !== 'Participante' ? name : '',
     avatar_url: avatar_url || '',
-    stream: new MediaStream()
+    stream: new MediaStream(), speaking: false, meterTimer: null, meterContext: null
   };
   v.peers.set(userId, item);
 
@@ -589,6 +638,7 @@ async function createGroupVoicePeer(userId, name, initiator, avatar_url = '') {
     } else if (!item.stream.getTracks().some(t => t.id === event.track.id)) {
       item.stream.addTrack(event.track);
     }
+    monitorGroupVoice(item, userId);
     renderGroupVoiceMembers();
   };
 
@@ -670,7 +720,12 @@ async function joinGroupVoice() {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       video: false
     });
+    const voiceRole = state.activeSpace?.role || 'member';
+    const voiceAllowed = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(voiceRole) || ['owner','admin'].includes(voiceRole) || state.activeSpace?.owner_id === state.user?.id;
+    v.muted = !voiceAllowed;
+    if (!voiceAllowed) v.localStream.getAudioTracks().forEach(track => track.enabled = false);
     v.channelId = channel.id;
+    monitorLocalGroupVoice();
 
     const room = supabase.channel(`lumi-group-voice-${channel.id}`, {
       config: {
@@ -754,6 +809,9 @@ async function joinGroupVoice() {
 function toggleGroupVoiceMute() {
   const v = state.groupVoice;
   if (!v.localStream) return;
+  const role=state.activeSpace?.role||'member';
+  const allowed=(state.activeChannel?.speak_roles||['owner','admin','moderator','developer','member','newcomer']).includes(role)||['owner','admin'].includes(role)||state.activeSpace?.owner_id===state.user?.id;
+  if(v.muted&&!allowed){toast('Seu cargo está em modo ouvinte neste canal.','error');return;}
   v.muted = !v.muted;
   v.localStream.getAudioTracks().forEach(track => track.enabled = !v.muted);
   renderGroupVoiceMembers();
@@ -766,21 +824,23 @@ function renderWorkspace() {
   const space = state.activeSpace; const channel = state.activeChannel;
   if (channel?.kind === 'voice') {
     const joined = state.groupVoice?.channelId === channel.id && !!state.groupVoice?.channel;
+    const voiceCanSpeak = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role) || space.owner_id === state.user?.id;
     $('#crumbParent').textContent = space.name;
     $('#crumbCurrent').textContent = `Voz · ${channel.name}`;
     $('#pageContent').innerHTML = `<section class="workspace-chat-view voice-room-view">
       <header class="channel-chat-head"><div>
         <h2><span class="material-symbols-rounded">headphones</span> ${escapeHTML(channel.name)}</h2>
         <p>${escapeHTML(channel.topic || 'Entre para conversar por voz com as pessoas deste espaço.')}</p>
-      </div><div class="chat-head-actions"><button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button></div></header>
+      </div><div class="chat-head-actions">${channelManageActionsHTML(channel)}<button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button></div></header>
       <div class="voice-room-card">
         <div class="voice-room-symbol"><span class="material-symbols-rounded">graphic_eq</span></div>
         <h3>${joined ? 'Você está na sala' : 'Sala de voz'}</h3>
-        <p>${joined ? 'Seu microfone está conectado à sala.' : 'Entre na sala para conversar em tempo real.'}</p>
+        <p>${joined ? (voiceCanSpeak ? 'Seu microfone está conectado à sala.' : 'Seu cargo está em modo ouvinte nesta sala.') : 'Entre na sala para conversar em tempo real.'}</p>
+        <div class="voice-presence-header"><span class="material-symbols-rounded">graphic_eq</span><div><strong>Quem está falando</strong><small>O indicador acende quando detecta voz no microfone.</small></div><span class="voice-live-pill"><i></i> AO VIVO</span></div>
         <div id="voiceMemberList" class="voice-member-list"></div>
         <div id="voiceAudios" hidden></div>
         <div class="voice-room-controls">
-          ${joined ? `<button class="secondary-button" id="toggleGroupVoiceMute"><span class="material-symbols-rounded">${state.groupVoice.muted ? 'mic_off' : 'mic'}</span> ${state.groupVoice.muted ? 'Ativar microfone' : 'Silenciar'}</button><button class="primary-button" id="leaveGroupVoice"><span class="material-symbols-rounded">call_end</span> Sair da sala</button>` : `<button class="primary-button" id="joinGroupVoice" ${state.groupVoice?.joining ? 'disabled' : ''}><span class="material-symbols-rounded">headphones</span> ${state.groupVoice?.joining ? 'Conectando…' : 'Entrar na sala'}</button>`}
+          ${joined ? `<button class="secondary-button" id="toggleGroupVoiceMute" ${voiceCanSpeak ? '' : 'disabled'}><span class="material-symbols-rounded">${state.groupVoice.muted ? 'mic_off' : 'mic'}</span> ${voiceCanSpeak ? (state.groupVoice.muted ? 'Ativar microfone' : 'Silenciar') : 'Modo ouvinte'}</button><button class="primary-button" id="leaveGroupVoice"><span class="material-symbols-rounded">call_end</span> Sair da sala</button>` : `<button class="primary-button" id="joinGroupVoice" ${state.groupVoice?.joining ? 'disabled' : ''}><span class="material-symbols-rounded">headphones</span> ${state.groupVoice?.joining ? 'Conectando…' : 'Entrar na sala'}</button>`}
         </div>
       </div>
     </section>`;
@@ -789,8 +849,9 @@ function renderWorkspace() {
     return;
   }
   if (state.groupVoice?.channel && state.groupVoice.channelId !== channel?.id) leaveGroupVoice();
+  const canSpeak = !channel || (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(space.role || 'member') || ['owner','admin'].includes(space.role) || space.owner_id === state.user?.id;
   $('#crumbParent').textContent = space.name; $('#crumbCurrent').textContent = channel ? `# ${channel.name}` : 'Espaço';
-  $('#pageContent').innerHTML = `<section class="workspace-chat-view"><header class="channel-chat-head"><div><h2>${channel ? `<span class="chat-hash material-symbols-rounded">tag</span> ${escapeHTML(channel.name)}` : 'Nenhum canal ainda'}</h2><p>${escapeHTML(channel?.topic || (channel ? 'Esse é o começo de uma boa conversa.' : 'Crie um canal para começar a conversar.'))}</p></div><div class="chat-head-actions"><button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button><button class="icon-button" data-action="invite" title="Convidar pessoas" aria-label="Convidar pessoas"><span class="material-symbols-rounded">person_add</span></button></div></header><div class="chat-message-list" id="chatMessageList">${messagesHTML()}</div>${channel ? `<form class="message-composer" id="messageForm"><input id="spaceFileInput" type="file" accept="image/*,video/*" hidden><button class="dm-attach-button" type="button" id="spaceAttachButton" title="Enviar foto ou vídeo"><span class="material-symbols-rounded">add_photo_alternate</span></button><textarea id="messageInput" maxlength="4000" rows="1" placeholder="Mensagem em #${escapeHTML(channel.name)}" aria-label="Escreva uma mensagem"></textarea><button class="send-button" type="submit" title="Enviar mensagem"><span class="material-symbols-rounded">send</span></button></form>${state.spaceReplyTo?`<div class="space-reply-banner">Respondendo a uma mensagem <button type="button" data-space-reply-cancel aria-label="Cancelar resposta">×</button></div>`:''}` : ''}</section>`;
+  $('#pageContent').innerHTML = `<section class="workspace-chat-view"><header class="channel-chat-head"><div><h2>${channel ? `<span class="chat-hash material-symbols-rounded">tag</span> ${escapeHTML(channel.name)}` : 'Nenhum canal ainda'}</h2><p>${escapeHTML(channel?.topic || (channel ? 'Esse é o começo de uma boa conversa.' : 'Crie um canal para começar a conversar.'))}</p></div><div class="chat-head-actions">${channelManageActionsHTML(channel)}<button class="icon-button" data-action="manage-members" title="Ver membros" aria-label="Ver membros"><span class="material-symbols-rounded">group</span></button><button class="icon-button" data-action="invite" title="Convidar pessoas" aria-label="Convidar pessoas"><span class="material-symbols-rounded">person_add</span></button></div></header><div class="chat-message-list" id="chatMessageList">${messagesHTML()}</div>${channel ? `<form class="message-composer" id="messageForm"><input id="spaceFileInput" type="file" accept="image/*,video/*" hidden><button class="dm-attach-button" type="button" id="spaceAttachButton" title="Enviar foto ou vídeo"><span class="material-symbols-rounded">add_photo_alternate</span></button><textarea id="messageInput" maxlength="4000" rows="1" ${canSpeak ? '' : 'disabled'} placeholder="${canSpeak ? `Mensagem em #${escapeHTML(channel.name)}` : 'Seu cargo não pode falar neste canal'}" aria-label="Escreva uma mensagem"></textarea><button class="send-button" type="submit" title="Enviar mensagem" ${canSpeak ? '' : 'disabled'}><span class="material-symbols-rounded">send</span></button></form>${state.spaceReplyTo?`<div class="space-reply-banner">Respondendo a uma mensagem <button type="button" data-space-reply-cancel aria-label="Cancelar resposta">×</button></div>`:''}` : ''}</section>`;
   renderSpaceNav();
 }
 function messagesHTML() {
@@ -804,7 +865,7 @@ function messagesHTML() {
     const isVideo=message.attachment_type?.startsWith('video/');
     const media=fileUrl?(isImage?`<a class="space-media-link" href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(fileUrl)}" loading="lazy" alt="${escapeHTML(message.attachment_name||'Foto compartilhada')}"></a>`:isVideo?`<video class="space-video" controls preload="metadata" src="${escapeHTML(fileUrl)}"></video>`:`<a href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(message.attachment_name||'Abrir arquivo')}</a>`):message.attachment_path?`<div class="space-media-unavailable"><span class="material-symbols-rounded">attach_file</span><span><strong>${escapeHTML(message.attachment_name||'Mídia anexada')}</strong><small>Não foi possível carregar a mídia. Atualize o canal para tentar novamente.</small></span></div>`:'';
     const reply=message.reply_to?state.messages.find(m=>m.id===message.reply_to):null; const reactions=state.spaceReactions.filter(r=>r.message_id===message.id); const reactionHTML=reactions.length?`<div class="space-reactions">${[...new Set(reactions.map(r=>r.emoji))].map(emoji=>`<button type="button" data-space-react="${message.id}" data-emoji="${escapeHTML(emoji)}" class="space-reaction">${escapeHTML(emoji)} <small>${reactions.filter(r=>r.emoji===emoji).length}</small></button>`).join('')}</div>`:'';
-    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?`<div class="message-text">${escapeHTML(message.content)}</div>`:''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
+    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id,message.profiles?.vip_purchased)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?.startsWith('LUMI_GIF:') && isKlipyMediaUrl(message.content.slice(9)) ? `<div class="message-text space-gif-message"><img src="${escapeHTML(message.content.slice(9))}" alt="GIF" loading="lazy" style="max-width:min(280px,100%);max-height:240px;border-radius:12px;object-fit:contain"></div>` : message.content ? `<div class="message-text">${escapeHTML(message.content)}</div>` : ''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
   }).join('');
 }
 async function signSpaceMedia(messages) {
@@ -817,6 +878,9 @@ async function refreshSpaceMedia(){state.messages=await signSpaceMedia(state.mes
 function renderMessages() { const list = $('#chatMessageList'); if (!list) return; const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 120; list.innerHTML = messagesHTML(); if (nearBottom || state.messages.length <= 1) list.scrollTop = list.scrollHeight; }
 async function sendMessage(event) {
   event.preventDefault(); if (!requireAuth() || !state.activeChannel) return;
+  const role = state.activeSpace?.role || 'member';
+  const allowedRoles = state.activeChannel?.speak_roles || ['owner','admin','moderator','developer','member','newcomer'];
+  if (!allowedRoles.includes(role) && !['owner','admin'].includes(role) && state.activeSpace?.owner_id !== state.user?.id) { toast('Seu cargo pode ler este canal, mas não pode enviar mensagens.', 'error'); return; }
   const input = $('#messageInput'); const fileInput=$('#spaceFileInput'); const file=fileInput?.files?.[0]||null; const content = input.value.trim(); if (!content&&!file) return;
   if(file && file.size>30*1024*1024){toast('Cada arquivo deve ter no máximo 30 MB.','error');return;}
   if(file && !/^(image\/|video\/)/.test(file.type)){toast('Nos Espaços, envie fotos ou vídeos.','error');return;}
@@ -824,7 +888,7 @@ async function sendMessage(event) {
   let attachment_path=null;
   if(file){const safeName=(file.name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9._-]/g,'_').replace(/_+/g,'_').slice(-100)||'midia');attachment_path=`${state.activeChannel.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`;const {error:uploadError}=await supabase.storage.from('space-attachments').upload(attachment_path,file,{contentType:file.type,upsert:false});if(uploadError){toast(`Falha no envio da mídia: ${uploadError.message}. Confira as permissões do Supabase.`, 'error');input.disabled=false;if(send)send.disabled=false;return;}}
   const payload={channel_id:state.activeChannel.id,author_id:state.user.id,content:content||'',attachment_path,attachment_name:file?.name||null,attachment_type:file?.type||null,attachment_size:file?.size||null,reply_to:state.spaceReplyTo?.id||null};
-  const {data,error} = await supabase.from('messages').insert(payload).select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url)').single();
+  const {data,error} = await supabase.from('messages').insert(payload).select('id,content,created_at,author_id,attachment_path,attachment_name,attachment_type,attachment_size,edited_at,reply_to,profiles(display_name,username,avatar_url,vip_purchased)').single();
   input.disabled = false;if(send)send.disabled=false;
   if (error) { if (attachment_path) { const cleanup = await supabase.storage.from('space-attachments').remove([attachment_path]); if (cleanup.error) console.warn('Não consegui remover o anexo enviado sem mensagem:', cleanup.error); } console.error(error); toast(`Não foi possível enviar: ${error.message}`, 'error'); return; }
   if(data.attachment_path){const signed=await signSpaceMedia([data]);Object.assign(data,signed[0]);}
@@ -836,14 +900,82 @@ async function deleteSpaceMessage(id){const msg=state.messages.find(m=>m.id===id
 function replyToSpaceMessage(id){const msg=state.messages.find(m=>m.id===id);if(!msg)return;state.spaceReplyTo=msg;renderWorkspace();$('#messageInput')?.focus();}
 async function reactToSpaceMessage(id,chosen=null){const msg=state.messages.find(m=>m.id===id);if(!msg)return;const reaction=chosen||prompt('Digite uma reação (por exemplo: 💛 🎉 😂 👍):','💛');if(!reaction)return;const existing=state.spaceReactions.find(r=>r.message_id===id&&r.user_id===state.user.id&&r.emoji===reaction);if(existing){const {error}=await supabase.from('message_reactions').delete().eq('message_id',id).eq('user_id',state.user.id).eq('emoji',reaction);if(error){toast(`Não foi possível remover reação: ${error.message}`,'error');return;}state.spaceReactions=state.spaceReactions.filter(r=>r!==existing);}else{const {data,error}=await supabase.from('message_reactions').insert({message_id:id,user_id:state.user.id,emoji:reaction}).select().single();if(error){toast(`Não foi possível reagir: ${error.message}`,'error');return;}state.spaceReactions.push(data);}renderMessages();}
 
+async function moveChannel(id, direction) {
+  if (!canManageChannels()) { toast('Somente o dono ou um administrador pode reorganizar canais.', 'error'); return; }
+  const ordered = [...state.channels].sort((a,b)=>(a.position||0)-(b.position||0));
+  const index = ordered.findIndex(channel => channel.id === id), targetIndex = index + direction;
+  if (index < 0 || targetIndex < 0 || targetIndex >= ordered.length) return;
+  const [item] = ordered.splice(index, 1); ordered.splice(targetIndex, 0, item);
+  for (let i=0; i<ordered.length; i++) {
+    const {error} = await supabase.from('channels').update({position:i}).eq('id', ordered[i].id).eq('space_id', state.activeSpace.id);
+    if (error) { toast('Não consegui reorganizar os canais. Confira as permissões do Supabase.', 'error'); await loadWorkspace(state.activeSpace.id, state.activeChannel?.id); return; }
+  }
+  state.channels = ordered.map((channel, position)=>({...channel, position}));
+  renderWorkspace(); toast('Ordem dos canais atualizada!', 'success');
+}
+
+function resetChannelModal() {
+  state.editingChannelId = null;
+  $('#channelForm')?.reset();
+  const title = $('#channelModal h2'); if (title) title.textContent = 'Novo canal';
+  const submit = $('#channelForm button[type="submit"]'); if (submit) submit.innerHTML = 'Criar canal <span>→</span>';
+  const kindSelect = $('#channelKind'); if (kindSelect) { kindSelect.disabled = false; kindSelect.value = 'text'; window.lumiSyncChannelSelect?.('text'); }
+}
+function openEditChannel(id) {
+  const channel = state.channels.find(item => item.id === id);
+  if (!channel || !canManageChannels()) { toast('Somente o dono ou um administrador pode editar canais.', 'error'); return; }
+  state.editingChannelId = channel.id;
+  $('#channelName').value = channel.name || '';
+  $('#channelTopic').value = channel.topic || '';
+  if ($('#channelCategory')) $('#channelCategory').value = channel.category || 'Geral';
+  if ($('#channelSpeakRoles')) [...$('#channelSpeakRoles').options].forEach(option => option.selected = (channel.speak_roles || ['owner','admin','moderator','developer','member','newcomer']).includes(option.value));
+  const kindSelect = $('#channelKind');
+  if (kindSelect) { kindSelect.value = channel.kind === 'voice' ? 'voice' : 'text'; kindSelect.disabled = true; window.lumiSyncChannelSelect?.(kindSelect.value); }
+  const title = $('#channelModal h2'); if (title) title.textContent = 'Editar canal';
+  const submit = $('#channelForm button[type="submit"]'); if (submit) submit.innerHTML = 'Salvar alterações <span>→</span>';
+  openModal('channelModal');
+}
+async function deleteChannel(id) {
+  const channel = state.channels.find(item => item.id === id);
+  if (!channel || !canManageChannels()) { toast('Somente o dono ou um administrador pode excluir canais.', 'error'); return; }
+  const kindLabel = channel.kind === 'voice' ? 'canal de voz' : 'canal de texto';
+  if (!confirm(`Excluir o ${kindLabel} “${channel.name}”? As mensagens e os arquivos associados podem ser removidos e esta ação não pode ser desfeita.`)) return;
+  const previousChannelId = state.activeChannel?.id;
+  const {data: attachments} = await supabase.from('messages').select('attachment_path').eq('channel_id', channel.id).not('attachment_path', 'is', null);
+  const {error} = await supabase.from('channels').delete().eq('id', channel.id).eq('space_id', state.activeSpace.id);
+  if (error) { console.error(error); toast(`Não foi possível excluir o canal: ${error.message}`, 'error'); return; }
+  const paths = (attachments || []).map(item => item.attachment_path).filter(Boolean);
+  if (paths.length) {
+    const {error: storageError} = await supabase.storage.from('space-attachments').remove(paths);
+    if (storageError) console.warn('LUMI: não foi possível limpar todos os anexos do canal excluído.', storageError);
+  }
+  const nextChannel = state.channels.find(item => item.id !== channel.id);
+  if (state.groupVoice?.channelId === channel.id) await leaveGroupVoice();
+  await loadWorkspace(state.activeSpace.id, previousChannelId === channel.id ? nextChannel?.id || null : previousChannelId);
+  toast('Canal excluído.', 'success');
+}
 async function createChannel(event) {
   event.preventDefault(); if (!requireAuth() || !state.activeSpace) return;
-  const name = $('#channelName').value.trim().toLowerCase().replace(/\s+/g,'-'); const topic = $('#channelTopic').value.trim();
+  if (!canManageChannels()) { toast('Somente o dono ou um administrador pode gerenciar canais.', 'error'); return; }
+  const name = $('#channelName').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const topic = $('#channelTopic').value.trim();
+  const category = ($('#channelCategory')?.value || 'Geral').trim().slice(0,40) || 'Geral';
+  const speak_roles = [...($('#channelSpeakRoles')?.selectedOptions || [])].map(option => option.value);
   const kind = $('#channelKind')?.value === 'voice' ? 'voice' : 'text';
   if (!name) return;
-  const {data,error} = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,kind,created_by:state.user.id,position:state.channels.length}).select().single();
-  if (error) { console.error(error); toast(error.code === '42501' ? 'Somente administradores podem criar canais neste espaço.' : `Não foi possível criar o canal: ${error.message}`, 'error'); return; }
-  closeModal('channelModal'); $('#channelForm').reset(); await loadWorkspace(state.activeSpace.id,data.id); toast('Canal criado!', 'success');
+  let data, error;
+  if (state.editingChannelId) {
+    const result = await supabase.from('channels').update({name,topic,category,speak_roles}).eq('id',state.editingChannelId).eq('space_id',state.activeSpace.id).select().single();
+    data = result.data; error = result.error;
+  } else {
+    const result = await supabase.from('channels').insert({space_id:state.activeSpace.id,name,topic,category,speak_roles,kind,created_by:state.user.id,position:state.channels.length}).select().single();
+    data = result.data; error = result.error;
+  }
+  if (error) { console.error(error); toast(error.code === '42501' ? 'Somente administradores podem gerenciar canais neste espaço.' : `Não foi possível salvar o canal: ${error.message}`, 'error'); return; }
+  const editing = !!state.editingChannelId;
+  closeModal('channelModal'); resetChannelModal();
+  await loadWorkspace(state.activeSpace.id,data.id);
+  toast(editing ? 'Canal atualizado!' : 'Canal criado!', 'success');
 }
 
 async function renderDiscover() {
@@ -877,8 +1009,8 @@ async function manageMembers() {
   if(error){toast(`Não foi possível carregar membros: ${error.message}`,'error');return;}
   let dialog=$('#membersModal');
   if(!dialog){dialog=document.createElement('dialog');dialog.id='membersModal';dialog.className='modal';document.body.append(dialog);}
-  const canManage=['owner','admin'].includes(state.activeSpace.role);
-  dialog.innerHTML=`<div class="modal-card"><button class="modal-close" type="button" data-close="membersModal" aria-label="Fechar">×</button><div class="eyebrow">SUA COMUNIDADE</div><h2>Membros do espaço</h2><p class="modal-subtitle">Donos e administradores podem organizar os papéis dos membros.</p><div class="member-manager-list">${(data||[]).map(m=>{const name=m.profiles?.display_name||m.profiles?.username||'Pessoa LUMI';const isSelf=m.user_id===state.user.id;const manageable=canManage&&!isSelf&&m.role!=='owner'&&(state.activeSpace.role==='owner'||m.role==='member');return `<div class="member-manager-row"><div><strong>${escapeHTML(name)}${isSelf?' (você)':''}</strong><small>${escapeHTML(m.profiles?.username?'@'+m.profiles.username:m.role)}</small></div><span class="member-role">${m.role==='owner'?'Dono':m.role==='admin'?'Administrador':'Membro'}</span>${manageable?`<select class="form-input member-role-select" data-member-role="${m.user_id}"><option value="member" ${m.role==='member'?'selected':''}>Membro</option><option value="admin" ${m.role==='admin'?'selected':''}>Administrador</option></select><button class="secondary-button" data-save-role="${m.user_id}">Salvar</button>`:''}</div>`}).join('')}</div></div>`;
+  const canManage=state.activeSpace.owner_id===state.user.id;
+  dialog.innerHTML=`<div class="modal-card"><button class="modal-close" type="button" data-close="membersModal" aria-label="Fechar">×</button><div class="eyebrow">SUA COMUNIDADE</div><h2>Membros do espaço</h2><p class="modal-subtitle">O fundador pode atribuir cargos. As permissões específicas de cada cargo ainda serão configuradas separadamente.</p><div class="member-manager-list">${(data||[]).map(m=>{const name=m.profiles?.display_name||m.profiles?.username||'Pessoa LUMI';const isSelf=m.user_id===state.user.id;const manageable=canManage&&!isSelf&&m.role!=='owner';const roleNames={owner:'Fundador',admin:'Administrador',moderator:'Moderador',developer:'Desenvolvedor',member:'Membro',newcomer:'Novato'};return `<div class="member-manager-row"><div><strong>${escapeHTML(name)}${isSelf?' (você)':''}</strong><small>${escapeHTML(m.profiles?.username?'@'+m.profiles.username:m.role)}</small></div><span class="member-role">${roleNames[m.role]||'Membro'}</span>${manageable?`<select class="form-input member-role-select" data-member-role="${m.user_id}"><option value="member" ${m.role==='member'?'selected':''}>Membro</option><option value="newcomer" ${m.role==='newcomer'?'selected':''}>Novato</option><option value="moderator" ${m.role==='moderator'?'selected':''}>Moderador</option><option value="developer" ${m.role==='developer'?'selected':''}>Desenvolvedor</option><option value="admin" ${m.role==='admin'?'selected':''}>Administrador</option></select><button class="secondary-button" data-save-role="${m.user_id}">Salvar cargo</button>`:''}</div>`}).join('')}</div></div>`;
   if(!dialog.open)dialog.showModal();
 }
 
@@ -918,7 +1050,7 @@ async function renderInbox() {
 
 async function loadConversations() {
   if (!state.user) return;
-  const { data, error } = await supabase.from('conversation_members').select('conversation_id, conversations(id,created_at,conversation_members(user_id,profiles(id,username,display_name,avatar_url)))').eq('user_id', state.user.id).order('joined_at', {ascending:false});
+  const { data, error } = await supabase.from('conversation_members').select('conversation_id, conversations(id,created_at,conversation_members(user_id,profiles(id,username,display_name,avatar_url,vip_purchased)))').eq('user_id', state.user.id).order('joined_at', {ascending:false});
   if (error) { console.error(error); $('#dmConversationList').innerHTML = `<div class="dm-empty-small">Não consegui carregar. Execute o SQL de DMs.</div>`; return; }
   state.conversations = (data || []).map(row => {
     const c = row.conversations; if (!c) return null;
@@ -930,7 +1062,8 @@ async function loadConversations() {
         id: member?.user_id || other?.id,
         display_name: other?.display_name || other?.username || 'Pessoa LUMI',
         username: other?.username || 'lumi-user',
-        avatar_url: other?.avatar_url || ''
+        avatar_url: other?.avatar_url || '',
+        vip_purchased: Boolean(other?.vip_purchased)
       }
     };
   }).filter(Boolean);
@@ -938,7 +1071,7 @@ async function loadConversations() {
 }
 function renderConversationList() {
   const html = state.conversations.length
-    ? state.conversations.map(c => `<button class="dm-conversation-entry ${state.activeConversation?.id===c.id?'active':''}" data-open-dm="${c.id}">${avatarMarkup(c.otherUser.display_name || c.otherUser.username || '?',c.otherUser.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(c.otherUser.display_name || c.otherUser.username || 'Pessoa LUMI')}</strong><small>@${escapeHTML(c.otherUser.username || 'lumi-user')}</small></span><span class="dm-entry-arrow material-symbols-rounded">chevron_right</span></button>`).join('')
+    ? state.conversations.map(c => `<button class="dm-conversation-entry ${state.activeConversation?.id===c.id?'active':''}" data-open-dm="${c.id}">${avatarMarkup(c.otherUser.display_name || c.otherUser.username || '?',c.otherUser.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(c.otherUser.display_name || c.otherUser.username || 'Pessoa LUMI')} ${accountBadges(c.otherUser.id,c.otherUser.vip_purchased)}</strong><small>@${escapeHTML(c.otherUser.username || 'lumi-user')}</small></span><span class="dm-entry-arrow material-symbols-rounded">chevron_right</span></button>`).join('')
     : `<div class="dm-empty-small"><span>✉</span><strong>Nenhuma conversa ainda</strong><p>Busque uma pessoa para mandar a primeira mensagem.</p></div>`;
   ['#dmConversationList', '#dmMobileConversationList'].forEach(selector => {
     const host = $(selector);
@@ -974,12 +1107,25 @@ async function searchDMPeople() {
   }
   state.dmSearchResults = data || [];
   const html = state.dmSearchResults.length
-    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button></div>`).join('')
+    ? state.dmSearchResults.map(u => `<div class="dm-person-result">${avatarMarkup(u.display_name||u.username||'?',u.avatar_url,'dm-avatar')}<span class="dm-conversation-copy"><strong>${escapeHTML(u.display_name||u.username||'Pessoa LUMI')} ${accountBadges(u.id,u.vip_purchased)}</strong><small>@${escapeHTML(u.username||'lumi-user')}</small></span><button class="dm-start-button" data-start-dm="${u.id}" title="Enviar mensagem"><span class="material-symbols-rounded">chat</span></button><button class="dm-start-button" data-call-user="${u.id}" data-call-mode="audio" title="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="dm-start-button" data-call-user="${u.id}" data-call-mode="video" title="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div>`).join('')
     : `<div class="dm-empty-small">Não encontrei ninguém com esse nome.</div>`;
   ['#dmSearchResults', '#dmMobileSearchResults'].forEach(s => {
     const host = $(s);
     if (host) host.innerHTML = html;
   });
+}
+async function startCallToUser(userId, mode='audio') {
+  if (!requireAuth() || !userId || userId === state.user.id) return;
+  if (state.callStatus !== 'idle') { toast('Você já está em uma chamada.', 'error'); return; }
+  const { data, error } = await supabase.rpc('start_direct_conversation', { p_user_id: userId });
+  if (error) { toast('Não consegui preparar a chamada: ' + error.message, 'error'); return; }
+  await loadConversations();
+  const id = typeof data === 'string' ? data : data?.conversation_id || data?.id;
+  const conversation = state.conversations.find(item => item.id === id)
+    || state.conversations.find(item => item.otherUser?.id === userId);
+  if (!conversation) { toast('Não consegui encontrar a conversa dessa pessoa.', 'error'); return; }
+  state.activeConversation = conversation;
+  await startCall(mode);
 }
 async function startDirectMessage(userId) {
   if (!requireAuth() || userId===state.user.id) return;
@@ -994,10 +1140,11 @@ async function openConversation(id, refreshList = true) {
   const conversation = state.conversations.find(c=>c.id===id) || state.activeConversation;
   if (!conversation || !id) return;
   state.activeConversation = conversation;
+  window.lumiActiveConversationId = id;
   $('.app-shell')?.classList.add('mobile-chat-open');
   if (state.dmRealtime) { await supabase.removeChannel(state.dmRealtime); state.dmRealtime = null; }
   const panel = $('#dmChatPanel'); if (!panel) return;
-  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button" type="button" data-share-contact title="Compartilhar cartão de contato" aria-label="Compartilhar cartão de contato"><span class="material-symbols-rounded">contact_page</span></button><button class="icon-button" type="button" data-block-user="${conversation.otherUser.id}" title="Bloquear ou desbloquear pessoa" aria-label="Bloquear ou desbloquear pessoa"><span class="material-symbols-rounded">block</span></button><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
+  panel.innerHTML = `<header class="dm-chat-head"><button type="button" class="dm-mobile-back" data-dm-back aria-label="Voltar para conversas"><span class="material-symbols-rounded">arrow_back</span></button>${avatarMarkup(conversation.otherUser.display_name||conversation.otherUser.username||'?',conversation.otherUser.avatar_url,'dm-avatar')}<div class="dm-head-identity"><strong>${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'Pessoa LUMI')} ${accountBadges(conversation.otherUser.id,conversation.otherUser.vip_purchased)}</strong><small>@${escapeHTML(conversation.otherUser.username||'lumi-user')}</small></div><div class="dm-call-actions"><button class="icon-button" type="button" data-share-contact title="Compartilhar cartão de contato" aria-label="Compartilhar cartão de contato"><span class="material-symbols-rounded">contact_page</span></button><button class="icon-button" type="button" data-block-user="${conversation.otherUser.id}" title="Bloquear ou desbloquear pessoa" aria-label="Bloquear ou desbloquear pessoa"><span class="material-symbols-rounded">block</span></button><button class="icon-button dm-call-button" type="button" data-call="audio" title="Ligar por voz" aria-label="Ligar por voz"><span class="material-symbols-rounded">call</span></button><button class="icon-button dm-call-button" type="button" data-call="video" title="Ligar por vídeo" aria-label="Ligar por vídeo"><span class="material-symbols-rounded">videocam</span></button></div></header><div id="dmCallStage" class="dm-call-stage" hidden><div class="dm-call-participants">
   <div class="dm-call-person-card" id="dmRemotePerson">
     <div class="dm-call-person-avatar" id="dmRemoteAvatar"></div>
     <video id="dmRemoteVideo" autoplay playsinline></video>
@@ -1008,15 +1155,15 @@ async function openConversation(id, refreshList = true) {
     <video id="dmLocalVideo" autoplay playsinline muted></video>
     <div class="dm-call-person-name" id="dmLocalName"></div>
   </div>
-</div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button" data-call-control="screen" title="Compartilhar tela"><span class="material-symbols-rounded">screen_share</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
+</div><div class="dm-call-voice-presence"><span id="dmRemoteSpeaking" class="dm-speaking-chip"><span class="material-symbols-rounded">graphic_eq</span><span data-speaking-label>Ouvindo</span></span><span id="dmLocalSpeaking" class="dm-speaking-chip"><span class="material-symbols-rounded">mic</span><span data-speaking-label>Microfone ligado</span></span></div><div class="dm-call-status" id="dmCallStatus">Preparando chamada…</div><div class="dm-call-controls"><button type="button" class="icon-button" data-call-control="mute" title="Microfone"><span class="material-symbols-rounded">mic</span></button><button type="button" class="icon-button" data-call-control="camera" title="Câmera"><span class="material-symbols-rounded">videocam</span></button><button type="button" class="icon-button" data-call-control="screen" title="Compartilhar tela"><span class="material-symbols-rounded">screen_share</span></button><button type="button" class="icon-button dm-hangup" data-call-control="hangup" title="Encerrar chamada"><span class="material-symbols-rounded">call_end</span></button></div></div><div id="dmMessageList" class="dm-message-list"><div class="dm-search-loading">Carregando mensagens…</div></div><form id="dmMessageForm" class="dm-composer"><input id="dmFileInput" type="file" class="visually-hidden-file"><button class="dm-attach-button" type="button" id="dmAttachButton" title="Anexar arquivo" aria-label="Anexar arquivo"><span class="material-symbols-rounded">attach_file</span></button><button class="dm-attach-button" type="button" id="dmRecordAudio" title="Gravar mensagem de áudio" aria-label="Gravar mensagem de áudio"><span class="material-symbols-rounded">mic</span></button><textarea id="dmMessageInput" maxlength="4000" rows="1" placeholder="Mensagem para ${escapeHTML(conversation.otherUser.display_name||conversation.otherUser.username||'essa pessoa')}…" aria-label="Mensagem direta"></textarea><button class="send-button" type="submit" title="Enviar"><span class="material-symbols-rounded">send</span></button></form><div class="dm-attachment-hint">Arquivos de até 20 MB · imagens, documentos, áudio e outros arquivos</div>`;
   if (refreshList) renderConversationList();
-  const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
+  const {data,error} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').eq('conversation_id',id).order('created_at',{ascending:true}).limit(150);
   if (error) { console.error(error); $('#dmMessageList').innerHTML=`<div class="dm-empty-small">Não consegui carregar as mensagens: ${escapeHTML(error.message)}</div>`; return; }
   state.dmMessages = await signDMFileUrls(data||[]); renderDMMessages();
   state.dmRealtime = supabase.channel(`lumi-dm-${id}`).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:`conversation_id=eq.${id}`},async payload=>{
     if (state.dmMessages.some(m=>m.id===payload.new.id)) return;
-    const {data:msg} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').eq('id',payload.new.id).maybeSingle();
-    if (msg && state.activeConversation?.id===id) { state.dmMessages.push(...await signDMFileUrls([msg])); renderDMMessages(); if(msg.sender_id!==state.user?.id&&document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification(msg.profiles?.display_name||'Nova mensagem no LUMI',{body:msg.content||'Enviou um arquivo'});n.onclick=()=>window.focus();}catch{}} }
+    const {data:msg} = await supabase.from('direct_messages').select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').eq('id',payload.new.id).maybeSingle();
+    if (msg && state.activeConversation?.id===id) { state.dmMessages.push(...await signDMFileUrls([msg])); renderDMMessages(); if(msg.sender_id!==state.user?.id&&document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const registration=await navigator.serviceWorker?.ready; if(registration?.showNotification) await registration.showNotification(msg.profiles?.display_name||'Nova mensagem no LUMI',{body:msg.content?.startsWith('LUMI_GIF:')?'Enviou um GIF':msg.content||'Enviou um arquivo',icon:'./logo.png',tag:'lumi-dm-'+id,renotify:true,data:{url:'./',conversation_id:id,sender_id:msg.sender_id},actions:[{action:'reply',title:'Responder',type:'text',placeholder:'Escreva uma resposta…'},{action:'open',title:'Abrir LUMI'}]}); else {const n=new Notification(msg.profiles?.display_name||'Nova mensagem no LUMI',{body:msg.content||'Enviou um arquivo'});n.onclick=()=>window.focus();}}catch(error){console.warn('Notificação de mensagem:',error.message);} } }
   }).subscribe();
 }
 // Chamadas WebRTC (voz/vídeo) com sinalização pelo Supabase.
@@ -1036,7 +1183,30 @@ async function sendCallSignal(recipientId, conversationId, type, payload={}) {
     if (pushError) console.warn('Notificação push de chamada não enviada:', pushError.message);
   }
 }
-function callStatus(text) { const el=$('#dmCallStatus'); if(el) el.textContent=text; }
+function ensureCallDock() {
+  let dock = document.getElementById('lumiActiveCallDock');
+  if (dock) return dock;
+  dock = document.createElement('aside');
+  dock.id = 'lumiActiveCallDock';
+  dock.className = 'lumi-active-call-dock';
+  dock.hidden = true;
+  dock.setAttribute('aria-live', 'polite');
+  dock.innerHTML = `<audio id="lumiCallRemoteAudio" autoplay playsinline></audio><span class="lumi-active-call-dot"></span><div class="lumi-active-call-copy"><strong id="lumiActiveCallTitle">Chamada em andamento</strong><small id="lumiActiveCallStatus">Conectando…</small></div><button type="button" class="secondary-button" data-call-dock-return>Voltar à chamada</button><button type="button" class="dm-hangup" data-call-control="hangup" title="Desligar" aria-label="Desligar chamada"><span class="material-symbols-rounded">call_end</span></button>`;
+  document.body.appendChild(dock);
+  return dock;
+}
+function updateCallDock() {
+  const dock = ensureCallDock();
+  dock.hidden = state.callStatus === 'idle' && !state.pendingCallOffer;
+  const title = document.getElementById('lumiActiveCallTitle');
+  const status = document.getElementById('lumiActiveCallStatus');
+  if (title) title.textContent = state.callMode === 'video' ? 'Chamada de vídeo' : 'Chamada de voz';
+  if (status) status.textContent = document.getElementById('dmCallStatus')?.textContent || (state.callStatus === 'calling' ? 'Chamando…' : 'Chamada em andamento');
+}
+function callStatus(text) {
+  const el=$('#dmCallStatus'); if(el) el.textContent=text;
+  if (state.callStatus !== 'idle') updateCallDock();
+}
 function ensureCallAvatarStyles() {
   if ($('#lumiCallAvatarStyles')) return;
 
@@ -1237,6 +1407,15 @@ function showCallStage() {
   renderCallParticipants();
   updateCallVideoCards();
   stage.hidden = false;
+  updateCallDock();
+}
+let dmVoiceMeter = { context: null, timer: null, local: null, remote: null };
+function monitorDMCallVoice() {
+  const local=state.callLocalStream, remote=state.callRemoteStream;
+  if(!local && !remote)return;
+  clearInterval(dmVoiceMeter.timer); dmVoiceMeter.context?.close().catch(()=>{});
+  dmVoiceMeter={context:null,timer:null,local,remote};
+  try { const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;const ctx=dmVoiceMeter.context=new Ctx();const meters=[];for(const [key,stream] of [['local',local],['remote',remote]])if(stream?.getAudioTracks().length){const analyser=ctx.createAnalyser();analyser.fftSize=512;ctx.createMediaStreamSource(stream).connect(analyser);meters.push({key,analyser,samples:new Uint8Array(analyser.fftSize)});}dmVoiceMeter.timer=setInterval(()=>{for(const meter of meters){meter.analyser.getByteTimeDomainData(meter.samples);let sum=0;for(const n of meter.samples){const x=(n-128)/128;sum+=x*x;}const speaking=Math.sqrt(sum/meter.samples.length)>0.055;const node=document.getElementById(meter.key==='remote'?'dmRemoteSpeaking':'dmLocalSpeaking');if(node){node.classList.toggle('is-speaking',speaking);const label=node.querySelector('[data-speaking-label]');if(label)label.textContent=speaking?'Falando agora':(meter.key==='remote'?'Ouvindo':'Microfone ligado');}}},130); } catch(error){console.debug('Medidor de voz da chamada indisponível',error);}
 }
 function attachCallMedia() {
   const local = $('#dmLocalVideo');
@@ -1256,19 +1435,98 @@ function attachCallMedia() {
     remote.onplaying = updateCallVideoCards;
   }
 
+  const remoteAudio = document.getElementById('lumiCallRemoteAudio');
+  if (remoteAudio && state.callRemoteStream) {
+    if (remoteAudio.srcObject !== state.callRemoteStream) remoteAudio.srcObject = state.callRemoteStream;
+    remoteAudio.play().catch(() => {});
+  }
   updateCallVideoCards();
+  monitorDMCallVoice();
 }
 async function createCallPeer(recipientId, conversationId, mode) {
-  state.callPeerId=recipientId; state.callConversationId=conversationId; state.callMode=mode; state.callSeenSignals=new Set(); state.pendingIceSignals=[];
-  state.callRemoteStream=new MediaStream();
-  state.callPC=new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]});
-  state.callPC.ontrack=e=>{ e.streams[0]?.getTracks().forEach(t=>{if(!state.callRemoteStream.getTracks().some(x=>x.id===t.id))state.callRemoteStream.addTrack(t);}); attachCallMedia(); };
-  state.callPC.onicecandidate=e=>{ if(e.candidate && state.callPeerId && state.callConversationId) sendCallSignal(state.callPeerId,state.callConversationId,'ice',e.candidate.toJSON()).catch(err=>console.warn('ICE:',err.message)); };
-  state.callPC.onconnectionstatechange=()=>{const status=state.callPC?.connectionState;if(status==='connected')stopLumiCallTone();if(status==='failed')stopLumiCallTone();if(status==='connected')callStatus(state.callMode==='video'?'Chamada de vídeo conectada':'Chamada de voz conectada');else if(status==='failed')callStatus('A conexão falhou. Tente novamente ou use a mesma rede.');else if(status==='disconnected')callStatus('Reconectando…');};
-  state.callLocalStream=await navigator.mediaDevices.getUserMedia({audio:true,video:mode==='video'});
-  state.callLocalStream.getTracks().forEach(track=>state.callPC.addTrack(track,state.callLocalStream));
-  attachCallMedia(); showCallStage();
+  const operationId = ++state.callOperationId;
+  state.callPeerId = recipientId;
+  state.callConversationId = conversationId;
+  state.callMode = mode === 'video' ? 'video' : 'audio';
+  state.callSeenSignals = new Set();
+  state.pendingIceSignals = state.pendingIceSignals.filter(entry =>
+    entry?.conversation_id === conversationId && entry?.sender_id === recipientId
+  );
+
+  const iceServers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' }
+  ];
+  // Optional TURN server for networks that block direct peer-to-peer connections.
+  try {
+    const relay = JSON.parse(localStorage.getItem('lumi-turn-config') || 'null');
+    if (relay?.urls && relay?.username && relay?.credential) {
+      iceServers.push({ urls: relay.urls, username: relay.username, credential: relay.credential });
+    }
+  } catch {}
+
+  const pc = new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 10 });
+  state.callPC = pc;
+  state.callRemoteStream = new MediaStream();
+  pc.ontrack = event => {
+    const tracks = event.streams?.[0]?.getTracks() || (event.track ? [event.track] : []);
+    for (const track of tracks) {
+      if (!state.callRemoteStream.getTracks().some(existing => existing.id === track.id)) state.callRemoteStream.addTrack(track);
+    }
+    attachCallMedia();
+  };
+  pc.onicecandidate = event => {
+    if (event.candidate && state.callPC === pc && state.callPeerId && state.callConversationId) {
+      sendCallSignal(state.callPeerId, state.callConversationId, 'ice', event.candidate.toJSON())
+        .catch(error => console.warn('Não consegui enviar candidato ICE:', error.message));
+    }
+  };
+  pc.oniceconnectionstatechange = () => {
+    if (state.callPC !== pc) return;
+    const ice = pc.iceConnectionState;
+    if (ice === 'connected' || ice === 'completed') callStatus('Conexão de áudio/vídeo estabelecida.');
+    else if (ice === 'checking') callStatus('Encontrando uma rota segura…');
+    else if (ice === 'disconnected') callStatus('Conexão instável. Tentando recuperar…');
+    else if (ice === 'failed') {
+      callStatus('A conexão direta falhou. Tentando recuperar…');
+      try { pc.restartIce?.(); } catch {}
+    }
+  };
+  pc.onconnectionstatechange = () => {
+    if (state.callPC !== pc) return;
+    if (pc.connectionState === 'connected') {
+      stopLumiCallTone();
+      callStatus(state.callMode === 'video' ? 'Chamada de vídeo conectada' : 'Chamada de voz conectada');
+    } else if (pc.connectionState === 'failed') {
+      stopLumiCallTone();
+      callStatus('A conexão falhou. Redes restritivas podem precisar de um servidor TURN.');
+    } else if (pc.connectionState === 'disconnected') callStatus('Reconectando…');
+  };
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      video: state.callMode === 'video' ? { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 24, max: 30 } } : false
+    });
+    if (operationId !== state.callOperationId || state.callPC !== pc) {
+      stream.getTracks().forEach(track => track.stop());
+      throw new Error('A chamada foi cancelada durante a preparação.');
+    }
+    state.callLocalStream = stream;
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    attachCallMedia();
+    showCallStage();
+    return pc;
+  } catch (error) {
+    if (state.callPC === pc) {
+      pc.close();
+      state.callPC = null;
+    }
+    throw error;
+  }
 }
+
 
 async function isUserBlocked(userId) {
   if(!state.user||!userId)return false;
@@ -1515,8 +1773,6 @@ async function startCall(mode) {
     await sendCallSignal(state.callPeerId,state.callConversationId,'offer',{sdp:offer.sdp,mode,retryMessage:getCallRetryMessage()});
     scheduleCallRetry();
     toast(mode==='video'?'Ligação de vídeo iniciada.':'Ligação de voz iniciada.','success');
-    await navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => stream.getTracks().forEach(track => track.stop()));
 } catch(error) {
   console.error(error);
 
@@ -1529,81 +1785,209 @@ async function startCall(mode) {
 }
 async function checkPendingIncomingCall() {
   if (!state.user || state.callStatus !== 'idle') return;
+  const params = new URLSearchParams(window.location.search);
+  const acceptFromNotification = params.get('lumi_accept_call') === '1';
+  const notificationConversationId = params.get('conversation_id');
   const since = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const {data,error} = await supabase.from('call_signals').select('*')
+  let query = supabase.from('call_signals').select('*')
     .eq('recipient_id',state.user.id).eq('signal_type','offer')
     .gte('created_at',since).order('created_at',{ascending:false}).limit(5);
+  if (acceptFromNotification && notificationConversationId) query = query.eq('conversation_id', notificationConversationId);
+  const {data,error} = await query;
   if(error||!data?.length)return;
   for(const offer of data){
     const {data:ended}=await supabase.from('call_signals').select('id')
       .eq('conversation_id',offer.conversation_id).eq('signal_type','end')
       .eq('sender_id',state.user.id).eq('recipient_id',offer.sender_id)
       .gt('created_at',offer.created_at).limit(1);
-    if(!ended?.length){await handleCallSignal(offer);return;}
+    if(!ended?.length){
+      await handleCallSignal(offer);
+      if (acceptFromNotification && state.pendingCallOffer?.id === offer.id) {
+        try { await acceptIncomingCall(); }
+        catch (error) { console.warn('Não foi possível atender pela notificação:', error); }
+        params.delete('lumi_accept_call'); params.delete('conversation_id');
+        const cleanUrl = window.location.pathname + (params.size ? '?' + params.toString() : '') + window.location.hash;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+      return;
+    }
   }
 }
 async function handleCallSignal(signal) {
-  if(!signal || signal.sender_id===state.user?.id)return;
-  if(signal.signal_type==='ice' && state.pendingCallOffer?.conversation_id===signal.conversation_id && !state.callPC){state.pendingIceSignals.push(signal.payload);return;}
-  if(signal.signal_type==='offer') {
-    const blocked=await isUserBlocked(signal.sender_id);
-    const {data:myPrefs}=await supabase.from('profiles').select('do_not_disturb').eq('id',state.user.id).maybeSingle();
-    if(blocked||getDoNotDisturb()||myPrefs?.do_not_disturb){try{await sendCallSignal(signal.sender_id,signal.conversation_id,'end',{reason:blocked?'blocked':'do_not_disturb'});}catch{}return;}
-    if(state.callStatus!=='idle') { try{await sendCallSignal(signal.sender_id,signal.conversation_id,'busy',{});}catch{} return; }
-    if(!state.conversations.some(c=>c.id===signal.conversation_id)) await loadConversations();
-    const conversation=state.conversations.find(c=>c.id===signal.conversation_id);
-    if(!conversation || conversation.otherUser.id!==signal.sender_id) return;
-    state.pendingCallOffer=signal;
-    const caller=conversation.otherUser.display_name||conversation.otherUser.username||'Seu contato';
-    showIncomingCall(caller,signal.payload?.mode==='video'?'video':'audio',signal.payload?.retryMessage||'');
+  if (!signal || signal.sender_id === state.user?.id || !state.user) return;
+
+  if (signal.signal_type === 'ice') {
+    if (!signal.payload) return;
+    const matches = state.callPC &&
+      signal.conversation_id === state.callConversationId &&
+      signal.sender_id === state.callPeerId;
+    if (!matches || !state.callPC?.remoteDescription) {
+      const key = signal.payload.candidate || JSON.stringify(signal.payload);
+      const exists = state.pendingIceSignals.some(entry =>
+        entry?.conversation_id === signal.conversation_id &&
+        entry?.sender_id === signal.sender_id &&
+        (entry?.candidate?.candidate || JSON.stringify(entry?.candidate)) === key
+      );
+      if (!exists) state.pendingIceSignals.push({
+        conversation_id: signal.conversation_id,
+        sender_id: signal.sender_id,
+        candidate: signal.payload
+      });
+      return;
+    }
+    try { await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload)); }
+    catch (error) {
+      console.warn('Candidato ICE guardado para tentar novamente:', error.message);
+      state.pendingIceSignals.push({ conversation_id: signal.conversation_id, sender_id: signal.sender_id, candidate: signal.payload });
+    }
     return;
   }
-  if(signal.signal_type==='busy' && state.callPeerId===signal.sender_id){callStatus('A pessoa já está em outra chamada.');setTimeout(()=>cleanupCall(false),1800);return;}
-  if(signal.conversation_id!==state.callConversationId || signal.sender_id!==state.callPeerId || !state.callPC)return;
+
+  if (signal.signal_type === 'offer') {
+    if (state.handledOfferIds.has(signal.id) || state.pendingCallOffer?.id === signal.id) return;
+    if (state.pendingCallOffer && state.pendingCallOffer.conversation_id === signal.conversation_id && state.pendingCallOffer.sender_id === signal.sender_id) return;
+    const blocked = await isUserBlocked(signal.sender_id);
+    const { data: prefs } = await supabase.from('profiles').select('do_not_disturb').eq('id', state.user.id).maybeSingle();
+    if (blocked || getDoNotDisturb() || prefs?.do_not_disturb) {
+      try { await sendCallSignal(signal.sender_id, signal.conversation_id, 'end', { reason: blocked ? 'blocked' : 'do_not_disturb' }); } catch {}
+      return;
+    }
+    if (state.callStatus !== 'idle') {
+      try { await sendCallSignal(signal.sender_id, signal.conversation_id, 'busy', {}); } catch {}
+      return;
+    }
+    if (!state.conversations.some(item => item.id === signal.conversation_id)) await loadConversations();
+    const conversation = state.conversations.find(item => item.id === signal.conversation_id);
+    if (!conversation || conversation.otherUser?.id !== signal.sender_id) return;
+    state.pendingCallOffer = signal;
+    showIncomingCall(
+      conversation.otherUser.display_name || conversation.otherUser.username || 'Seu contato',
+      signal.payload?.mode === 'video' ? 'video' : 'audio',
+      signal.payload?.retryMessage || ''
+    );
+    return;
+  }
+
+  if (signal.signal_type === 'busy' && state.callPeerId === signal.sender_id) {
+    callStatus('A pessoa já está em outra chamada.');
+    setTimeout(() => cleanupCall(false), 1800);
+    return;
+  }
+  if (signal.conversation_id !== state.callConversationId || signal.sender_id !== state.callPeerId || !state.callPC) return;
+
   try {
-    if(signal.signal_type==='answer' && state.callPC.signalingState==='have-local-offer') { clearTimeout(state.callRetryTimer); state.callRetryTimer=null; await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload)); await flushPendingIce(); }
-    else if(signal.signal_type==='ice' && signal.payload) { if(!state.callPC.remoteDescription){state.pendingIceSignals.push(signal.payload);}else{try{await state.callPC.addIceCandidate(new RTCIceCandidate(signal.payload));}catch(err){console.warn('Candidato ICE ignorado:',err.message);}} }
-    else if(signal.signal_type==='end') await cleanupCall(false);
-  } catch(error) { console.error(error); callStatus('Erro ao conectar a chamada.'); }
+    if (signal.signal_type === 'answer' && state.callPC.signalingState === 'have-local-offer') {
+      clearTimeout(state.callRetryTimer);
+      state.callRetryTimer = null;
+      await state.callPC.setRemoteDescription(new RTCSessionDescription(signal.payload));
+      await flushPendingIce();
+    } else if (signal.signal_type === 'end') {
+      await cleanupCall(false);
+    }
+  } catch (error) {
+    console.error('Falha na sinalização da chamada:', error);
+    callStatus('Erro ao negociar a chamada. Tente desligar e ligar novamente.');
+  }
 }
+
+
 function showIncomingCall(name,mode,message='') {
   let layer=$('#lumiIncomingCall'); if(!layer){layer=document.createElement('div');layer.id='lumiIncomingCall';layer.className='lumi-incoming-call';document.body.append(layer);}
   layer.innerHTML=`<div class="lumi-incoming-card"><div class="lumi-incoming-icon"><span class="material-symbols-rounded">${mode==='video'?'videocam':'call'}</span></div><small>CHAMADA RECEBIDA</small><h3>${escapeHTML(name)}</h3><p>${mode==='video'?'está chamando por vídeo':'está chamando por voz'}</p>${message ? `<div class="lumi-call-custom-message">${escapeHTML(message)}</div>` : ''}<div class="lumi-incoming-actions"><button type="button" data-incoming-call="decline" class="dm-hangup"><span class="material-symbols-rounded">call_end</span> Recusar</button><button type="button" data-incoming-call="accept"><span class="material-symbols-rounded">call</span> Atender</button></div></div>`;
   layer.hidden=false;
-  if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){try{const n=new Notification('Chamada recebida no LUMI',{body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.'});n.onclick=()=>window.focus();}catch{}}
+  if(document.hidden&&'Notification' in window&&Notification.permission==='granted'){
+    const notificationOptions = {
+      body:(name||'Seu contato')+' está chamando por '+(mode==='video'?'vídeo':'voz')+'.',
+      icon:'./logo.png',tag:'lumi-incoming-call-'+(state.pendingCallOffer?.conversation_id||'unknown'),
+      data:{url:'./',conversation_id:state.pendingCallOffer?.conversation_id||null},
+      actions:[{action:'accept',title:'Atender'},{action:'open',title:'Abrir LUMI'}]
+    };
+    if('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration=>registration.showNotification('Chamada recebida no LUMI',notificationOptions))
+        .catch(()=>{try{new Notification('Chamada recebida no LUMI',notificationOptions);}catch{}});
+    } else { try { new Notification('Chamada recebida no LUMI',notificationOptions); } catch {} }
+  }
 }
 async function acceptIncomingCall() {
-  const offer=state.pendingCallOffer; if(!offer)return;
-  const layer=$('#lumiIncomingCall'); if(layer)layer.hidden=true;
-  const conversation=state.conversations.find(c=>c.id===offer.conversation_id); if(conversation){state.activeConversation=conversation; if(state.page!=='inbox')setPage('inbox'); await openConversation(conversation.id);}
+  const offer = state.pendingCallOffer;
+  if (!offer || state.callStatus !== 'idle') return;
+  const layer = $('#lumiIncomingCall');
+  const acceptButton = layer?.querySelector('[data-incoming-call="accept"]');
+  if (acceptButton) { acceptButton.disabled = true; acceptButton.textContent = 'Conectando…'; }
   try {
-    state.callStatus='connecting'; await createCallPeer(offer.sender_id,offer.conversation_id,offer.payload?.mode==='video'?'video':'audio');
-    await state.callPC.setRemoteDescription(new RTCSessionDescription({type:'offer',sdp:offer.payload.sdp})); await flushPendingIce();
-    const answer=await state.callPC.createAnswer(); await state.callPC.setLocalDescription(answer);
-    await sendCallSignal(offer.sender_id,offer.conversation_id,'answer',{type:answer.type,sdp:answer.sdp});
-    callStatus('Conectando…'); state.pendingCallOffer=null;
-  } catch(error) { console.error(error); await cleanupCall(false); toast(`Não consegui atender: ${error.message||error}. Verifique as permissões e o SQL de chamadas.`, 'error'); }
+    if (!offer.payload?.sdp) throw new Error('A oferta chegou incompleta. Peça para a pessoa ligar novamente.');
+    const conversation = state.conversations.find(item => item.id === offer.conversation_id);
+    if (!conversation) throw new Error('Não encontrei a conversa desta chamada. Atualize e tente de novo.');
+    state.activeConversation = conversation;
+    state.callStatus = 'connecting';
+    state.handledOfferIds.add(offer.id);
+    if (state.handledOfferIds.size > 100) state.handledOfferIds.clear();
+
+    // Não renderizar/navegar antes de aplicar a oferta: isso evita atrasar o atendimento.
+    const pc = await createCallPeer(
+      offer.sender_id, offer.conversation_id,
+      offer.payload?.mode === 'video' ? 'video' : 'audio'
+    );
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: offer.payload.sdp }));
+    await flushPendingIce();
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await sendCallSignal(offer.sender_id, offer.conversation_id, 'answer', {
+      type: answer.type, sdp: answer.sdp
+    });
+    state.pendingCallOffer = null;
+    if (layer) layer.hidden = true;
+    await setPage('inbox');
+    showCallStage();
+    attachCallMedia();
+    callStatus('Resposta enviada. Estabelecendo áudio/vídeo…');
+  } catch (error) {
+    console.error('Falha ao atender chamada:', error);
+    await cleanupCall(false);
+    state.pendingCallOffer = offer;
+    if (layer) layer.hidden = false;
+    toast('Não consegui atender: ' + (error.message || error) + '. Confira a permissão do microfone/câmera.', 'error');
+  } finally {
+    if (acceptButton) { acceptButton.disabled = false; acceptButton.innerHTML = '<span class="material-symbols-rounded">call</span> Atender'; }
+  }
 }
+
+
 async function flushPendingIce() {
-  if(!state.callPC?.remoteDescription || !state.pendingIceSignals.length)return;
-  const candidates=state.pendingIceSignals.splice(0);
-  for(const candidate of candidates){try{await state.callPC.addIceCandidate(new RTCIceCandidate(candidate));}catch(error){console.warn('Candidato ICE pendente ignorado:',error.message);}}
+  const pc = state.callPC;
+  if (!pc?.remoteDescription || !state.pendingIceSignals.length) return;
+  const pending = state.pendingIceSignals.splice(0);
+  for (const entry of pending) {
+    const candidate = entry?.candidate || entry;
+    if (entry?.conversation_id && entry.conversation_id !== state.callConversationId) continue;
+    if (entry?.sender_id && entry.sender_id !== state.callPeerId) continue;
+    if (!candidate || state.callPC !== pc) continue;
+    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); }
+    catch (error) { console.warn('Candidato ICE pendente ignorado:', error.message); }
+  }
 }
+
+
 async function declineIncomingCall() {
   const offer=state.pendingCallOffer; const layer=$('#lumiIncomingCall'); if(layer)layer.hidden=true;
   if(offer)try{await sendCallSignal(offer.sender_id,offer.conversation_id,'end',{});}catch{}
   state.pendingCallOffer=null;
 }
 async function cleanupCall(notifyPeer=true) {
+  state.callOperationId++;
   stopLumiCallTone();
   clearTimeout(state.callRetryTimer);state.callRetryTimer=null;
   if(notifyPeer && state.callPeerId && state.callConversationId)try{await sendCallSignal(state.callPeerId,state.callConversationId,'end',{});}catch{}
   if(state.callPC){state.callPC.onicecandidate=null;state.callPC.ontrack=null;state.callPC.close();}
   state.callScreenStream?.getTracks().forEach(t=>t.stop()); state.callScreenStream=null;
   state.callLocalStream?.getTracks().forEach(t=>t.stop()); state.callRemoteStream?.getTracks().forEach(t=>t.stop());
+  clearInterval(dmVoiceMeter.timer); dmVoiceMeter.context?.close().catch(()=>{}); dmVoiceMeter={context:null,timer:null,local:null,remote:null};
   state.callPC=null;state.callLocalStream=null;state.callRemoteStream=null;state.callPeerId=null;state.callConversationId=null;state.callStatus='idle';state.pendingIceSignals=[];state.callMuted=false;state.callVideoEnabled=true;state.pendingCallOffer=null;
+  const dock=document.getElementById('lumiActiveCallDock');if(dock)dock.hidden=true;
   const stage=$('#dmCallStage'); if(stage)stage.hidden=true;
   const local=$('#dmLocalVideo'),remote=$('#dmRemoteVideo');if(local)local.srcObject=null;if(remote)remote.srcObject=null;
+  const remoteAudio=document.getElementById('lumiCallRemoteAudio');if(remoteAudio){remoteAudio.pause();remoteAudio.srcObject=null;}
   const layer=$('#lumiIncomingCall');if(layer)layer.hidden=true;
 }
 async function toggleCallControl(control) {
@@ -1636,10 +2020,14 @@ function dmMessagesHTML() {
         contactCard = '<div class="lumi-contact-card"><div class="lumi-contact-icon">' + escapeHTML(initials(card.name || 'LUMI')) + '</div><div class="lumi-contact-details"><strong>' + escapeHTML(card.name || 'Contato LUMI') + '</strong><small>@' + escapeHTML(card.username || 'lumi-user') + '</small>' + (card.bio ? '<p>' + escapeHTML(card.bio) + '</p>' : '') + '<button type="button" class="lumi-contact-copy" data-copy-contact="' + escapeHTML(card.username || '') + '" ' + (card.username ? '' : 'disabled') + '>Copiar usuário</button></div></div>';
       } catch {}
     }
+    const gifUrl = m.content?.startsWith('LUMI_GIF:') ? m.content.slice('LUMI_GIF:'.length).trim() : '';
+    const gif = isKlipyMediaUrl(gifUrl)
+      ? '<a href="' + escapeHTML(gifUrl) + '" target="_blank" rel="noopener noreferrer"><img class="dm-message-gif" loading="lazy" src="' + escapeHTML(gifUrl) + '" alt="GIF compartilhado"></a>' : '';
     const image = m.attachment_type?.startsWith('image/') && m.attachment_url ? '<a class="dm-image-link" href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHTML(m.attachment_url) + '" alt="' + escapeHTML(m.attachment_name || 'Imagem compartilhada') + '"></a>' : '';
     const audio = m.attachment_type?.startsWith('audio/') && m.attachment_url ? '<audio class="dm-audio-player" controls preload="metadata" src="' + escapeHTML(m.attachment_url) + '"></audio>' : '';
     const attachment = m.attachment_name ? '<div class="dm-file-card"><span class="dm-file-icon">' + (m.attachment_type?.startsWith('image/') ? '▧' : m.attachment_type?.startsWith('audio/') ? 'mic' : '↧') + '</span><div><strong>' + escapeHTML(m.attachment_name) + '</strong><small>' + formatFileSize(m.attachment_size) + '</small></div>' + (m.attachment_url ? '<a href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer" download="' + escapeHTML(m.attachment_name) + '">Abrir</a>' : '<span class="dm-file-unavailable">Indisponível</span>') + '</div>' : '';
-    return '<article class="dm-message-item ' + (m.sender_id === state.user.id ? 'mine' : '') + '">' + avatarMarkup(name, m.profiles?.avatar_url, 'dm-avatar') + '<div class="dm-message-body"><div class="dm-message-meta"><strong>' + escapeHTML(name) + '</strong>' + accountBadges(m.sender_id) + '<time>' + shortDate(m.created_at) + '</time></div>' + (m.content && !contactCard ? '<div class="dm-message-text">' + escapeHTML(m.content) + '</div>' : '') + contactCard + image + audio + attachment + '</div></article>';
+    const visibleContent = m.content && !contactCard && !gifUrl ? '<div class="dm-message-text">' + escapeHTML(m.content) + '</div>' : '';
+    return '<article class="dm-message-item ' + (m.sender_id === state.user.id ? 'mine' : '') + '">' + avatarMarkup(name, m.profiles?.avatar_url, 'dm-avatar') + '<div class="dm-message-body"><div class="dm-message-meta"><strong>' + escapeHTML(name) + '</strong>' + accountBadges(m.sender_id,m.profiles?.vip_purchased) + '<time>' + shortDate(m.created_at) + '</time></div>' + visibleContent + contactCard + gif + image + audio + attachment + '</div></article>';
   }).join('');
 }
 function renderDMMessages() { const list=$('#dmMessageList'); if(!list)return; const nearBottom=list.scrollHeight-list.scrollTop-list.clientHeight<120; list.innerHTML=dmMessagesHTML(); if(nearBottom)list.scrollTop=list.scrollHeight; }
@@ -1652,12 +2040,22 @@ async function sendDM(event) {
   let attachment_path=null;
   if(file){ const safeName=file.name.replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(-120)||'arquivo'; attachment_path=`${state.activeConversation.id}/${state.user.id}/${crypto.randomUUID()}-${safeName}`; const {error:uploadError}=await supabase.storage.from('dm-attachments').upload(attachment_path,file,{contentType:file.type||'application/octet-stream',upsert:false}); if(uploadError){if(submit)submit.disabled=false;toast(`Não consegui enviar o arquivo: ${uploadError.message}. Confira o SQL de anexos.`, 'error');return;} }
   const payload={conversation_id:state.activeConversation.id,sender_id:state.user.id,content,attachment_path,attachment_name:file?.name||null,attachment_type:file?.type||null,attachment_size:file?.size||null};
-  const {data,error}=await supabase.from('direct_messages').insert(payload).select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url)').single();
+  const {data,error}=await supabase.from('direct_messages').insert(payload).select('id,conversation_id,sender_id,content,attachment_path,attachment_name,attachment_type,attachment_size,created_at,profiles(display_name,username,avatar_url,vip_purchased)').single();
   if(submit)submit.disabled=false;
   if(error){console.error(error);toast(`Não consegui enviar: ${error.message}`,'error');return;}
   state.dmMessages.push(...await signDMFileUrls([data])); input.value='';fileInput.value='';renderDMMessages();input.focus();
 }
 
+function applyStreamerMode(enabled) {
+  document.documentElement.dataset.streamerMode = enabled ? 'true' : 'false';
+  try { localStorage.setItem('lumi-streamer-mode', String(Boolean(enabled))); } catch {}
+}
+function applyPresenceStatus(status) {
+  const allowed = ['online','chatting','gaming','hidden'];
+  const selected = allowed.includes(status) ? status : 'online';
+  document.documentElement.dataset.presence = selected;
+  try { localStorage.setItem('lumi-presence-status', selected); } catch {}
+}
 function applyTheme(theme) {
   const selected = theme === 'dark' ? 'dark' : 'light';
   document.documentElement.dataset.theme = selected;
@@ -1666,6 +2064,10 @@ function applyTheme(theme) {
 }
 function getDoNotDisturb() {
   try { return localStorage.getItem('lumi-do-not-disturb') === 'true'; } catch { return false; }
+}
+function getTurnConfig() {
+  try { const value = JSON.parse(localStorage.getItem('lumi-turn-config') || 'null'); return value && typeof value === 'object' ? value : {}; }
+  catch { return {}; }
 }
 function getCallRetryMessage() {
   try { return (localStorage.getItem('lumi-call-retry-message') || '').trim().slice(0,160); } catch { return ''; }
@@ -1710,7 +2112,10 @@ function renderSettings() {
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">keyboard</div><div class="settings-card-content"><h2>Envio de mensagens</h2><p>Escolha como enviar mensagens nos Espaços e nas conversas diretas.</p><label class="settings-toggle"><input id="lumiEnterToSend" type="checkbox" ${localStorage.getItem('lumi-enter-to-send') !== 'false' ? 'checked' : ''}><span class="settings-toggle-track"></span><span><strong>Enter envia a mensagem</strong><small>Ativado: Enter envia e Shift + Enter quebra a linha. Desativado: Enter quebra a linha e Ctrl + Enter envia.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">palette</div><div class="settings-card-content"><h2>Aparência</h2><p>Escolha como o LUMI aparece neste navegador.</p><label class="field-label" for="lumiTheme">Tema</label><select class="form-input" id="lumiTheme"><option value="light" ${theme==='light'?'selected':''}>Claro</option><option value="dark" ${theme==='dark'?'selected':''}>Escuro</option></select></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">color_lens</div><div class="settings-card-content"><h2>Identidade visual</h2><p>${isVip ? 'Como membro LUMI INFINITY, você pode escolher uma cor exclusiva.' : 'O amarelo é a identidade oficial do LUMI. As outras paletas são exclusivas do LUMI INFINITY.'}</p><label class="field-label" for="lumiAccent">Cor de destaque</label><select class="form-input" id="lumiAccent"><option value="yellow" ${accent==='yellow'?'selected':''}>Amarelo LUMI</option><option value="blue" ${isVip?'':'disabled'} ${accent==='blue'?'selected':''}>Azul${isVip?'':' — INFINITY'}</option><option value="green" ${isVip?'':'disabled'} ${accent==='green'?'selected':''}>Verde${isVip?'':' — INFINITY'}</option><option value="purple" ${isVip?'':'disabled'} ${accent==='purple'?'selected':''}>Roxo${isVip?'':' — INFINITY'}</option></select></div></section>
-      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">visibility_off</div><div class="settings-card-content"><h2>Modo streamer</h2><p>Esconde visualmente nomes e selos em partes da interface enquanto você grava ou transmite. Não substitui uma conta de teste para proteger dados privados.</p><label class="settings-toggle"><input id="lumiStreamerMode" type="checkbox"><span class="settings-toggle-track"></span><span><strong>Ocultar nomes e selos</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">sports_esports</div><div class="settings-card-content"><h2>LUMI Orbit</h2><p>Mostra um estado de atividade do LUMI neste navegador. Integrações RPC com jogos ou outros aplicativos precisam de um componente externo rodando no computador.</p><label class="field-label" for="lumiPresenceStatus">Minha atividade</label><select class="form-input" id="lumiPresenceStatus"><option value="online">Disponível no LUMI</option><option value="chatting">Conversando</option><option value="gaming">Jogando</option><option value="hidden">Não mostrar atividade</option></select><small class="settings-help" id="lumiPresenceStatusHelp">Estado local deste navegador.</small></div></section>
+      <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">wifi_tethering</div><div class="settings-card-content"><h2>Conexão de chamadas (TURN)</h2><p>Algumas redes e dados móveis bloqueiam conexões diretas. Um servidor TURN válido pode ajudar. Se você não tem credenciais de um servidor TURN, deixe estes campos vazios.</p><label class="field-label" for="lumiTurnUrls">Endereço TURN</label><input class="form-input" id="lumiTurnUrls" placeholder="turn:turn.exemplo.com:3478 ou turns:…" value="${escapeHTML(getTurnConfig().urls||'')}"><label class="field-label" for="lumiTurnUsername">Usuário TURN</label><input class="form-input" id="lumiTurnUsername" autocomplete="off" value="${escapeHTML(getTurnConfig().username||'')}"><label class="field-label" for="lumiTurnCredential">Senha/credencial TURN</label><input class="form-input" id="lumiTurnCredential" type="password" autocomplete="new-password" value="${escapeHTML(getTurnConfig().credential||'')}"><button type="button" class="secondary-button" id="lumiSaveTurnConfig">Salvar configuração TURN</button><small class="settings-help">Salvo somente neste navegador. As mudanças valem para novas chamadas.</small></div></section>
+       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">music_note</div><div class="settings-card-content"><h2>Toque de chamada</h2><p>Escolha um áudio para tocar enquanto você liga. O arquivo fica salvo neste navegador.</p><input id="lumiCallToneFile" type="file" accept="audio/*" hidden><div class="settings-inline-actions"><button class="secondary-button" id="chooseCallTone" type="button">Escolher áudio</button><button class="secondary-button" id="previewCallTone" type="button">Ouvir toque</button><button class="text-button" id="removeCallTone" type="button">Usar toque padrão</button></div><small class="settings-help" id="callToneStatus">Toque padrão do LUMI</small></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">chat</div><div class="settings-card-content"><h2>Mensagem nas chamadas</h2><p>Escreva uma mensagem curta que aparecerá para a pessoa quando você ligar. Ela será reutilizada nas tentativas automáticas.</p><label class="field-label" for="lumiCallRetryMessage">Mensagem (opcional)</label><input class="form-input" id="lumiCallRetryMessage" maxlength="160" value="${escapeHTML(retryMessage)}" placeholder="Ex.: Opa, me atende quando puder!"><small class="settings-help">Até 160 caracteres. Salva neste navegador.</small></div></section>
       <section class="settings-card lumi-infinity-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><div class="lumi-infinity-eyebrow">EDIÇÃO ESPECIAL</div><h2>LUMI INFINITY</h2><p>Um pagamento único de <strong>R$ 10,00</strong>. Sem assinatura, mensalidade ou renovação automática.</p><ul class="lumi-infinity-perks"><li><span class="material-symbols-rounded">palette</span><span><strong>Paletas exclusivas</strong><small>Azul, verde e roxo para personalizar sua experiência.</small></span></li><li><span class="material-symbols-rounded">auto_awesome</span><span><strong>Mais identidade</strong><small>Novos detalhes de personalização planejados para o INFINITY.</small></span></li></ul><p>${isVip ? "Seu perfil já tem LUMI INFINITY ativado." : "A compra ainda não está disponível: estamos preparando um checkout seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "INFINITY ativado" : "Compra em breve"}</button></div></section>
@@ -1719,6 +2124,8 @@ function renderSettings() {
       <p class="settings-help">Tema e cor de destaque ficam neste navegador. O Não Perturbe é sincronizado com sua conta quando você está conectado.</p>
     </section>`;
   const accentSelect = $('#lumiAccent'); if (accentSelect) accentSelect.value = accent;
+  const streamerToggle = $('#lumiStreamerMode'); if (streamerToggle) streamerToggle.checked = localStorage.getItem('lumi-streamer-mode') === 'true';
+  const presenceSelect = $('#lumiPresenceStatus'); if (presenceSelect) presenceSelect.value = localStorage.getItem('lumi-presence-status') || 'online';
   loadBlockedUsers();
 }
 async function changeAccountPassword(event) {
@@ -1746,17 +2153,19 @@ function renderProfile() {
   $('#crumbParent').textContent='LUMI'; $('#crumbCurrent').textContent='Perfil';
   const name=state.profile?.display_name || state.user?.email?.split('@')[0] || 'Visitante';
   const photo = state.profile?.avatar_url;
-  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview">${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
+  $('#pageContent').innerHTML = `<section class="page-placeholder profile-page"><div class="eyebrow">SUA IDENTIDADE</div><h1>Seu perfil</h1><p>Personalize como as pessoas vão conhecer você no LUMI.</p><div class="inbox-layout profile-layout"><div class="inbox-note profile-preview-card" style="--profile-highlight:${escapeHTML(state.profile?.profile_color||'#ffd83d')}"><div class="profile-photo-preview">${photo?`<img class="avatar-image" src="${escapeHTML(photo)}" alt="Sua foto de perfil">`:`<span>${escapeHTML(initials(name))}</span>`}</div><strong>${escapeHTML(name)} ${accountBadges(state.user?.id,state.profile?.vip_purchased)}</strong><p>Escolha uma foto para deixar seu perfil com a sua cara.</p><div class="profile-bio-preview" style="--profile-highlight:${escapeHTML(state.profile?.profile_color||'#ffd83d')}">${state.profile?.pronouns ? `<span class="profile-pronouns">${escapeHTML(state.profile.pronouns)}</span><br>` : ''}${state.profile?.bio ? escapeHTML(state.profile.bio) : ""}${state.profile?.status_text ? "<br><strong>Status:</strong> " + escapeHTML(state.profile.status_text) : ""}${state.profile?.activity_text ? "<br><strong>Atividade:</strong> " + escapeHTML(state.profile.activity_text) : ""}</div><label class="secondary-button upload-photo-button" for="profilePhoto">Escolher foto</label><input id="profilePhoto" class="visually-hidden-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></div><form id="profileForm" class="profile-form"><label class="field-label" for="profileDisplayName">Nome de exibição</label><input class="form-input" id="profileDisplayName" maxlength="40" value="${escapeHTML(name)}" required><label class="field-label" for="profilePronouns">Pronomes <span class="optional">OPCIONAL</span></label><input class="form-input" id="profilePronouns" maxlength="32" value="${escapeHTML(state.profile?.pronouns||'')}" placeholder="Ex.: ele/dele, ela/dela, elu/delu"><label class="field-label" for="profileColor">Cor do perfil</label><select class="form-input" id="profileColor"><option value="#ffd83d" ${(state.profile?.profile_color||'#ffd83d')==='#ffd83d'?'selected':''}>Amarelo LUMI</option><option value="#8ec5ff" ${state.profile?.profile_color==='#8ec5ff'?'selected':''}>Azul céu</option><option value="#a7e6b5" ${state.profile?.profile_color==='#a7e6b5'?'selected':''}>Verde suave</option><option value="#d8b4fe" ${state.profile?.profile_color==='#d8b4fe'?'selected':''}>Lilás</option><option value="#ffb4c8" ${state.profile?.profile_color==='#ffb4c8'?'selected':''}>Rosa</option><option value="#ffffff" ${state.profile?.profile_color==='#ffffff'?'selected':''}>Branco</option></select><label class="field-label" for="profileBio">BIO <span class="optional">OPCIONAL</span></label><textarea class="form-input textarea" id="profileBio" maxlength="160" placeholder="Conte um pouquinho sobre você">${escapeHTML(state.profile?.bio || '')}</textarea><p class="settings-help">Até 160 caracteres. Evite compartilhar informações pessoais sensíveis.</p><label class="field-label" for="profileStatus">Status <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileStatus" maxlength="80" value="${escapeHTML(state.profile?.status_text || "")}" placeholder="Ex.: disponível, estudando..."><label class="field-label" for="profileActivity">O que estou jogando/fazendo <span class="optional">OPCIONAL</span></label><input class="form-input" id="profileActivity" maxlength="100" value="${escapeHTML(state.profile?.activity_text || "")}" placeholder="Ex.: Minecraft, criando um projeto..."><p class="settings-help">A atividade é informada por você; o site ainda não detecta automaticamente outros aplicativos.</p><button class="primary-button full-button" type="submit">Salvar perfil <span>→</span></button><button class="secondary-button full-button" type="button" data-action="signout">Sair da conta</button></form></div><div class="notice-box">Os selos de verificação e de dono são atribuídos oficialmente pela configuração do LUMI, não pelo próprio usuário.</div></section>`;
 }
 async function saveProfile(event) {
   event.preventDefault(); if (!state.user) return;
   const display_name=$('#profileDisplayName').value.trim(); if (!display_name) return;
   const bio=$('#profileBio')?.value.trim() || '';
+  const pronouns=$('#profilePronouns')?.value.trim().slice(0,32) || '';
+  const profile_color=$('#profileColor')?.value || '#ffd83d';
   const status_text=$('#profileStatus')?.value.trim() || '';
   const activity_text=$('#profileActivity')?.value.trim() || '';
-  const {error}=await supabase.from('profiles').update({display_name,bio,status_text,activity_text}).eq('id',state.user.id);
+  const {error}=await supabase.from('profiles').update({display_name,bio,pronouns,profile_color,status_text,activity_text}).eq('id',state.user.id);
   if(error){toast(error.message.toLowerCase().includes('bio') ? 'Execute database/profile-settings.sql no SQL Editor do Supabase e tente novamente.' : `Não foi possível salvar: ${error.message}`,'error');return;}
-  state.profile.display_name=display_name; state.profile.bio=bio; state.profile.status_text=status_text; state.profile.activity_text=activity_text; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
+  state.profile.display_name=display_name; state.profile.bio=bio; state.profile.pronouns=pronouns; state.profile.profile_color=profile_color; state.profile.status_text=status_text; state.profile.activity_text=activity_text; updateIdentity(); renderProfile(); toast('Perfil atualizado!','success');
 }
 async function uploadProfilePhoto(file) {
   if (!state.user || !file) return;
@@ -1894,7 +2303,7 @@ document.addEventListener('click', async event=>{
   if(channelButton){const channel=state.channels.find(c=>c.id===channelButton.dataset.channelId);if(channel){state.activeChannel=channel;await loadMessages();}return;}
   if(joinButton){await joinSpaceById(joinButton.dataset.joinSpace);return;}
   if(joinCodeButton){await joinSpaceByCode(joinCodeButton.dataset.joinCode);return;}
-  if(saveRoleButton){const select=$(`[data-member-role="${saveRoleButton.dataset.saveRole}"]`);const {error}=await supabase.rpc('set_space_member_role',{p_space_id:state.activeSpace.id,p_user_id:saveRoleButton.dataset.saveRole,p_role:select.value});if(error){toast(`Não foi possível alterar o papel: ${error.message}`,'error');return;}toast('Papel do membro atualizado!','success');await manageMembers();return;}
+  if(saveRoleButton){const select=$(`[data-member-role="${saveRoleButton.dataset.saveRole}"]`);if(!select||state.activeSpace?.owner_id!==state.user?.id){toast('Somente o fundador pode alterar cargos.', 'error');return;}const {data,error}=await supabase.from('space_members').update({role:select.value}).eq('space_id',state.activeSpace.id).eq('user_id',saveRoleButton.dataset.saveRole).neq('role','owner').select('user_id').maybeSingle();if(error){toast(`Não foi possível alterar o cargo: ${error.message}`,'error');return;}if(!data){toast('Esse membro não pode receber esse cargo.', 'error');return;}toast('Cargo do membro atualizado!', 'success');await manageMembers();return;}
   if(event.target.closest('[data-close]')){closeModal(event.target.closest('[data-close]').dataset.close);return;}
   if(!action)return;
   if(action==='create-space'){if(requireAuth())openModal('spaceModal');}
@@ -1902,7 +2311,11 @@ document.addEventListener('click', async event=>{
   else if(action==='discover')setPage('discover');
   else if(action==='home')setPage('home');
   else if(action==='show-inbox')setPage('inbox');
-  else if(action==='create-channel'){if(requireAuth()&&state.activeSpace)openModal('channelModal');else if(!state.activeSpace)toast('Abra um espaço primeiro.');}
+  else if(action==='create-channel'){if(requireAuth()&&state.activeSpace){resetChannelModal();openModal('channelModal');}else if(!state.activeSpace)toast('Abra um espaço primeiro.');}
+  else if(action==='edit-channel')openEditChannel(event.target.closest('[data-channel-edit]')?.dataset.channelEdit);
+  else if(action==='move-channel-up')await moveChannel(event.target.closest('[data-move-channel]')?.dataset.moveChannel,-1);
+  else if(action==='move-channel-down')await moveChannel(event.target.closest('[data-move-channel]')?.dataset.moveChannel,1);
+  else if(action==='delete-channel')await deleteChannel(event.target.closest('[data-channel-delete]')?.dataset.channelDelete);
   else if(action==='invite')showInvite();
   else if(action==='edit-space')await editActiveSpace();
   else if(action==='delete-space')await deleteActiveSpace();
@@ -1914,6 +2327,13 @@ document.addEventListener('click', async event=>{
 $('#authForm').addEventListener('submit',handleAuth);
 $('#forgotPasswordButton')?.addEventListener('click', requestPasswordRecovery);
 document.addEventListener('click', async event => {
+  const callUser = event.target.closest('[data-call-user]');
+  if (callUser) { await startCallToUser(callUser.dataset.callUser, callUser.dataset.callMode || 'audio'); return; }
+  const dockReturn = event.target.closest('[data-call-dock-return]');
+  if (dockReturn) {
+    if (state.activeConversation) { setPage('inbox'); setTimeout(() => { showCallStage(); updateCallDock(); }, 500); }
+    return;
+  }
   const button = event.target.closest('[data-copy-contact]');
   if (!button) return;
   const username = button.dataset.copyContact;
@@ -1934,17 +2354,31 @@ document.addEventListener('click', async event => {
   }
 });
 $('#passwordRecoveryForm')?.addEventListener('submit', saveRecoveredPassword);
-document.addEventListener('change',async e=>{if(e.target.id==='lumiEnterToSend'){try{localStorage.setItem('lumi-enter-to-send',String(e.target.checked));toast(e.target.checked?'Enter envia as mensagens.':'Enter quebra a linha.','success');}catch{toast('Não foi possível salvar essa preferência.','error');}}if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
+document.addEventListener('change',async e=>{if(e.target.id==='lumiEnterToSend'){try{localStorage.setItem('lumi-enter-to-send',String(e.target.checked));toast(e.target.checked?'Enter envia as mensagens.':'Enter quebra a linha.','success');}catch{toast('Não foi possível salvar essa preferência.','error');}}if(e.target.id==='lumiStreamerMode'){try{localStorage.setItem('lumi-streamer-mode',String(e.target.checked));applyStreamerMode(e.target.checked);toast(e.target.checked?'Modo streamer ativado.':'Modo streamer desativado.','success');}catch{toast('Não foi possível salvar o modo streamer.','error');}}if(e.target.id==='lumiPresenceStatus'){try{localStorage.setItem('lumi-presence-status',e.target.value);applyPresenceStatus(e.target.value);toast('LUMI Presence atualizado.','success');}catch{toast('Não foi possível salvar a atividade.','error');}}if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
 document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
 $('#channelForm').addEventListener('submit',createChannel);
+$('#channelModal')?.addEventListener('close',resetChannelModal);
 $('#inviteForm').addEventListener('submit',async e=>{e.preventDefault();await joinSpaceByCode($('#joinCode').value);});
 $('#copyInvite').addEventListener('click',copyInvite);
 $('#spaceSearch').addEventListener('input',renderSpaceNav);
 $('#messageForm')?.addEventListener('submit',sendMessage);
 document.addEventListener('submit',e=>{if(e.target.id==='dmMessageForm')sendDM(e);});
-document.addEventListener('click',e=>{const channelCreate=e.target.closest('[data-action="create-channel"][data-channel-kind]');if(channelCreate){const kindSelect=$('#channelKind');if(kindSelect)kindSelect.value=channelCreate.dataset.channelKind;const nameInput=$('#channelName');if(nameInput)nameInput.placeholder=channelCreate.dataset.channelKind==='voice'?'Ex.: sala-de-voz':'Ex.: papo-geral';}const edit=e.target.closest('[data-space-edit]');if(edit){editSpaceMessage(edit.dataset.spaceEdit);return;}const del=e.target.closest('[data-space-delete]');if(del){deleteSpaceMessage(del.dataset.spaceDelete);return;}const reply=e.target.closest('[data-space-reply]');if(reply){replyToSpaceMessage(reply.dataset.spaceReply);return;}const react=e.target.closest('[data-space-react]');if(react){reactToSpaceMessage(react.dataset.spaceReact,react.dataset.emoji||null);return;}if(e.target.closest('[data-space-reply-cancel]')){state.spaceReplyTo=null;renderWorkspace();return;}if(e.target.closest('#spaceAttachButton')){$('#spaceFileInput')?.click();return;}if(e.target.closest('#dmSearchButton'))searchDMPeople();if(e.target.closest('#dmMobileSearchButton'))searchDMPeople();if(e.target.closest('#dmRefreshButton'))loadConversations();if(e.target.closest('#dmAttachButton'))$('#dmFileInput')?.click();});
+window.addEventListener('lumi:gif-sent', event => {
+  const message = event.detail?.message;
+  // A conversa visível é a referência principal: o estado pode estar um ciclo
+  // atrás durante a troca de conversa, mesmo com o envio já concluído.
+  const visibleConversationId = window.lumiActiveConversationId
+    || document.querySelector('#dmChatPanel')?.dataset.conversationId
+    || state.activeConversation?.id;
+  if (!message || message.conversation_id !== visibleConversationId) return;
+  if (!state.dmMessages.some(item => item.id === message.id)) {
+    state.dmMessages.push(message);
+    renderDMMessages();
+  }
+});
+document.addEventListener('click',e=>{const channelCreate=e.target.closest('[data-action="create-channel"][data-channel-kind]');if(channelCreate){const kindSelect=$('#channelKind');if(kindSelect){kindSelect.value=channelCreate.dataset.channelKind;kindSelect.dispatchEvent(new Event('change',{bubbles:true}));window.lumiSyncChannelSelect?.(kindSelect.value);}const nameInput=$('#channelName');if(nameInput)nameInput.placeholder=channelCreate.dataset.channelKind==='voice'?'Ex.: sala-de-voz':'Ex.: papo-geral';}const edit=e.target.closest('[data-space-edit]');if(edit){editSpaceMessage(edit.dataset.spaceEdit);return;}const del=e.target.closest('[data-space-delete]');if(del){deleteSpaceMessage(del.dataset.spaceDelete);return;}const reply=e.target.closest('[data-space-reply]');if(reply){replyToSpaceMessage(reply.dataset.spaceReply);return;}const react=e.target.closest('[data-space-react]');if(react){reactToSpaceMessage(react.dataset.spaceReact,react.dataset.emoji||null);return;}if(e.target.closest('[data-space-reply-cancel]')){state.spaceReplyTo=null;renderWorkspace();return;}if(e.target.closest('#spaceAttachButton')){$('#spaceFileInput')?.click();return;}if(e.target.closest('#dmSearchButton'))searchDMPeople();if(e.target.closest('#dmMobileSearchButton'))searchDMPeople();if(e.target.closest('#dmRefreshButton'))loadConversations();if(e.target.closest('#dmAttachButton'))$('#dmFileInput')?.click();});
 document.addEventListener('click',e=>{const call=e.target.closest('[data-call]');if(call){startCall(call.dataset.call);return;}const control=e.target.closest('[data-call-control]');if(control){toggleCallControl(control.dataset.callControl);return;}const incoming=e.target.closest('[data-incoming-call]');if(incoming){if(incoming.dataset.incomingCall==='accept')acceptIncomingCall();else declineIncomingCall();}});
 document.addEventListener('keydown',e=>{if((e.target.id==='dmPeopleSearch'||e.target.id==='dmMobilePeopleSearch')&&e.key==='Enter'){e.preventDefault();searchDMPeople();return;}if((e.target.id==='messageInput'||e.target.id==='dmMessageInput')&&e.key==='Enter'&&!e.isComposing){const enterSends=localStorage.getItem('lumi-enter-to-send')!=='false';const shouldSend=enterSends?(!e.shiftKey):((e.ctrlKey||e.metaKey)&&!e.shiftKey);if(shouldSend){e.preventDefault();const form=e.target.form;if(form&&typeof form.requestSubmit==='function')form.requestSubmit();}}});
 document.addEventListener('submit',e=>{if(e.target.id==='messageForm')sendMessage(e);if(e.target.id==='profileForm')saveProfile(e);});
@@ -1969,7 +2403,7 @@ $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){state.sear
 document.addEventListener('keydown',e=>{const target=e.target;const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('#globalSearch').focus();}else if(e.key==='/'&&!typing&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!document.querySelector('.modal[open]')){e.preventDefault();$('#globalSearch').focus();}if(e.key==='Escape'){$('.modal[open]').forEach(d=>d.close());}});
 
 // Preferências locais do LUMI: tema e Não Perturbe.
-try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); applyAccent(localStorage.getItem('lumi-accent') || 'yellow'); } catch { applyTheme('light'); applyAccent('yellow'); }
+try { applyTheme(localStorage.getItem('lumi-theme') || 'light'); applyAccent(localStorage.getItem('lumi-accent') || 'yellow'); applyStreamerMode(localStorage.getItem('lumi-streamer-mode') === 'true'); applyPresenceStatus(localStorage.getItem('lumi-presence-status') || 'online'); } catch { applyTheme('light'); applyAccent('yellow'); applyStreamerMode(false); applyPresenceStatus('online'); }
 setDoNotDisturb(getDoNotDisturb());
 loadCustomCallTone();
 
@@ -2045,6 +2479,7 @@ document.addEventListener('change', event => {
     event.target.value = '';
   }
 });
+document.addEventListener('click',event=>{if(!event.target.closest('#lumiSaveTurnConfig'))return;const urls=$('#lumiTurnUrls')?.value.trim();const username=$('#lumiTurnUsername')?.value.trim();const credential=$('#lumiTurnCredential')?.value;if(!urls&&!username&&!credential){localStorage.removeItem('lumi-turn-config');toast('Configuração TURN removida.','success');return;}if(!urls||!username||!credential||!/^turns?:/i.test(urls)){toast('Preencha endereço turn:/turns:, usuário e credencial válidos.','error');return;}try{localStorage.setItem('lumi-turn-config',JSON.stringify({urls,username,credential}));toast('Configuração TURN salva para as próximas chamadas.','success');}catch{toast('Não consegui salvar a configuração TURN.','error');}});
 document.addEventListener('change',event=>{if(event.target.id==='lumiAccent'){applyAccent(event.target.value);toast('Cor de destaque atualizada.','success');}});
 
 
