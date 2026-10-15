@@ -170,8 +170,8 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Melhorar a captura de microfone com cancelamento de eco, supressão de ruído e controle automático de ganho
 - [x] Adicionar mais servidores STUN e suporte opcional para credenciais TURN configuradas localmente
 - [x] Melhorar mensagens de estado e tratamento de erros durante a negociação WebRTC
-- [x] Adicionar LUMI Assist e sugestões locais de perfis com interesses parecidos
-- [x] Adicionar busca/envio de GIFs Tenor nas DMs, com chave API informada pelo usuário
+- [x] LUMI Assist removido na rodada final; o seletor de GIFs continua separado e funcional
+- [x] Adicionar busca/envio de GIFs KLIPY nas DMs, com chave API informada pelo usuário
 - [x] Adicionar suporte a resposta em notificações de mensagens (precisa teste real em navegadores compatíveis)
 - [ ] Testar chamadas com duas contas em redes diferentes; STUN sozinho não garante conexão em todas as redes
 
