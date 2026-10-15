@@ -314,7 +314,7 @@ function installGifButton() {
     localStorage.setItem('lumi-tenor-api-key', event.target.value.trim());
     if (!panel.hidden) {
       const active = panel.querySelector('[data-tenor-tab].active')?.dataset.tenorTab || 'featured';
-      if (active === 'search' && queryInput.value.trim()) queryInput.form?.requestSubmit();
+      if (active === 'search' && queryInput.value.trim()) panel.querySelector('[data-tenor-search-form]')?.requestSubmit();
       else panel.querySelector('[data-tenor-tab="' + (active === 'search' ? 'featured' : active) + '"]')?.click();
     }
   });
