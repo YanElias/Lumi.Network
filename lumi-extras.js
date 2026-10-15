@@ -36,7 +36,13 @@ function installStyles() {
     .lumi-assistant-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line,rgba(0,0,0,.1))}
     .lumi-assistant-form input,.lumi-gif-search{min-width:0;flex:1;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:11px;padding:10px;background:var(--surface,#fff);color:inherit}
     .lumi-assistant-form button,.lumi-gif-search-button{border:0;border-radius:11px;padding:0 13px;background:var(--accent,#ffd83d);color:#191919;font-weight:700;cursor:pointer}
-    .lumi-gif-button{flex:0 0 auto;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:12px;background:var(--surface,#fff);color:inherit;padding:0 11px;cursor:pointer;font-weight:800}
+    .lumi-gif-button{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:42px;height:40px;padding:0 11px;border:1px solid var(--line,rgba(0,0,0,.12));border-radius:13px;background:var(--panel,#f6f6f6);color:var(--text,#333);cursor:pointer;font:700 12px/1 inherit;letter-spacing:.02em;transition:background .16s ease,border-color .16s ease,transform .16s ease,box-shadow .16s ease}
+    .lumi-gif-button .material-symbols-rounded{font-size:21px;line-height:1}
+    .lumi-gif-button:hover{background:var(--accent-soft,rgba(255,216,61,.18));border-color:var(--accent,#ffd83d);box-shadow:0 3px 10px #0000000d}
+    .lumi-gif-button:active{transform:scale(.96)}
+    .lumi-gif-button:focus-visible{outline:2px solid var(--accent,#ffd83d);outline-offset:2px}
+    html[data-theme="dark"] .lumi-gif-button{background:var(--lumi-dark-raised,#252525);border-color:var(--lumi-dark-line,#393939);color:var(--text,#f1f1f3)}
+    @media(max-width:600px){.lumi-gif-button{height:38px;min-width:38px;padding:0 9px}}
     #dmMessageForm{position:relative}.lumi-gif-panel{position:absolute;bottom:calc(100% + 10px);left:8px;width:min(340px,calc(100vw - 48px));max-height:360px;overflow:auto;padding:12px;border:1px solid var(--line,rgba(0,0,0,.15));border-radius:16px;background:var(--surface,#fff);color:var(--text,#222);box-shadow:0 12px 35px #0003;z-index:30}
     .lumi-gif-panel form{display:flex;gap:7px;margin:9px 0}
     .lumi-gif-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -315,7 +321,7 @@ function installGifButton() {
   const attach = $('#dmAttachButton',form);
   const button = document.createElement('button');
   button.id = 'lumiGifButton'; button.type='button'; button.className='lumi-gif-button';
-  button.textContent='GIF'; button.title='Buscar GIFs'; button.setAttribute('aria-label','Buscar GIFs');
+  button.innerHTML='<span class="material-symbols-rounded" aria-hidden="true">gif_box</span><span>GIF</span>'; button.title='Buscar GIFs'; button.setAttribute('aria-label','Buscar GIFs');
   const panel = document.createElement('section');
   panel.id='lumiGifPanel'; panel.className='lumi-gif-panel'; panel.hidden=true;
   panel.innerHTML = '<strong>Enviar um GIF</strong><p class="lumi-gif-hint">Em alta, categorias e busca do Tenor. Sua chave fica salva neste navegador.</p>' +
