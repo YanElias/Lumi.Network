@@ -59,6 +59,14 @@ const VERIFIED_USER_IDS = ['66fbb608-8672-40d7-aedc-7e7645726ebf']; // UUIDs de 
 const TESTER_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Testers autorizados
 const STAFF_USER_IDS = ['222eba63-627c-4cc9-bf49-09da8cb7550d', '66fbb608-8672-40d7-aedc-7e7645726ebf']; // Equipe do LUMI
 const CREATOR_USER_IDS = []; // IDs aprovados de criadores de conteúdo que usam o LUMI
+function hasLumiInfinity(userId = state.user?.id, profile = state.profile) {
+  if (!userId) return false;
+  return userId === APP_OWNER_USER_ID || INFINITY_USER_IDS.includes(userId) ||
+    (userId === state.user?.id && Boolean(profile?.vip_purchased));
+}
+function isLumiOwner(userId = state.user?.id) {
+  return Boolean(userId && APP_OWNER_USER_ID && userId === APP_OWNER_USER_ID);
+}
 function accountBadges(userId, isInfinity = false) {
   if (!userId) return '';
   const owner = userId === APP_OWNER_USER_ID && APP_OWNER_USER_ID.length > 0;
@@ -209,11 +217,21 @@ function renderSpaceNav() {
 function renderHome() {
   $('.main-panel').classList.remove('workspace-mode'); $('.app-shell').classList.remove('workspace-mode','inbox-mode');
   $('#crumbParent').textContent = 'LUMI'; $('#crumbCurrent').textContent = 'Início';
-  $('#pageContent').innerHTML = `
+  $('#pageContent').innerHTML = `<div id="lumiAnnouncementSlot"></div>
     <section class="welcome-row"><div><div class="eyebrow"><span class="eyebrow-dot"></span> SEU CANTINHO NA INTERNET</div><h1>Um lugar para <span>se encontrar.</span></h1><p>Converse, compartilhe ideias e construa comunidades do seu jeito.</p><div class="welcome-actions"><button class="primary-button" data-action="create-space">＋ Criar um espaço</button><button class="secondary-button" data-action="discover">Explorar espaços <span>↗</span></button></div></div><div class="hero-art" aria-hidden="true"><div class="sun-orbit orbit-one"></div><div class="sun-orbit orbit-two"></div><div class="sun-core"><span>l</span></div><span class="spark spark-one">✳</span><span class="spark spark-two">✦</span><span class="spark spark-three">·</span></div></section>
     <section class="section-block"><div class="section-title-row"><div><div class="eyebrow">SEU MUNDO</div><h2>Continue de onde parou</h2></div><button class="text-button" data-action="discover">Ver todos <span>→</span></button></div><div id="homeSpaces" class="space-cards">${homeSpacesHTML()}</div></section>
     <section class="section-block discovery-block"><div class="section-title-row"><div><div class="eyebrow">PRA VOCÊ</div><h2>Ideias para se conectar</h2></div></div><div class="feature-grid"><article class="feature-card feature-yellow"><div class="feature-symbol">✳</div><div><span class="feature-tag">CRIE</span><h3>Seu espaço, suas regras.</h3><p>Junte pessoas em torno do que vocês amam.</p></div><button class="round-arrow" data-action="create-space" aria-label="Criar espaço">↗</button></article><article class="feature-card feature-white"><div class="feature-symbol symbol-chat">☷</div><div><span class="feature-tag">CONVERSE</span><h3>Uma conversa de cada vez.</h3><p>Canais organizados para as ideias fluírem.</p></div><button class="round-arrow" data-action="show-inbox" aria-label="Abrir mensagens">↗</button></article></div></section>`;
   renderSpaceNav();
+  loadActiveAnnouncement();
+}
+async function loadActiveAnnouncement() {
+  try {
+    const { data, error } = await supabase.from('app_announcements').select('id,message,created_at').eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (error || !data) return;
+    const slot = $('#lumiAnnouncementSlot');
+    if (!slot) return;
+    slot.innerHTML = `<aside class="lumi-global-announcement" role="status"><span class="material-symbols-rounded" aria-hidden="true">campaign</span><div><strong>Comunicado oficial do LUMI</strong><p>${escapeHTML(data.message)}</p></div></aside>`;
+  } catch (error) { console.debug('Comunicados do LUMI ainda não foram configurados.', error); }
 }
 function spacePhotoContent(space) {
   const url = typeof space?.image_url === 'string'
@@ -2091,7 +2109,7 @@ async function setDoNotDisturb(enabled) {
   return true;
 }
 function applyAccent(accent) {
-  const allowed = state.profile?.vip_purchased ? ['yellow','blue','green','purple'] : ['yellow'];
+  const allowed = hasLumiInfinity() ? ['yellow','blue','green','purple'] : ['yellow'];
   const selected = allowed.includes(accent) ? accent : 'yellow';
   document.documentElement.dataset.accent = selected;
   try { localStorage.setItem('lumi-accent', selected); } catch {}
@@ -2104,7 +2122,8 @@ function renderSettings() {
   const accent = document.documentElement.dataset.accent || 'yellow';
   const dnd = getDoNotDisturb();
   const retryMessage = getCallRetryMessage();
-  const isVip = Boolean(state.profile?.vip_purchased);
+  const isVip = hasLumiInfinity();
+  const isOwner = isLumiOwner();
   $('#pageContent').innerHTML = `
     <section class="page-placeholder settings-page">
       <div class="eyebrow">DO SEU JEITO</div><h1>Configurações</h1>
@@ -2118,6 +2137,7 @@ function renderSettings() {
        <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">notifications_off</div><div class="settings-card-content"><h2>Não Perturbe</h2><p>Quando ativado, o LUMI recusa chamadas recebidas e interrompe retornos automáticos. Você pode desativá-lo quando quiser.</p><label class="settings-toggle"><input id="lumiDnd" type="checkbox" ${dnd?'checked':''}><span class="settings-toggle-track"></span><span><strong>Ativar Não Perturbe</strong><small>Preferência salva neste navegador.</small></span></label></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">music_note</div><div class="settings-card-content"><h2>Toque de chamada</h2><p>Escolha um áudio para tocar enquanto você liga. O arquivo fica salvo neste navegador.</p><input id="lumiCallToneFile" type="file" accept="audio/*" hidden><div class="settings-inline-actions"><button class="secondary-button" id="chooseCallTone" type="button">Escolher áudio</button><button class="secondary-button" id="previewCallTone" type="button">Ouvir toque</button><button class="text-button" id="removeCallTone" type="button">Usar toque padrão</button></div><small class="settings-help" id="callToneStatus">Toque padrão do LUMI</small></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">chat</div><div class="settings-card-content"><h2>Mensagem nas chamadas</h2><p>Escreva uma mensagem curta que aparecerá para a pessoa quando você ligar. Ela será reutilizada nas tentativas automáticas.</p><label class="field-label" for="lumiCallRetryMessage">Mensagem (opcional)</label><input class="form-input" id="lumiCallRetryMessage" maxlength="160" value="${escapeHTML(retryMessage)}" placeholder="Ex.: Opa, me atende quando puder!"><small class="settings-help">Até 160 caracteres. Salva neste navegador.</small></div></section>
+      ${isOwner ? `<section class="settings-card lumi-owner-card"><div class="settings-card-icon material-symbols-rounded">admin_panel_settings</div><div class="settings-card-content"><div class="lumi-infinity-eyebrow">ACESSO EXCLUSIVO</div><h2>Painel do dono do LUMI</h2><p>Publique um comunicado oficial que aparece na página inicial para as pessoas conectadas.</p><form id="lumiOwnerAnnouncementForm"><label class="field-label" for="lumiOwnerAnnouncement">Comunicado global</label><textarea class="form-input textarea" id="lumiOwnerAnnouncement" maxlength="240" placeholder="Escreva um aviso para a comunidade (até 240 caracteres)…" required></textarea><button class="primary-button" type="submit">Publicar comunicado</button><button class="text-button" id="lumiOwnerClearAnnouncement" type="button">Remover comunicado atual</button></form><small class="settings-help">Execute database/app-owner-tools.sql no Supabase para habilitar os comunicados com segurança.</small></div></section>` : ''}
       <section class="settings-card lumi-infinity-card"><div class="settings-card-icon material-symbols-rounded">workspace_premium</div><div class="settings-card-content"><div class="lumi-infinity-eyebrow">EDIÇÃO ESPECIAL</div><h2>LUMI INFINITY</h2><p>Um pagamento único de <strong>R$ 10,00</strong>. Sem assinatura, mensalidade ou renovação automática.</p><ul class="lumi-infinity-perks"><li><span class="material-symbols-rounded">palette</span><span><strong>Paletas exclusivas</strong><small>Azul, verde e roxo para personalizar sua experiência.</small></span></li><li><span class="material-symbols-rounded">auto_awesome</span><span><strong>Mais identidade</strong><small>Novos detalhes de personalização planejados para o INFINITY.</small></span></li></ul><p>${isVip ? "Seu perfil já tem LUMI INFINITY ativado." : "A compra ainda não está disponível: estamos preparando um checkout seguro."}</p><button class="secondary-button" type="button" disabled>${isVip ? "INFINITY ativado" : "Compra em breve"}</button></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">person_off</div><div class="settings-card-content"><h2>Pessoas bloqueadas</h2><p>Veja quem você bloqueou e desbloqueie alguém quando quiser voltar a conversar.</p><div id="lumiBlockedUsers" class="lumi-blocked-users"><p class="settings-help">Carregando lista…</p></div></div></section>
       <section class="settings-card"><div class="settings-card-icon material-symbols-rounded">lock</div><div class="settings-card-content"><h2>Alterar senha</h2><p>Confirme sua senha atual antes de escolher uma nova.</p><form id="passwordChangeForm"><label class="field-label" for="currentPassword">Senha atual</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required><label class="field-label" for="newPassword">Nova senha</label><input class="form-input" id="newPassword" type="password" minlength="6" autocomplete="new-password" required><label class="field-label" for="confirmPassword">Confirmar nova senha</label><input class="form-input" id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required><button class="primary-button" type="submit">Atualizar senha</button></form></div></section>
@@ -2127,6 +2147,33 @@ function renderSettings() {
   const streamerToggle = $('#lumiStreamerMode'); if (streamerToggle) streamerToggle.checked = localStorage.getItem('lumi-streamer-mode') === 'true';
   const presenceSelect = $('#lumiPresenceStatus'); if (presenceSelect) presenceSelect.value = localStorage.getItem('lumi-presence-status') || 'online';
   loadBlockedUsers();
+}
+async function publishOwnerAnnouncement(event) {
+  event.preventDefault();
+  if (!isLumiOwner()) { toast('Apenas o dono do LUMI pode publicar comunicados.', 'error'); return; }
+  const input = $('#lumiOwnerAnnouncement');
+  const message = input?.value.trim().slice(0, 240);
+  if (!message) { toast('Escreva um comunicado antes de publicar.', 'error'); return; }
+  const button = $('#lumiOwnerAnnouncementForm button[type="submit"]');
+  if (button) { button.disabled = true; button.textContent = 'Publicando…'; }
+  const deactivated = await supabase.from('app_announcements').update({ is_active: false }).eq('is_active', true);
+  if (deactivated.error) {
+    if (button) { button.disabled = false; button.textContent = 'Publicar comunicado'; }
+    toast('Painel indisponível. Execute database/app-owner-tools.sql no Supabase.', 'error');
+    return;
+  }
+  const { error } = await supabase.from('app_announcements').insert({ message, created_by: state.user.id, is_active: true });
+  if (button) { button.disabled = false; button.textContent = 'Publicar comunicado'; }
+  if (error) { toast('Não consegui publicar: ' + error.message, 'error'); return; }
+  input.value = '';
+  toast('Comunicado publicado para a comunidade!', 'success');
+  if (state.page === 'home') renderHome();
+}
+async function clearOwnerAnnouncement() {
+  if (!isLumiOwner()) { toast('Apenas o dono do LUMI pode remover comunicados.', 'error'); return; }
+  const { error } = await supabase.from('app_announcements').update({ is_active: false }).eq('is_active', true);
+  if (error) { toast('Não consegui remover. Confira se database/app-owner-tools.sql foi executado.', 'error'); return; }
+  toast('Comunicado removido.', 'success');
 }
 async function changeAccountPassword(event) {
   event.preventDefault();
@@ -2355,7 +2402,8 @@ document.addEventListener('click', async event => {
 });
 $('#passwordRecoveryForm')?.addEventListener('submit', saveRecoveredPassword);
 document.addEventListener('change',async e=>{if(e.target.id==='lumiEnterToSend'){try{localStorage.setItem('lumi-enter-to-send',String(e.target.checked));toast(e.target.checked?'Enter envia as mensagens.':'Enter quebra a linha.','success');}catch{toast('Não foi possível salvar essa preferência.','error');}}if(e.target.id==='lumiStreamerMode'){try{localStorage.setItem('lumi-streamer-mode',String(e.target.checked));applyStreamerMode(e.target.checked);toast(e.target.checked?'Modo streamer ativado.':'Modo streamer desativado.','success');}catch{toast('Não foi possível salvar o modo streamer.','error');}}if(e.target.id==='lumiPresenceStatus'){try{localStorage.setItem('lumi-presence-status',e.target.value);applyPresenceStatus(e.target.value);toast('LUMI Presence atualizado.','success');}catch{toast('Não foi possível salvar a atividade.','error');}}if(e.target.id==='lumiTheme'){applyTheme(e.target.value);toast(e.target.value==='dark'?'Tema escuro ativado.':'Tema claro ativado.','success');}if(e.target.id==='lumiAccent'){applyAccent(e.target.value);toast('Cor de destaque atualizada.','success');}if(e.target.id==='lumiCallRetryMessage'){try{localStorage.setItem('lumi-call-retry-message',e.target.value.slice(0,160));}catch{};}if(e.target.id==='lumiDnd'){const toggle=e.target;toggle.disabled=true;const ok=await setDoNotDisturb(toggle.checked);toggle.disabled=false;if(ok)toast(toggle.checked?'Não Perturbe ativado.':'Não Perturbe desativado.','success');else toggle.checked=!toggle.checked;}});
-document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);});
+document.addEventListener('submit',e=>{if(e.target.id==='passwordChangeForm')changeAccountPassword(e);if(e.target.id==='lumiOwnerAnnouncementForm')publishOwnerAnnouncement(e);});
+document.addEventListener('click',e=>{if(e.target.closest('#lumiOwnerClearAnnouncement'))clearOwnerAnnouncement();});
 $('#authSwitch').addEventListener('click',()=>setAuthMode(state.authMode==='signin'?'signup':'signin'));
 $('#spaceForm').addEventListener('submit',createSpace);
 $('#channelForm').addEventListener('submit',createChannel);
