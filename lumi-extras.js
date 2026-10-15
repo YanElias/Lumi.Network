@@ -165,6 +165,10 @@ async function startConversation(userId) {
 
 function installGifButton() {
   const form = $('#dmMessageForm');
+  const spaceFormObserver = new MutationObserver(() => installSpaceGifPicker());
+  if ($('#activeSpaceNav')) spaceFormObserver.observe($('#activeSpaceNav'), {childList:true,subtree:true});
+  const mainObserver = new MutationObserver(() => installSpaceGifPicker());
+  if ($('.main-panel')) mainObserver.observe($('.main-panel'), {childList:true,subtree:true});
   if (!form || form.querySelector('#lumiGifButton')) return;
   const attach = $('#dmAttachButton',form);
   const button = document.createElement('button');
@@ -237,10 +241,61 @@ async function processNotificationReply() {
   if (error) toast('A resposta da notificação não foi enviada. Abra a conversa para tentar novamente.',true);
   else toast('Resposta enviada pela notificação!');
 }
+
+function installSpaceGifPicker() {
+  const form = $('#messageForm');
+  if (!form || form.dataset.lumiSpaceGifReady === 'true') return;
+  const input = $('#messageInput');
+  const attach = $('#spaceAttachButton');
+  if (!input || !attach) return;
+  form.dataset.lumiSpaceGifReady = 'true';
+  const wrap = document.createElement('div');
+  wrap.className = 'lumi-space-gif-wrap';
+  wrap.style.cssText = 'position:relative;display:flex;align-items:center;';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'dm-attach-button';
+  button.title = 'Enviar GIF';
+  button.setAttribute('aria-label','Enviar GIF');
+  button.innerHTML = '<span class="material-symbols-rounded">gif</span>';
+  const panel = document.createElement('div');
+  panel.className = 'lumi-gif-panel';
+  panel.hidden = true;
+  panel.style.cssText = 'position:absolute;left:0;bottom:calc(100% + 10px);width:min(340px,calc(100vw - 48px));max-height:340px;overflow:auto;padding:12px;border:1px solid var(--line,#ddd);border-radius:14px;background:var(--surface,#fff);box-shadow:0 12px 35px #0002;z-index:100;';
+  panel.innerHTML = '<form class="lumi-space-gif-search" style="display:flex;gap:6px;margin-bottom:10px"><input class="lumi-space-gif-query" placeholder="Buscar GIFs…" required style="min-width:0;flex:1"><button type="submit">Buscar</button></form><div class="lumi-space-gif-results" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div><p style="font-size:11px;opacity:.7;margin:8px 0 0">A chave Tenor é a mesma configurada nas DMs.</p>';
+  wrap.append(button,panel);
+  attach.insertAdjacentElement('afterend',wrap);
+  button.addEventListener('click',()=>{panel.hidden=!panel.hidden;if(!panel.hidden)panel.querySelector('input').focus();});
+  panel.querySelector('form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const key=localStorage.getItem('lumi-tenor-api-key')||'';
+    const query=panel.querySelector('input').value.trim();
+    const results=panel.querySelector('.lumi-space-gif-results');
+    if(!key){results.innerHTML='<p style="grid-column:1/-1">Configure a chave da API Tenor no seletor de GIF das mensagens diretas primeiro.</p>';return;}
+    results.textContent='Buscando…';
+    try {
+      const url='https://tenor.googleapis.com/v2/search?'+new URLSearchParams({q:query,key,client_key:'lumi_network',limit:'12',media_filter:'gif,tinygif',contentfilter:'medium'});
+      const response=await fetch(url);
+      if(!response.ok)throw new Error('Tenor '+response.status);
+      const data=await response.json();
+      const gifs=(data.results||[]).map(item=>({url:item.media_formats?.gif?.url||item.media_formats?.tinygif?.url,preview:item.media_formats?.tinygif?.url||item.media_formats?.gif?.url,alt:item.content_description||'GIF'})).filter(item=>item.url&&/^https:\/\/(media\.tenor\.com|tenor\.com)\//i.test(item.url));
+      results.innerHTML=gifs.length?gifs.map((gif,index)=>'<button type="button" data-gif-index="'+index+'" style="border:0;background:transparent;padding:0;cursor:pointer"><img src="'+esc(gif.preview)+'" alt="'+esc(gif.alt)+'" loading="lazy" style="width:100%;height:100px;object-fit:cover;border-radius:8px"></button>').join(''):'<p style="grid-column:1/-1">Nenhum GIF encontrado.</p>';
+      results.querySelectorAll('[data-gif-index]').forEach((node,index)=>node.addEventListener('click',()=>{
+        const gif=gifs[index];
+        if(!gif)return;
+        input.value='LUMI_GIF:'+gif.url;
+        panel.hidden=true;
+        form.requestSubmit();
+      }));
+    } catch(error) { results.textContent='Não consegui buscar GIFs. Confira a chave Tenor e tente novamente.';console.warn('LUMI GIF nos Espaços:',error); }
+  });
+}
+
 function install() {
   installStyles();
   installAssistant();
   installGifButton();
+  installSpaceGifPicker();
   const form = $('#dmMessageForm');
   if (form) {
     const panel = $('#lumiGifPanel');
