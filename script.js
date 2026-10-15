@@ -84,6 +84,13 @@ function toast(message, type = '') {
 }
 function initials(name = '?') { return name.trim().split(/\s+/).slice(0,2).map(part => part[0] || '').join('').toUpperCase() || '?'; }
 function escapeHTML(value = '') { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function isKlipyMediaUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' && /(^|\\.)klipy\\.com$/i.test(url.hostname);
+  } catch { return false; }
+}
+
 function shortDate(value) { const date = new Date(value); return date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'}); }
 function openModal(id) { const dialog = document.getElementById(id); if (dialog && !dialog.open) dialog.showModal(); }
 function closeModal(id) { const dialog = document.getElementById(id); if (dialog?.open) dialog.close(); }
@@ -858,7 +865,7 @@ function messagesHTML() {
     const isVideo=message.attachment_type?.startsWith('video/');
     const media=fileUrl?(isImage?`<a class="space-media-link" href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHTML(fileUrl)}" loading="lazy" alt="${escapeHTML(message.attachment_name||'Foto compartilhada')}"></a>`:isVideo?`<video class="space-video" controls preload="metadata" src="${escapeHTML(fileUrl)}"></video>`:`<a href="${escapeHTML(fileUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(message.attachment_name||'Abrir arquivo')}</a>`):message.attachment_path?`<div class="space-media-unavailable"><span class="material-symbols-rounded">attach_file</span><span><strong>${escapeHTML(message.attachment_name||'Mídia anexada')}</strong><small>Não foi possível carregar a mídia. Atualize o canal para tentar novamente.</small></span></div>`:'';
     const reply=message.reply_to?state.messages.find(m=>m.id===message.reply_to):null; const reactions=state.spaceReactions.filter(r=>r.message_id===message.id); const reactionHTML=reactions.length?`<div class="space-reactions">${[...new Set(reactions.map(r=>r.emoji))].map(emoji=>`<button type="button" data-space-react="${message.id}" data-emoji="${escapeHTML(emoji)}" class="space-reaction">${escapeHTML(emoji)} <small>${reactions.filter(r=>r.emoji===emoji).length}</small></button>`).join('')}</div>`:'';
-    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id,message.profiles?.vip_purchased)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?.startsWith('LUMI_GIF:') && /^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(message.content.slice(9)) ? `<div class="message-text space-gif-message"><img src="${escapeHTML(message.content.slice(9))}" alt="GIF" loading="lazy" style="max-width:min(280px,100%);max-height:240px;border-radius:12px;object-fit:contain"></div>` : message.content ? `<div class="message-text">${escapeHTML(message.content)}</div>` : ''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
+    return `<article class="message-item space-message-item" data-message-id="${message.id}"><div class="message-avatar">${message.profiles?.avatar_url?`<img class="avatar-image" src="${escapeHTML(message.profiles.avatar_url)}" alt="">`:escapeHTML(initials(name))}</div><div class="message-content"><div class="message-meta"><strong>${escapeHTML(name)}</strong> ${accountBadges(message.author_id,message.profiles?.vip_purchased)}<time>${shortDate(message.created_at)}</time>${message.edited_at?'<small class="message-edited">editada</small>':''}</div>${reply?`<div class="space-reply-preview">↳ ${escapeHTML(reply.content||reply.attachment_name||'mídia')}</div>`:''}${message.content?.startsWith('LUMI_GIF:') && isKlipyMediaUrl(message.content.slice(9)) ? `<div class="message-text space-gif-message"><img src="${escapeHTML(message.content.slice(9))}" alt="GIF" loading="lazy" style="max-width:min(280px,100%);max-height:240px;border-radius:12px;object-fit:contain"></div>` : message.content ? `<div class="message-text">${escapeHTML(message.content)}</div>` : ''}${media}${reactionHTML}<div class="space-message-actions"><button type="button" data-space-reply="${message.id}" title="Responder"><span class="material-symbols-rounded">reply</span></button>${mine?`<button type="button" data-space-edit="${message.id}" title="Editar"><span class="material-symbols-rounded">edit</span></button><button type="button" data-space-delete="${message.id}" title="Excluir"><span class="material-symbols-rounded">delete</span></button>`:''}<button type="button" data-space-react="${message.id}" title="Reagir"><span class="material-symbols-rounded">add_reaction</span></button></div></div></article>`;
   }).join('');
 }
 async function signSpaceMedia(messages) {
@@ -1133,6 +1140,7 @@ async function openConversation(id, refreshList = true) {
   const conversation = state.conversations.find(c=>c.id===id) || state.activeConversation;
   if (!conversation || !id) return;
   state.activeConversation = conversation;
+  window.lumiActiveConversationId = id;
   $('.app-shell')?.classList.add('mobile-chat-open');
   if (state.dmRealtime) { await supabase.removeChannel(state.dmRealtime); state.dmRealtime = null; }
   const panel = $('#dmChatPanel'); if (!panel) return;
@@ -2013,7 +2021,7 @@ function dmMessagesHTML() {
       } catch {}
     }
     const gifUrl = m.content?.startsWith('LUMI_GIF:') ? m.content.slice('LUMI_GIF:'.length).trim() : '';
-    const gif = /^https:\/\/(static\.klipy\.com|klipy\.com)\//i.test(gifUrl)
+    const gif = isKlipyMediaUrl(gifUrl)
       ? '<a href="' + escapeHTML(gifUrl) + '" target="_blank" rel="noopener noreferrer"><img class="dm-message-gif" loading="lazy" src="' + escapeHTML(gifUrl) + '" alt="GIF compartilhado"></a>' : '';
     const image = m.attachment_type?.startsWith('image/') && m.attachment_url ? '<a class="dm-image-link" href="' + escapeHTML(m.attachment_url) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHTML(m.attachment_url) + '" alt="' + escapeHTML(m.attachment_name || 'Imagem compartilhada') + '"></a>' : '';
     const audio = m.attachment_type?.startsWith('audio/') && m.attachment_url ? '<audio class="dm-audio-player" controls preload="metadata" src="' + escapeHTML(m.attachment_url) + '"></audio>' : '';
@@ -2357,6 +2365,14 @@ $('#copyInvite').addEventListener('click',copyInvite);
 $('#spaceSearch').addEventListener('input',renderSpaceNav);
 $('#messageForm')?.addEventListener('submit',sendMessage);
 document.addEventListener('submit',e=>{if(e.target.id==='dmMessageForm')sendDM(e);});
+window.addEventListener('lumi:gif-sent', event => {
+  const message = event.detail?.message;
+  if (!message || message.conversation_id !== state.activeConversation?.id) return;
+  if (!state.dmMessages.some(item => item.id === message.id)) {
+    state.dmMessages.push(message);
+    renderDMMessages();
+  }
+});
 document.addEventListener('click',e=>{const channelCreate=e.target.closest('[data-action="create-channel"][data-channel-kind]');if(channelCreate){const kindSelect=$('#channelKind');if(kindSelect){kindSelect.value=channelCreate.dataset.channelKind;kindSelect.dispatchEvent(new Event('change',{bubbles:true}));window.lumiSyncChannelSelect?.(kindSelect.value);}const nameInput=$('#channelName');if(nameInput)nameInput.placeholder=channelCreate.dataset.channelKind==='voice'?'Ex.: sala-de-voz':'Ex.: papo-geral';}const edit=e.target.closest('[data-space-edit]');if(edit){editSpaceMessage(edit.dataset.spaceEdit);return;}const del=e.target.closest('[data-space-delete]');if(del){deleteSpaceMessage(del.dataset.spaceDelete);return;}const reply=e.target.closest('[data-space-reply]');if(reply){replyToSpaceMessage(reply.dataset.spaceReply);return;}const react=e.target.closest('[data-space-react]');if(react){reactToSpaceMessage(react.dataset.spaceReact,react.dataset.emoji||null);return;}if(e.target.closest('[data-space-reply-cancel]')){state.spaceReplyTo=null;renderWorkspace();return;}if(e.target.closest('#spaceAttachButton')){$('#spaceFileInput')?.click();return;}if(e.target.closest('#dmSearchButton'))searchDMPeople();if(e.target.closest('#dmMobileSearchButton'))searchDMPeople();if(e.target.closest('#dmRefreshButton'))loadConversations();if(e.target.closest('#dmAttachButton'))$('#dmFileInput')?.click();});
 document.addEventListener('click',e=>{const call=e.target.closest('[data-call]');if(call){startCall(call.dataset.call);return;}const control=e.target.closest('[data-call-control]');if(control){toggleCallControl(control.dataset.callControl);return;}const incoming=e.target.closest('[data-incoming-call]');if(incoming){if(incoming.dataset.incomingCall==='accept')acceptIncomingCall();else declineIncomingCall();}});
 document.addEventListener('keydown',e=>{if((e.target.id==='dmPeopleSearch'||e.target.id==='dmMobilePeopleSearch')&&e.key==='Enter'){e.preventDefault();searchDMPeople();return;}if((e.target.id==='messageInput'||e.target.id==='dmMessageInput')&&e.key==='Enter'&&!e.isComposing){const enterSends=localStorage.getItem('lumi-enter-to-send')!=='false';const shouldSend=enterSends?(!e.shiftKey):((e.ctrlKey||e.metaKey)&&!e.shiftKey);if(shouldSend){e.preventDefault();const form=e.target.form;if(form&&typeof form.requestSubmit==='function')form.requestSubmit();}}});
