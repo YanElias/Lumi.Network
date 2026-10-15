@@ -174,3 +174,24 @@ Itens planejados para uma etapa futura, porque precisam de integração externa,
 - [x] Adicionar busca/envio de GIFs Tenor nas DMs, com chave API informada pelo usuário
 - [x] Adicionar suporte a resposta em notificações de mensagens (precisa teste real em navegadores compatíveis)
 - [ ] Testar chamadas com duas contas em redes diferentes; STUN sozinho não garante conexão em todas as redes
+
+
+## Encerramento do projeto — última rodada (outubro de 2026)
+
+- [x] Remover o chatbot LUMI Assist sem remover o seletor de GIFs KLIPY.
+- [x] Unificar a verificação de acesso ao LUMI INFINITY para contas autorizadas e contas com benefício ativo.
+- [x] Adicionar painel do dono para publicar/remover comunicado oficial global (requer a migração SQL abaixo).
+- [x] Refinar superfícies do tema escuro, campos, cartões, comunicados e responsividade.
+- [ ] Revisar visualmente todas as páginas em desktop/celular e testar duas contas após atualizar.
+- [ ] Executar `database/app-owner-tools.sql` no Supabase para habilitar comunicados globais com políticas RLS.
+- [ ] Pagamento real do LUMI INFINITY: continua pendente de provedor de pagamento e validação server-side; não marcar compras como pagas pelo frontend.
+
+### Ideias pesquisadas para possíveis atualizações futuras
+
+- [ ] Denunciar perfil/mensagem e painel de revisão para o dono/moderação.
+- [ ] Preferências de privacidade mais claras: quem pode mandar DM, ver status e atividade.
+- [ ] Favoritar/salvar mensagens e pesquisar dentro de uma conversa.
+- [ ] Agrupar canais por categoria e configurar permissões granulares por cargo.
+- [ ] Notificações configuráveis por espaço/canal e silenciar conversas.
+- [ ] Acessibilidade: foco de teclado consistente, contraste, leitores de tela e movimento reduzido.
+- [ ] Métricas simples de saúde da comunidade e controles anti-spam.
